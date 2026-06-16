@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import Navbar from '../components/common/Navbar'
 
 /* ── Hero ─────────────────────────────────────────── */
@@ -48,12 +49,12 @@ function HeroSection() {
         </div>
 
         <div className="hero-actions">
-          <button className="btn-primary" onClick={() => inputRef.current?.click()}>
+          <Link to="/upload" className="btn-primary">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
             </svg>
             계약서 업로드하기
-          </button>
+          </Link>
           <a href="#how-it-works" className="btn-ghost">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>
@@ -355,12 +356,12 @@ function CTASection() {
         </h2>
         <p>무료로 첫 계약서를 분석해 드립니다. 회원가입 없이 바로 시작 가능합니다.</p>
         <div className="cta-actions">
-          <a href="#upload" className="btn-primary" style={{ fontSize: 16, padding: '16px 36px' }}>
+          <Link to="/upload" className="btn-primary" style={{ fontSize: 16, padding: '16px 36px' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
             </svg>
             무료로 계약서 분석하기
-          </a>
+          </Link>
         </div>
         <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 20, marginBottom: 0 }}>
           신용카드 불필요 · 회원가입 불필요 · 즉시 분석

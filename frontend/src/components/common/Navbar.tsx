@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
@@ -29,7 +30,7 @@ export default function Navbar() {
           <li><a href="#targets">대상</a></li>
         </ul>
 
-        <a href="#upload" className="navbar-cta">무료 체험하기</a>
+        <button className="navbar-cta" onClick={() => navigate('/upload')}>무료 체험하기</button>
       </div>
     </nav>
   )
