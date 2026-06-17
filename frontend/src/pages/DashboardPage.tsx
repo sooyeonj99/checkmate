@@ -95,10 +95,6 @@ const MOCK_CONTRACTS: Contract[] = [
 ]
 
 /* ── Risk helpers ───────────────────────────────────── */
-function riskLabel(r: RiskLevel) {
-  return r === 'danger' ? '위험' : r === 'warn' ? '주의' : '안전'
-}
-
 function scoreColor(score: number) {
   if (score < 40) return 'var(--risk-high)'
   if (score < 65) return 'var(--risk-mid)'
