@@ -1,11 +1,14 @@
 import { useState, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/common/Navbar'
 
 /* ── Hero ─────────────────────────────────────────── */
 function HeroSection() {
+  const navigate = useNavigate()
   const [dragOver, setDragOver] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  const goToUpload = () => navigate('/upload')
 
   return (
     <section className="hero" id="upload">
@@ -33,9 +36,15 @@ function HeroSection() {
             onClick={() => inputRef.current?.click()}
             onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
             onDragLeave={() => setDragOver(false)}
-            onDrop={(e) => { e.preventDefault(); setDragOver(false) }}
+            onDrop={(e) => { e.preventDefault(); setDragOver(false); goToUpload() }}
           >
-            <input ref={inputRef} type="file" accept=".pdf,.jpg,.jpeg,.png" style={{ display: 'none' }} />
+            <input
+              ref={inputRef}
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              style={{ display: 'none' }}
+              onChange={goToUpload}
+            />
             <div className="upload-icon">📄</div>
             <h3>계약서를 여기에 드래그하거나 클릭하여 업로드</h3>
             <p>PDF, JPG, PNG 파일 지원 · 최대 20MB</p>

@@ -8,7 +8,7 @@ import DashboardPage from './pages/DashboardPage'
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/checkmate">
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/upload" element={<UploadPage />} />
