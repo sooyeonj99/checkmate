@@ -25,7 +25,8 @@
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
       "Bash(git push *)",
-      "Bash(ssh -T git@github.com)"
+      "Bash(ssh -T git@github.com)",
+      "Bash(git restore *)"
     ],
     "additionalDirectories": [
       "/mnt/e/checkmate/frontend",
