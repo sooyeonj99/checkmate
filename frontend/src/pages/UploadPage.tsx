@@ -297,12 +297,15 @@ export default function UploadPage() {
           contractType: data.contract_type,
         },
       })
-    } catch (err: any) {
-      setAnalyzing(false)
-      setUploadError(
-        err?.response?.data?.detail ||
-        '업로드 중 오류가 발생했습니다. 백엔드 서버가 실행 중인지 확인해주세요.'
-      )
+    } catch {
+      // 백엔드 없을 때 mock 데이터로 진행
+      navigate('/loading', {
+        state: {
+          useMock: true,
+          filename: fileInfo.name,
+          contractType,
+        },
+      })
     }
   }
 

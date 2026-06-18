@@ -296,11 +296,12 @@ function MsgArea({ step, stepIndex, msgKey }: MsgAreaProps) {
   )
 }
 
+
 /* ── Page ──────────────────────────────────────────── */
 export default function LoadingPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { contractId } = (location.state as any) || {}
+  const { contractId, useMock } = (location.state as any) || {}
 
   const [stepIndex, setStepIndex] = useState(0)
   const [msgKey, setMsgKey] = useState(0)
@@ -314,22 +315,34 @@ export default function LoadingPage() {
 
   const tryNavigate = useCallback(() => {
     if (animDoneRef.current && apiDoneRef.current) {
-      navigate('/result', { state: { analysisResult: apiResultRef.current } })
+      navigate('/result', {
+        state: {
+          analysisResult: apiResultRef.current,
+          isMock: useMock || !apiResultRef.current,
+        },
+      })
     }
-  }, [navigate])
+  }, [navigate, useMock])
 
   // 분석 API 호출
   useEffect(() => {
-    if (!contractId) {
+    if (!contractId && !useMock) {
       navigate('/upload')
+      return
+    }
+
+    if (useMock) {
+      // 백엔드 없을 때: 애니메이션만 재생 후 결과 페이지로 이동 (isMock 플래그 전달)
+      apiDoneRef.current = true
+      tryNavigate()
       return
     }
 
     api.post(`/contracts/${contractId}/analyze`)
       .then(({ data }) => { apiResultRef.current = data })
-      .catch(() => { apiResultRef.current = null })
+      .catch(() => { /* mock으로 폴백 */ })
       .finally(() => { apiDoneRef.current = true; tryNavigate() })
-  }, [contractId, navigate, tryNavigate])
+  }, [contractId, useMock, navigate, tryNavigate])
 
   const currentStep = STEPS[stepIndex]
   const smoothProgress = useSmoothProgress(currentStep.targetProgress, 800)
@@ -412,6 +425,24 @@ export default function LoadingPage() {
         </svg>
         분석이 완료되면 업로드된 파일은 서버에서 즉시 삭제됩니다
       </div>
+
+      {/* 베타 안내 */}
+      {useMock && (
+        <div style={{
+          marginTop: 16,
+          padding: '10px 20px',
+          background: 'rgba(79,142,247,0.1)',
+          border: '1px solid rgba(79,142,247,0.25)',
+          borderRadius: 10,
+          fontSize: 12,
+          color: 'rgba(79,142,247,0.9)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+        }}>
+          🧪 베타 테스트 모드 · 샘플 분석 결과를 표시합니다
+        </div>
+      )}
     </div>
   )
 }

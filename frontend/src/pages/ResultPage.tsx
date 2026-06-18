@@ -81,81 +81,71 @@ function transformApiResult(data: any): AnalysisResult {
   }
 }
 
-/* ── Mock data (백엔드 미연결 시 표시) ─────────────── */
+/* ── Mock data (베타 테스트 시 표시 — 근로계약서 샘플) ── */
 const RESULT: AnalysisResult = {
-  contractName: '프리랜서 영상 편집 용역계약서',
-  contractMeta: '발주사 ○○○ · 계약 기간 2026.07.01 – 2026.12.31',
-  analysisDate: '2026. 06. 17',
-  totalClauses: 13,
-  score: 78,
+  contractName: '○○ 주식회사 근로계약서',
+  contractMeta: '사용자 ○○ 주식회사 · 입사일 2026.07.01 · 정규직',
+  analysisDate: '2026. 06. 19',
+  totalClauses: 12,
+  score: 74,
   grade: 'danger',
-  dangerCount: 5,
-  warnCount: 2,
-  safeCount: 4,
-  analysisTime: '28초',
+  dangerCount: 3,
+  warnCount: 3,
+  safeCount: 6,
+  analysisTime: '24초',
   problemTags: [
-    { text: '저작권 귀속 불명확', level: 'danger' },
-    { text: '대금 지급 조건 불리', level: 'danger' },
-    { text: '일방적 계약 해지', level: 'danger' },
-    { text: '과도한 손해배상', level: 'danger' },
-    { text: '비밀유지 범위 무제한', level: 'danger' },
-    { text: '수정 요청 횟수 제한 없음', level: 'warn' },
-    { text: '분쟁 관할 법원 불리', level: 'warn' },
+    { text: '포괄임금제로 야근수당 없음', level: 'danger' },
+    { text: '의무재직 위반 시 손해배상', level: 'danger' },
+    { text: '퇴직 후 2년 취업 제한', level: 'danger' },
+    { text: '수습기간 임금 감액', level: 'warn' },
+    { text: '업무 범위 무제한', level: 'warn' },
+    { text: '개인정보 광범위 수집', level: 'warn' },
   ],
   clauses: [
     {
-      id: 1, level: 'danger', title: '저작권 및 지식재산권 귀속', article: '제7조',
-      desc: '계약 완료 후 결과물의 저작권을 자동으로 발주사에 전부 이전하는 조항입니다. 중간 산출물 및 2차 저작물 이용 권한까지 포함되어 있어 추가 수익을 원천 차단합니다.',
-      original: '본 계약에 따라 제작된 모든 결과물(완성본 및 중간 산출물 포함)의 저작권, 저작인접권 및 기타 지식재산권 일체는 납품 즉시 발주사에 무상으로 귀속되며, 수급인은 이에 대한 어떠한 권리도 주장할 수 없다.',
-      problem: '중간 산출물까지 포함, 무상 이전, 어떠한 권리도 주장 불가 — 과도한 권리 박탈',
-      suggestion: '완성된 최종 결과물에 한하여 발주사에 이용 허락하며, 저작인격권은 수급인이 보유한다. 결과물의 2차적 저작물 작성 권한은 별도 합의에 의한다.',
-      lawRef: '저작권법 제9조 (업무상저작물) · 제45조 (저작재산권 양도) · 공정거래위원회 불공정약관 심사지침 제7조',
+      id: 1, level: 'danger', title: '포괄임금제 조항', article: '제4조',
+      desc: '연장·야간·휴일 근로수당을 월 급여에 포함시키는 포괄임금 약정입니다. 실제 초과근무를 해도 별도 수당이 지급되지 않아 장시간 근로 시 큰 손해가 발생합니다.',
+      original: '월 급여 ○○○만 원에는 연장근로수당, 야간근로수당, 휴일근로수당이 포함되어 있으며, 실제 초과근무 시에도 별도 수당을 지급하지 아니한다.',
+      problem: '대법원은 실제 초과근무가 발생하는 업무에 포괄임금제 적용 시 무효로 판단 (대법원 2016다48785)',
+      suggestion: '연장·야간·휴일 근로는 근로기준법 제56조에 따라 통상임금의 50%를 가산하여 별도 지급한다. 불가피한 경우 사전 합의된 고정 연장근로 시간(주 12시간 한도)만 포괄 산정한다.',
+      lawRef: '근로기준법 제56조 (연장·야간·휴일 근로 가산수당) · 대법원 2016다48785 판결',
     },
     {
-      id: 2, level: 'danger', title: '대금 지급 및 정산 조건', article: '제4조',
-      desc: '대금 지급 시기를 \'발주사 내부 결재 완료 후\'로 명시하여 지급 시기가 발주사 재량에 달려 있습니다. 법정 지급 기한을 준수하지 않을 소지가 있습니다.',
-      original: '용역 대금은 최종 결과물 납품 후 발주사의 내부 검수 및 결재 절차 완료 시점으로부터 60일 이내에 지급한다. 단, 발주사의 내부 사정에 따라 지급이 지연될 수 있다.',
-      problem: '\'내부 사정에 따라 지연 가능\' 조항이 하도급법 지급 기한(60일) 규정을 무력화',
-      suggestion: '용역 대금은 최종 납품 확인일로부터 30일 이내에 지급한다. 지급이 지연될 경우 지연 일수에 연 12%의 지연이자를 가산하여 지급한다.',
-      lawRef: '하도급법 제13조 (하도급대금 지급) · 상법 제54조 (지연이자) · 프리랜서 표준계약서 제5조',
+      id: 2, level: 'danger', title: '의무 재직 기간 손해배상', article: '제10조',
+      desc: '입사 후 1년 내 퇴직 시 회사가 지출한 교육·훈련 비용 전액을 배상하도록 규정하고 있습니다. 근로자의 자유로운 퇴직권을 사실상 박탈하는 조항입니다.',
+      original: '근로자는 입사일로부터 1년 이내 퇴직 시 회사가 지출한 교육훈련비, 채용 비용 등 일체를 배상하여야 한다.',
+      problem: '근로기준법은 근로자의 손해배상액 예정을 금지 — 실제 손해 입증 없이 전액 청구는 무효 소지',
+      suggestion: '회사가 실제로 지출하고 입증 가능한 교육훈련비에 한하여, 재직 기간에 비례하여 감액된 금액을 반환 요청할 수 있다. 단, 반환 조건은 근로자가 자발적으로 퇴직하는 경우에만 적용한다.',
+      lawRef: '근로기준법 제20조 (위약 예정의 금지) · 제24조 · 대법원 2004다13589 판결',
     },
     {
-      id: 3, level: 'danger', title: '계약 해지 및 해제', article: '제10조',
-      desc: '발주사에게만 일방적 해지권을 부여하고 위약금 없이 계약을 종료할 수 있게 하는 불공정 조항입니다.',
-      original: '발주사는 사업 내부 사정에 의해 계약을 언제든지 서면 통보로 해지할 수 있으며, 이 경우 기납품 부분에 대한 대금만을 지급한다.',
-      problem: '수급인에게 해지권 없음 + 중단 시 손실 보전 조항 전무',
-      suggestion: '양 당사자는 30일 전 서면 통보로 계약을 해지할 수 있다. 발주사의 귀책 해지 시 기납품 대금 외 잔여 계약금의 30%를 위약금으로 지급한다.',
-      lawRef: '민법 제543조 (해지·해제권) · 공정거래위원회 표준 하도급 계약서 제12조',
+      id: 3, level: 'danger', title: '경업금지(취업제한) 조항', article: '제11조',
+      desc: '퇴직 후 2년간 동종업계 취업 및 창업을 금지하는 조항입니다. 생계와 직결되는 직업 선택의 자유를 과도하게 제한하며, 범위·기간이 합리적이지 않으면 법적으로 무효입니다.',
+      original: '근로자는 퇴직 후 2년간 동종·유사 업종의 타 회사에 취업하거나 창업할 수 없으며, 위반 시 위약금 ○○○만 원을 지급한다.',
+      problem: '기간(2년) + 범위(동종 전체) + 지역 제한 없음 → 헌법상 직업선택의 자유 침해, 법원 무효 판결 다수',
+      suggestion: '경업금지 의무는 회사의 핵심 영업비밀에 직접 접근한 직무에 한하며, 기간은 6개월 이내, 지역은 회사 영업 지역으로 한정한다. 금지 기간 동안 통상임금 50% 이상의 보상을 지급한다.',
+      lawRef: '헌법 제15조 (직업선택의 자유) · 부정경쟁방지법 제2조 · 대법원 2010다82199 판결',
     },
     {
-      id: 4, level: 'danger', title: '손해배상 및 위약금', article: '제11조',
-      desc: '수급인의 손해배상 범위를 계약금액의 300%로 설정한 과도한 위약금 조항입니다. 불공정약관 심사 기준상 무효 가능성이 높습니다.',
-      original: '수급인의 귀책사유로 납기를 초과하거나 결과물 하자 발생 시, 계약금액의 300%에 해당하는 손해배상액을 발주사에 지급한다.',
-      problem: '300%는 통상적 기준(10~20%) 대비 비상식적 수준. 약관법상 무효 소지',
-      suggestion: '납기 지연 시 지연 1일당 계약금액의 0.1%(최대 10%)를 지체상금으로 지급한다. 고의·중과실이 아닌 경우 책임을 계약금액 이내로 제한한다.',
-      lawRef: '약관의 규제에 관한 법률 제8조 (손해배상액 예정 조항) · 대법원 2016다227258 판결',
+      id: 4, level: 'warn', title: '수습 기간 임금 감액', article: '제3조',
+      desc: '3개월 수습 기간 동안 최저임금의 90%를 지급하는 조항입니다. 법적으로는 허용되나, 수습 여부와 관계없이 정상 업무를 수행하는 경우 부당한 감액이 될 수 있습니다.',
+      original: '입사 후 3개월은 수습 기간으로 하며, 이 기간 동안 임금은 최저임금의 90%를 적용한다.',
+      suggestion: '수습 기간은 최대 3개월로 하되, 수습 감액(최저임금 90%)은 단순 반복 업무가 아닌 기술 습득이 필요한 직종에 한하여 적용하며, 정상 업무 투입 즉시 정규 급여를 지급한다.',
+      lawRef: '최저임금법 제5조 제2항 (수습 근로자 감액 적용) · 고용노동부 고시',
     },
     {
-      id: 5, level: 'danger', title: '비밀유지 의무', article: '제8조',
-      desc: '비밀유지 대상을 \'본 계약과 관련된 모든 정보\'로 포괄 정의하고 기간도 \'영구적\'으로 설정하여 포트폴리오 활용 및 유사 업무 수행까지 제한될 수 있습니다.',
-      original: '수급인은 본 계약과 관련하여 알게 된 모든 정보를 영구적으로 제3자에게 공개하거나 이용할 수 없다.',
-      problem: '\'모든 정보\' + \'영구적\' 조합으로 포트폴리오 활용, 유사 업무 수행까지 제한될 수 있음',
-      suggestion: '수급인은 계약 기간 및 종료 후 2년간 발주사가 \'영업비밀\'로 지정·고지한 정보에 한하여 제3자 공개를 금지한다. 포트폴리오 활용은 발주사 사전 동의 하에 허용한다.',
-      lawRef: '부정경쟁방지법 제2조 제2호 (영업비밀 정의) · 민법 제103조 (반사회적 법률행위)',
+      id: 5, level: 'warn', title: '업무 범위 무제한 지시', article: '제2조',
+      desc: '담당 업무를 "회사가 지시하는 모든 업무"로 포괄 규정하여 채용 공고와 다른 업무, 전혀 다른 부서 배치 등에 이의를 제기하기 어렵게 됩니다.',
+      original: '근로자는 회사가 지시하는 모든 업무를 성실히 수행하여야 한다.',
+      suggestion: '근로자의 담당 업무는 [직무명: ○○ 업무]로 하며, 업무 변경이 필요한 경우 근로자와 사전 협의하여 서면으로 합의한다.',
+      lawRef: '근로기준법 제17조 (근로조건의 명시) · 제23조 (해고 등의 제한)',
     },
     {
-      id: 6, level: 'warn', title: '수정 및 검수 조건', article: '제5조',
-      desc: '수정 요청 횟수 제한이 없어 납품 후 무제한 수정을 요구할 수 있는 구조입니다. 명확한 횟수 및 범위 합의가 필요합니다.',
-      original: '발주사는 납품 후 최종 승인 전까지 결과물에 대한 수정을 요청할 수 있으며, 수급인은 이에 응해야 한다.',
-      suggestion: '수정 요청은 납품일로부터 14일 이내, 최대 2회로 한정한다. 추가 수정은 별도 견적으로 진행한다.',
-      lawRef: '프리랜서 표준계약서(문화체육관광부) 제6조',
-    },
-    {
-      id: 7, level: 'warn', title: '분쟁 해결 및 관할 법원', article: '제13조',
-      desc: '분쟁 발생 시 관할 법원을 발주사 소재지 법원(서울중앙지방법원)으로 일방 지정하여 수급인이 지방 거주 시 소송 부담이 커집니다.',
-      original: '본 계약과 관련된 분쟁은 발주사 소재지 관할 법원을 제1심 법원으로 한다.',
-      suggestion: '분쟁 발생 시 먼저 조정을 시도하고, 합의 불성립 시 민사소송법에 따른 관할 법원으로 한다.',
-      lawRef: '민사소송법 제24조 (합의관할) · 약관규제법 제14조',
+      id: 6, level: 'warn', title: '개인정보 광범위 수집 동의', article: '제12조',
+      desc: '재직 중 및 퇴직 후에도 개인정보 이용에 동의하도록 규정하고 있으며, 수집 목적과 보유 기간이 불명확합니다.',
+      original: '근로자는 회사의 인사·노무 관리 목적으로 개인정보를 수집·이용하는 것에 동의하며, 이는 퇴직 후에도 유효하다.',
+      suggestion: '개인정보 수집 항목, 이용 목적, 보유 기간을 별도 동의서에 명시한다. 퇴직 후 개인정보는 관련 법령이 정한 기간 경과 후 즉시 파기한다.',
+      lawRef: '개인정보 보호법 제15조 (개인정보의 수집·이용) · 제16조 (개인정보의 수집 제한)',
     },
   ],
 }
@@ -415,25 +405,24 @@ function ExpertCard({ grade }: { grade: RiskLevel }) {
 
 /* ── ContractTextView ──────────────────────────────── */
 const CONTRACT_HTML = `
-<p><strong>제1조 (목적)</strong><br>본 계약은 발주사(이하 "갑")와 수급인(이하 "을") 간의 영상 편집 용역에 관한 권리와 의무를 정함을 목적으로 한다.</p>
-<p><strong>제2조 (용역의 내용)</strong><br>을은 갑이 요청한 유튜브 채널용 쇼츠 영상 편집 용역을 수행한다. (월 20편, 편당 최대 60초)</p>
-<p><strong>제3조 (계약 기간)</strong><br>본 계약의 유효 기간은 2026년 7월 1일부터 2026년 12월 31일까지로 한다.</p>
-<p><strong>제4조 (대금 지급)</strong><br><span class="hl-danger">용역 대금은 최종 결과물 납품 후 발주사의 내부 검수 및 결재 절차 완료 시점으로부터 60일 이내에 지급한다. 단, 발주사의 내부 사정에 따라 지급이 지연될 수 있다.</span></p>
-<p><strong>제5조 (검수 및 수정)</strong><br><span class="hl-warn">발주사는 납품 후 최종 승인 전까지 결과물에 대한 수정을 요청할 수 있으며, 수급인은 이에 응해야 한다.</span></p>
-<p><strong>제6조 (납기)</strong><br>을은 매월 말일까지 해당 월 분량을 납품하여야 한다.</p>
-<p><strong>제7조 (저작권 귀속)</strong><br><span class="hl-danger">본 계약에 따라 제작된 모든 결과물(완성본 및 중간 산출물 포함)의 저작권, 저작인접권 및 기타 지식재산권 일체는 납품 즉시 발주사에 무상으로 귀속되며, 수급인은 이에 대한 어떠한 권리도 주장할 수 없다.</span></p>
-<p><strong>제8조 (비밀유지)</strong><br><span class="hl-danger">수급인은 본 계약과 관련하여 알게 된 모든 정보를 영구적으로 제3자에게 공개하거나 이용할 수 없다.</span></p>
-<p><strong>제9조 (4대보험 및 세금)</strong><br>을은 개인사업자로서 세금 신고 및 4대보험 처리를 직접 책임진다.</p>
-<p><strong>제10조 (계약 해지)</strong><br><span class="hl-danger">발주사는 사업 내부 사정에 의해 계약을 언제든지 서면 통보로 해지할 수 있으며, 이 경우 기납품 부분에 대한 대금만을 지급한다.</span></p>
-<p><strong>제11조 (손해배상)</strong><br><span class="hl-danger">수급인의 귀책사유로 납기를 초과하거나 결과물 하자 발생 시, 계약금액의 300%에 해당하는 손해배상액을 발주사에 지급한다.</span></p>
-<p><strong>제12조 (준거법)</strong><br>본 계약은 대한민국 법률에 따라 해석된다.</p>
-<p><strong>제13조 (관할 법원)</strong><br><span class="hl-warn">본 계약과 관련된 분쟁은 발주사 소재지 관할 법원을 제1심 법원으로 한다.</span></p>
+<p><strong>제1조 (목적)</strong><br>본 계약은 ○○ 주식회사(이하 "회사")와 근로자 간의 근로관계에 관한 사항을 정함을 목적으로 한다.</p>
+<p><strong>제2조 (업무 내용)</strong><br><span class="hl-warn">근로자는 회사가 지시하는 모든 업무를 성실히 수행하여야 한다.</span></p>
+<p><strong>제3조 (수습 기간)</strong><br>입사일로부터 3개월은 수습 기간으로 하며, <span class="hl-warn">이 기간 동안 임금은 최저임금의 90%를 적용한다.</span></p>
+<p><strong>제4조 (임금)</strong><br><span class="hl-danger">월 급여 ○○○만 원에는 연장근로수당, 야간근로수당, 휴일근로수당이 포함되어 있으며, 실제 초과근무 시에도 별도 수당을 지급하지 아니한다.</span></p>
+<p><strong>제5조 (근로 시간)</strong><br>근로 시간은 주 40시간을 원칙으로 하되, 업무 상황에 따라 연장근로가 발생할 수 있다.</p>
+<p><strong>제6조 (연차 및 휴가)</strong><br>근로기준법이 정하는 바에 따라 연차 유급휴가를 부여한다.</p>
+<p><strong>제7조 (복무 규정)</strong><br>근로자는 회사의 취업규칙 및 내부 규정을 준수하여야 한다.</p>
+<p><strong>제8조 (비밀유지)</strong><br>근로자는 재직 중 및 퇴직 후에도 회사의 영업비밀 및 기밀 정보를 외부에 유출하여서는 아니 된다.</p>
+<p><strong>제9조 (지식재산권)</strong><br>근로자가 재직 중 직무와 관련하여 창작한 발명, 저작물 등의 지식재산권은 회사에 귀속된다.</p>
+<p><strong>제10조 (의무 재직 및 손해배상)</strong><br><span class="hl-danger">근로자는 입사일로부터 1년 이내 퇴직 시 회사가 지출한 교육훈련비, 채용 비용 등 일체를 배상하여야 한다.</span></p>
+<p><strong>제11조 (경업금지)</strong><br><span class="hl-danger">근로자는 퇴직 후 2년간 동종·유사 업종의 타 회사에 취업하거나 창업할 수 없으며, 위반 시 위약금 ○○○만 원을 지급한다.</span></p>
+<p><strong>제12조 (개인정보 수집·이용 동의)</strong><br><span class="hl-warn">근로자는 회사의 인사·노무 관리 목적으로 개인정보를 수집·이용하는 것에 동의하며, 이는 퇴직 후에도 유효하다.</span></p>
 `
 
 function ContractTextView() {
   return (
     <div className="contract-text-card">
-      <div className="section-eyebrow" style={{ marginBottom: 16 }}>영상 편집 용역계약서 전문</div>
+      <div className="section-eyebrow" style={{ marginBottom: 16 }}>근로계약서 전문</div>
       {/* NOTE: dangerouslySetInnerHTML is safe here — content is controlled static data.
           Production should sanitize with DOMPurify if rendering user-uploaded text. */}
       <div
@@ -458,6 +447,7 @@ function ContractTextView() {
 export default function ResultPage() {
   const location = useLocation()
   const rawResult = (location.state as any)?.analysisResult
+  const isMock = (location.state as any)?.isMock || !rawResult
   const result: AnalysisResult = rawResult ? transformApiResult(rawResult) : RESULT
 
   const [activeTab, setActiveTab] = useState<'result' | 'contract'>('result')
@@ -465,6 +455,27 @@ export default function ResultPage() {
   return (
     <div className="result-page">
       <ResultNav date={result.analysisDate} />
+
+      {/* 베타 테스트 배너 */}
+      {isMock && (
+        <div style={{
+          background: 'rgba(79,142,247,0.08)',
+          borderBottom: '1px solid rgba(79,142,247,0.2)',
+          padding: '10px 24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 10,
+          fontSize: 13,
+          color: 'rgba(79,142,247,0.95)',
+        }}>
+          <span>🧪</span>
+          <span>
+            <strong>베타 테스트 버전</strong> · 현재 샘플 분석 결과를 표시하고 있습니다.
+            실제 AI 분석은 서비스 정식 출시 후 이용 가능합니다.
+          </span>
+        </div>
+      )}
 
       <div className="result-content">
         {/* Title block */}
