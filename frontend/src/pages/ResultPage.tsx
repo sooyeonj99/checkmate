@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 
 /* ── Types ─────────────────────────────────────────── */
 type RiskLevel = 'danger' | 'warn' | 'safe'
@@ -36,7 +36,52 @@ interface AnalysisResult {
   clauses: Clause[]
 }
 
-/* ── Mock data (HTML 참고 파일 기반) ───────────────── */
+/* ── 백엔드 응답 → 프론트 형식 변환 ─────────────────── */
+function gradeFromKorean(grade: string): RiskLevel {
+  if (grade === '위험') return 'danger'
+  if (grade === '주의') return 'warn'
+  return 'safe'
+}
+
+function transformApiResult(data: any): AnalysisResult {
+  const filtered = (data.clauses ?? []).filter(
+    (c: any) => c.risk === 'danger' || c.risk === 'warn'
+  )
+  const clauses: Clause[] = filtered.map((c: any, i: number) => ({
+    id: i + 1,
+    level: c.risk as 'danger' | 'warn',
+    title: c.title ?? '',
+    article: c.article ?? '',
+    desc: c.description ?? '',
+    original: c.original ?? '',
+    suggestion: c.suggestion ?? '',
+    lawRef: c.law_ref ?? '',
+  }))
+
+  const problemTags: ProblemTag[] = clauses.map((c) => ({
+    text: c.title,
+    level: c.level,
+  }))
+
+  const grade = gradeFromKorean(data.grade ?? '')
+
+  return {
+    contractName: data.filename ?? '계약서',
+    contractMeta: data.contract_type ?? '',
+    analysisDate: (data.analyzed_at ?? '').slice(0, 10).replace(/-/g, '. '),
+    totalClauses: (data.clauses ?? []).length,
+    score: data.score ?? 0,
+    grade,
+    dangerCount: data.danger_count ?? 0,
+    warnCount: data.warn_count ?? 0,
+    safeCount: data.safe_count ?? 0,
+    analysisTime: data.analysis_time ?? '',
+    problemTags,
+    clauses,
+  }
+}
+
+/* ── Mock data (백엔드 미연결 시 표시) ─────────────── */
 const RESULT: AnalysisResult = {
   contractName: '프리랜서 영상 편집 용역계약서',
   contractMeta: '발주사 ○○○ · 계약 기간 2026.07.01 – 2026.12.31',
@@ -411,20 +456,24 @@ function ContractTextView() {
 
 /* ── Page ──────────────────────────────────────────── */
 export default function ResultPage() {
+  const location = useLocation()
+  const rawResult = (location.state as any)?.analysisResult
+  const result: AnalysisResult = rawResult ? transformApiResult(rawResult) : RESULT
+
   const [activeTab, setActiveTab] = useState<'result' | 'contract'>('result')
 
   return (
     <div className="result-page">
-      <ResultNav date={RESULT.analysisDate} />
+      <ResultNav date={result.analysisDate} />
 
       <div className="result-content">
         {/* Title block */}
         <div className="result-eyebrow">분석 완료</div>
-        <h1 className="result-contract-name">{RESULT.contractName}</h1>
+        <h1 className="result-contract-name">{result.contractName}</h1>
         <p className="result-contract-meta">
-          {RESULT.contractMeta}
+          {result.contractMeta}
           <span>·</span>
-          총 {RESULT.totalClauses}개 조항
+          총 {result.totalClauses}개 조항
         </p>
 
         {/* Tab bar */}
@@ -446,13 +495,13 @@ export default function ResultPage() {
         {/* Tab content */}
         {activeTab === 'result' ? (
           <>
-            <ScoreSection result={RESULT} />
+            <ScoreSection result={result} />
 
             <div className="section-eyebrow" style={{ marginTop: 32 }}>위험 조항 상세 분석</div>
-            <ClauseList clauses={RESULT.clauses} />
+            <ClauseList clauses={result.clauses} />
 
             <div className="section-eyebrow">전문가 연계</div>
-            <ExpertCard grade={RESULT.grade} />
+            <ExpertCard grade={result.grade} />
           </>
         ) : (
           <ContractTextView />

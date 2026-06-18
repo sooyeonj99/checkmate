@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+import api from '../services/api'
 
 /* ── Step definitions ──────────────────────────────── */
 interface Step {
@@ -298,15 +299,42 @@ function MsgArea({ step, stepIndex, msgKey }: MsgAreaProps) {
 /* ── Page ──────────────────────────────────────────── */
 export default function LoadingPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const { contractId } = (location.state as any) || {}
+
   const [stepIndex, setStepIndex] = useState(0)
   const [msgKey, setMsgKey] = useState(0)
   const [elapsed, setElapsed] = useState(0)
   const countdown = useCountdown(30)
 
+  // 애니메이션 완료 & API 완료를 각각 추적
+  const animDoneRef = useRef(false)
+  const apiResultRef = useRef<any>(null)
+  const apiDoneRef = useRef(false)
+
+  const tryNavigate = useCallback(() => {
+    if (animDoneRef.current && apiDoneRef.current) {
+      navigate('/result', { state: { analysisResult: apiResultRef.current } })
+    }
+  }, [navigate])
+
+  // 분석 API 호출
+  useEffect(() => {
+    if (!contractId) {
+      navigate('/upload')
+      return
+    }
+
+    api.post(`/contracts/${contractId}/analyze`)
+      .then(({ data }) => { apiResultRef.current = data })
+      .catch(() => { apiResultRef.current = null })
+      .finally(() => { apiDoneRef.current = true; tryNavigate() })
+  }, [contractId, navigate, tryNavigate])
+
   const currentStep = STEPS[stepIndex]
   const smoothProgress = useSmoothProgress(currentStep.targetProgress, 800)
 
-  // Advance through steps
+  // 애니메이션 단계 진행
   const scheduleNext = useCallback((idx: number) => {
     const step = STEPS[idx]
     const timerId = setTimeout(() => {
@@ -316,12 +344,15 @@ export default function LoadingPage() {
         setMsgKey((k) => k + 1)
         scheduleNext(next)
       } else {
-        // All steps done → navigate to result
-        setTimeout(() => navigate('/result'), 800)
+        // 애니메이션 완료 → API 결과 기다렸다가 이동
+        setTimeout(() => {
+          animDoneRef.current = true
+          tryNavigate()
+        }, 800)
       }
     }, step.duration)
     return timerId
-  }, [navigate])
+  }, [tryNavigate])
 
   useEffect(() => {
     const timerId = scheduleNext(0)

@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/common/Navbar'
+import api from '../services/api'
 
 /* ── Types ─────────────────────────────────────────── */
 type ContractType = 'employment' | 'lease' | 'freelance' | 'subscription' | 'other'
@@ -263,8 +264,10 @@ export default function UploadPage() {
   const [fileInfo, setFileInfo] = useState<FileInfo | null>(null)
   const [contractType, setContractType] = useState<ContractType | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
 
   const handleFile = useCallback((file: File) => {
+    setUploadError(null)
     setFileInfo({
       file,
       name: file.name,
@@ -273,12 +276,34 @@ export default function UploadPage() {
     })
   }, [])
 
-  const handleRemove = () => setFileInfo(null)
+  const handleRemove = () => { setFileInfo(null); setUploadError(null) }
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
     if (!fileInfo || !contractType) return
     setAnalyzing(true)
-    navigate('/loading')
+    setUploadError(null)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', fileInfo.file)
+      formData.append('contract_type', contractType)
+
+      const { data } = await api.post('/contracts/upload', formData)
+
+      navigate('/loading', {
+        state: {
+          contractId: data.contract_id,
+          filename: data.filename,
+          contractType: data.contract_type,
+        },
+      })
+    } catch (err: any) {
+      setAnalyzing(false)
+      setUploadError(
+        err?.response?.data?.detail ||
+        '업로드 중 오류가 발생했습니다. 백엔드 서버가 실행 중인지 확인해주세요.'
+      )
+    }
   }
 
   const canSubmit = !!fileInfo && !!contractType
@@ -330,6 +355,16 @@ export default function UploadPage() {
               <ContractTypeSelector selected={contractType} onSelect={setContractType} />
               <PrivacyNotice />
               <SubmitButton enabled={canSubmit} loading={analyzing} onClick={handleAnalyze} />
+              {uploadError && (
+                <div style={{
+                  marginTop: 12, padding: '12px 16px',
+                  background: 'var(--risk-high-bg)', border: '1px solid rgba(217,64,64,0.2)',
+                  borderRadius: 'var(--radius-md)', color: 'var(--risk-high)',
+                  fontSize: 13, lineHeight: 1.5,
+                }}>
+                  ⚠ {uploadError}
+                </div>
+              )}
             </div>
 
           </div>
