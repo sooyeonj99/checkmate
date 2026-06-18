@@ -3499,3 +3499,110 @@ img, svg {
   .dash-summary-grid { grid-template-columns: 1fr 1fr; }
   .dash-summary-value { font-size: 28px; }
 }
+
+/* ════════════════════════════════════════════════════════
+   모바일 반응형 보완
+   ════════════════════════════════════════════════════════ */
+
+/* 공통 컨테이너 */
+@media (max-width: 480px) {
+  .container { padding: 0 16px; }
+}
+
+/* ── 네비게이션 바 ─────────────────────────────────────── */
+@media (max-width: 640px) {
+  .navbar-links { display: none; }
+  .navbar-cta   { padding: 9px 14px; font-size: 13px; }
+}
+
+/* ── 홈 히어로 ────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .hero { padding: 100px 16px 60px; }
+  .hero h1 { letter-spacing: -1px; }
+  .hero-slogan { font-size: 15px; margin-bottom: 36px; }
+  .hero-actions { flex-direction: column; align-items: stretch; }
+  .hero-actions .btn-primary,
+  .hero-actions .btn-ghost { justify-content: center; width: 100%; }
+  .hero-stat-value { font-size: 22px; }
+  .hero-stat-label { font-size: 11px; }
+}
+
+@media (max-width: 400px) {
+  .hero-stat { padding: 0 10px; }
+}
+
+/* ── 업로드 페이지 ────────────────────────────────────── */
+@media (max-width: 480px) {
+  .upload-page { padding: 80px 0 60px; }
+  .upload-page-header { margin-bottom: 28px; }
+  .upload-page-header h1 { font-size: 26px; }
+  .upload-progress { margin-bottom: 28px; }
+  .drop-zone h2 { font-size: 15px; }
+  .privacy-notice { flex-direction: column; gap: 10px; text-align: center; }
+  .submit-btn { width: 100%; justify-content: center; }
+  .file-preview-card { padding: 16px; }
+  .file-name { font-size: 13px; }
+}
+
+/* ── 로딩 페이지 ──────────────────────────────────────── */
+@media (max-width: 480px) {
+  .loading-ring-container {
+    transform: scale(0.78);
+    margin-top: -20px;
+    margin-bottom: 16px;
+  }
+  .loading-steps-row { gap: 6px; }
+  .loading-msg-title { font-size: 18px; }
+  .loading-msg-sub   { font-size: 12px; }
+  .loading-time-box  { gap: 16px; padding: 16px 20px; }
+  .loading-time-value { font-size: 20px; }
+  .loading-privacy { font-size: 11px; }
+}
+
+/* ── 결과 페이지 네비게이션 ───────────────────────────── */
+@media (max-width: 640px) {
+  .result-nav-inner { padding: 0 16px; }
+  .result-nav-inner > div:last-child { display: none; } /* 날짜 숨김 */
+  .result-share-btn { display: none; }
+  .result-download-btn { padding: 8px 12px; font-size: 12px; }
+}
+
+/* ── 결과 페이지 본문 ─────────────────────────────────── */
+@media (max-width: 640px) {
+  .result-content { padding: 24px 16px 40px; }
+  .result-contract-name { font-size: 20px; letter-spacing: -0.5px; }
+  .result-contract-meta { font-size: 12px; flex-wrap: wrap; gap: 4px; }
+  .result-tabs { gap: 4px; }
+  .result-tab-btn { padding: 10px 16px; font-size: 13px; }
+
+  /* 점수 영역 - 세로 스택 */
+  .score-top-row { flex-direction: column; gap: 16px; }
+  .score-right { min-width: 0; width: 100%; }
+  .score-number { font-size: 64px; }
+  .score-section { padding: 20px; }
+
+  /* 메트릭 그리드 */
+  .result-metric-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .result-metric { padding: 12px; }
+
+  /* 문제 태그 */
+  .problem-tag-row { gap: 6px; }
+  .problem-tag { font-size: 11px; padding: 4px 10px; }
+
+  /* 조항 아코디언 */
+  .result-clause-head { padding: 14px 16px; gap: 8px; }
+  .result-clause-title { font-size: 13px; }
+  .result-clause-body-inner { padding: 0 14px 16px; }
+  .result-quote-block { padding: 10px 12px; }
+
+  /* 전문가 연계 */
+  .expert-chips { flex-direction: column; }
+  .expert-chip { justify-content: flex-start; }
+}
+
+/* ── 대시보드 추가 ────────────────────────────────────── */
+@media (max-width: 480px) {
+  .dash-table th:nth-child(3),
+  .dash-table td:nth-child(3) { display: none; }
+  .dash-summary-card { padding: 16px; }
+}
