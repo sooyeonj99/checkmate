@@ -40,3 +40,6 @@ htmlcov/
 # Alembic
 alembic/versions/*.py
 !alembic/versions/.gitkeep
+
+# 업로드 파일 (개인정보 보호)
+backend/uploads/
