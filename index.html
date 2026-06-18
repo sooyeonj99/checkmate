@@ -5,8 +5,21 @@
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Checkmate</title>
-    <script type="module" crossorigin src="/checkmate/assets/index-DBzeuSxx.js"></script>
-    <link rel="stylesheet" crossorigin href="/checkmate/assets/index-ShfU8EaR.css">
+    <script>
+      // GitHub Pages SPA 경로 복원
+      (function(l) {
+        if (l.search[1] === '/') {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&');
+          }).join('?');
+          window.history.replaceState(null, null,
+            l.pathname.split('/').slice(0, 2).join('/') + decoded + l.hash
+          );
+        }
+      }(window.location));
+    </script>
+    <script type="module" crossorigin src="/checkmate/assets/index-C4r_pyQd.js"></script>
+    <link rel="stylesheet" crossorigin href="/checkmate/assets/index-CL5mF2fP.css">
   </head>
   <body>
     <div id="root"></div>
