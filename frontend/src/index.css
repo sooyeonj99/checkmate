@@ -3510,9 +3510,11 @@ img, svg {
 }
 
 /* ── 네비게이션 바 ─────────────────────────────────────── */
-@media (max-width: 640px) {
+.navbar .container { flex-wrap: nowrap; overflow: hidden; }
+
+@media (max-width: 768px) {
   .navbar-links { display: none; }
-  .navbar-cta   { padding: 9px 14px; font-size: 13px; }
+  .navbar-cta   { padding: 9px 14px; font-size: 13px; white-space: nowrap; }
 }
 
 /* ── 홈 히어로 ────────────────────────────────────────── */
