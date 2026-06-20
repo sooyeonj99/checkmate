@@ -3336,6 +3336,14 @@ img, svg {
   align-items: center;
   gap: 12px;
   min-width: 0;
+  overflow: hidden;
+}
+
+/* 이름+날짜 묶음 div — flex 자식이 수축 가능해야 ellipsis 작동 */
+.dash-cell-name > div {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .dash-contract-emoji {
