@@ -31,6 +31,17 @@ function formatSize(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`
 }
 
+function truncateFilename(name: string, maxLen = 24): string {
+  if (name.length <= maxLen) return name
+  const dot = name.lastIndexOf('.')
+  if (dot > 0) {
+    const ext = name.slice(dot)                        // ".docx"
+    const base = name.slice(0, Math.max(maxLen - ext.length - 3, 6))
+    return `${base}...${ext}`
+  }
+  return `${name.slice(0, maxLen - 3)}...`
+}
+
 function getExt(name: string): string {
   return name.split('.').pop()?.toUpperCase() ?? 'FILE'
 }
@@ -154,7 +165,7 @@ function FilePreview({ info, onRemove, onReplace }: { info: FileInfo; onRemove: 
       <div className="file-preview-top">
         <div className="file-type-icon" style={{ background: bg }}>{emoji}</div>
         <div className="file-meta">
-          <div className="file-name">{info.name}</div>
+          <div className="file-name" title={info.name}>{truncateFilename(info.name)}</div>
           <div className="file-size">{info.ext} · {info.sizeLabel}</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
