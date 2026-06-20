@@ -403,29 +403,15 @@ function ExpertCard({ grade }: { grade: RiskLevel }) {
 }
 
 /* ── ContractTextView ──────────────────────────────── */
-const CONTRACT_HTML = `
-<p><strong>제1조 (목적)</strong><br>본 계약은 ○○렌탈(이하 "회사")과 소비자(이하 "고객") 간의 가전제품 렌탈 서비스 이용에 관한 사항을 정함을 목적으로 한다.</p>
-<p><strong>제2조 (렌탈 제품)</strong><br>렌탈 제품은 공기청정기 ○○ 모델(이하 "제품")로 하며, 회사는 계약 체결 후 14일 이내에 설치를 완료한다.</p>
-<p><strong>제3조 (약정 기간)</strong><br><span class="hl-warn">약정 기간은 계약 체결일로부터 60개월로 하며, 계약 기간 동안 월 렌탈료가 부과된다.</span></p>
-<p><strong>제4조 (렌탈료 납부)</strong><br>월 렌탈료는 39,900원으로 하며, 매월 지정된 날짜에 자동이체로 납부한다.</p>
-<p><strong>제5조 (렌탈료 조정)</strong><br><span class="hl-danger">회사는 소비자 물가지수 변동 및 원자재·서비스 비용 상승에 따라 렌탈료를 조정할 수 있으며, 변경 30일 전 고지한다.</span></p>
-<p><strong>제6조 (관리 서비스)</strong><br>회사는 연 2회 정기점검 및 필터 교체 서비스를 제공한다.</p>
-<p><strong>제7조 (제품 교체)</strong><br><span class="hl-warn">회사는 서비스 운영상 필요한 경우 동급 사양의 제품으로 교체할 수 있으며, 소비자는 이에 동의한다.</span></p>
-<p><strong>제8조 (자동 연장)</strong><br><span class="hl-danger">계약 만료일 45일 전까지 서면으로 해지 의사를 통보하지 않을 경우, 동일 조건으로 1년간 자동 연장된다.</span></p>
-<p><strong>제9조 (중도 해지)</strong><br><span class="hl-danger">계약 기간 중 중도 해지 시 잔여 약정 렌탈료의 40%에 해당하는 금액을 위약금으로 납부하여야 한다.</span></p>
-<p><strong>제10조 (소유권)</strong><br>렌탈 기간 중 제품의 소유권은 회사에 있다.</p>
-<p><strong>제11조 (소유권 이전)</strong><br><span class="hl-warn">약정 기간 만료 후 소비자가 소유권 이전을 신청하고 이전 수수료를 납부한 경우에 한하여 소유권이 이전된다.</span></p>
-`
-
-function ContractTextView() {
+function ContractTextView({ contractName, html }: { contractName: string; html: string }) {
   return (
     <div className="contract-text-card">
-      <div className="section-eyebrow" style={{ marginBottom: 16 }}>렌탈 서비스 이용계약서 전문</div>
+      <div className="section-eyebrow" style={{ marginBottom: 16 }}>{contractName} 전문</div>
       {/* NOTE: dangerouslySetInnerHTML is safe here — content is controlled static data.
           Production should sanitize with DOMPurify if rendering user-uploaded text. */}
       <div
         className="contract-text-scroll"
-        dangerouslySetInnerHTML={{ __html: CONTRACT_HTML }}
+        dangerouslySetInnerHTML={{ __html: html }}
       />
       <div className="contract-text-legend">
         <div className="legend-chip">
@@ -514,7 +500,10 @@ export default function ResultPage() {
             <ExpertCard grade={result.grade} />
           </>
         ) : (
-          <ContractTextView />
+          <ContractTextView
+            contractName={result.contractName}
+            html={(result as any).contractHtml ?? ''}
+          />
         )}
 
         {/* Footer */}

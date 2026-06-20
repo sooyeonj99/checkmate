@@ -33,9 +33,43 @@ export interface AnalysisResult {
   analysisTime: string
   problemTags: ProblemTag[]
   clauses: Clause[]
+  contractHtml: string   // 계약서 원문 HTML (위험=hl-danger, 주의=hl-warn)
 }
 
 /* ── 1. 근로계약서 ──────────────────────────────────────── */
+const employmentHtml = `
+<p><strong>근로계약서</strong></p>
+<p>사용자 (주)테크스타트(이하 "회사")와 근로자 ○○○(이하 "근로자")는 아래와 같이 근로계약을 체결한다.</p>
+
+<p><strong>제1조 (근로계약 기간)</strong><br>근로계약 기간은 2026년 7월 1일부터 정함이 없는 기간으로 한다.</p>
+
+<p><strong>제2조 (업무 내용)</strong><br><span class="hl-warn">근로자는 회사가 지시하는 모든 업무를 성실히 수행하여야 한다.</span></p>
+
+<p><strong>제3조 (임금)</strong><br><span class="hl-warn">입사 후 3개월은 수습 기간으로 하며, 이 기간의 임금은 최저임금의 90%를 적용한다.</span> 수습 종료 후 연봉은 금 36,000,000원으로 하며, 매월 25일에 지급한다.</p>
+
+<p><strong>제4조 (근무 시간 및 임금)</strong><br>소정 근로시간은 1일 8시간, 주 40시간으로 한다. <span class="hl-danger">월 급여에는 연장·야간·휴일 근로수당이 포함되어 있으며, 실제 초과근무 시에도 별도 수당을 지급하지 아니한다.</span></p>
+
+<p><strong>제5조 (연차 휴가)</strong><br>연차 유급휴가는 근로기준법에 따라 부여한다. 1년 미만 근로자는 매월 1일의 유급휴가를 부여한다.</p>
+
+<p><strong>제6조 (복리후생)</strong><br>회사는 4대보험(국민연금, 건강보험, 고용보험, 산재보험)을 법령에 따라 가입하며, 식대 월 20만 원을 지급한다.</p>
+
+<p><strong>제7조 (취업규칙 준수)</strong><br>근로자는 회사의 취업규칙 및 제반 규정을 준수하여야 한다.</p>
+
+<p><strong>제8조 (개인정보 보호)</strong><br>근로자는 업무상 취득한 개인정보를 목적 외 용도로 이용하거나 제3자에게 제공하여서는 아니 된다.</p>
+
+<p><strong>제9조 (해고 및 퇴직)</strong><br>해고는 근로기준법이 정하는 절차에 따라 이루어지며, 근로자는 퇴직 30일 전까지 서면으로 통보하여야 한다.</p>
+
+<p><strong>제10조 (손해배상 예정)</strong><br><span class="hl-danger">근로자는 입사일로부터 1년 이내 퇴직 시 회사가 지출한 교육훈련비, 채용 비용 등 일체를 배상하여야 한다.</span></p>
+
+<p><strong>제11조 (경업금지 및 취업제한)</strong><br><span class="hl-danger">근로자는 퇴직 후 2년간 동종·유사 업종의 타 회사에 취업하거나 창업할 수 없으며, 위반 시 위약금을 지급한다.</span></p>
+
+<p><strong>제12조 (비밀 유지)</strong><br>근로자는 재직 중 및 퇴직 후 회사의 영업비밀 및 기술 정보를 제3자에게 누설하여서는 아니 된다.</p>
+
+<p style="margin-top:24px">위 계약 내용에 동의하여 아래에 서명(날인)한다.</p>
+<p>2026년 6월 15일</p>
+<p>사용자: (주)테크스타트 대표이사 ○○○ (인)<br>근로자: ○○○ (인)</p>
+`
+
 const employmentResult: AnalysisResult = {
   contractName: '(주)테크스타트 근로계약서',
   contractMeta: '사용자 (주)테크스타트 · 입사일 2026.07.01 · 정규직',
@@ -94,9 +128,42 @@ const employmentResult: AnalysisResult = {
       lawRef: '근로기준법 제17조 (근로조건의 명시) · 제23조',
     },
   ],
+  contractHtml: employmentHtml,
 }
 
 /* ── 2. 임대차계약서 (마포구) ───────────────────────────── */
+const leaseHtml = `
+<p><strong>주택 임대차계약서</strong></p>
+<p>임대인 ○○○(이하 "갑")과 임차인 ○○○(이하 "을")은 아래 주택에 대하여 임대차계약을 다음과 같이 체결한다.</p>
+
+<p><strong>【목적물】</strong><br>소재지: 서울특별시 마포구 합정동 ○○-○○<br>구조/용도: 철근콘크리트 / 주거용<br>면적: 전용 59㎡</p>
+
+<p><strong>제1조 (보증금 및 임대료)</strong><br>보증금: 금 오천만 원정(₩50,000,000)<br>월임대료: 금 팔십만 원정(₩800,000), 매월 5일 지급</p>
+
+<p><strong>제2조 (임대차 기간)</strong><br>임대차 기간은 2026년 7월 1일부터 2028년 6월 30일까지로 한다.</p>
+
+<p><strong>제3조 (계약의 목적)</strong><br>을은 임차 주택을 주거 목적으로만 사용하며, 갑의 동의 없이 용도를 변경할 수 없다.</p>
+
+<p><strong>제4조 (임대료 인상)</strong><br><span class="hl-warn">갱신 계약의 임대료는 임대인과 임차인이 협의하여 결정한다.</span></p>
+
+<p><strong>제5조 (보증금 반환)</strong><br>을은 계약 종료 시 임차 주택을 갑에게 인도하여야 한다. <span class="hl-danger">갑은 을의 퇴거 후 보증금을 반환한다. 단, 미납 임대료, 원상복구 비용 등을 공제할 수 있다.</span></p>
+
+<p><strong>제6조 (전대 금지)</strong><br><span class="hl-warn">을은 갑의 동의 없이 전대할 수 없으며, 위반 시 갑은 즉시 계약을 해지할 수 있다.</span></p>
+
+<p><strong>제7조 (수선 및 원상복구)</strong><br><span class="hl-warn">을은 계약 종료 시 자연 마모, 노후화로 인한 사항도 포함하여 입주 당시 상태로 원상복구하여야 한다.</span></p>
+
+<p><strong>제8조 (관리비)</strong><br>을은 월 관리비를 별도로 부담하며, 공과금(전기·수도·가스)은 을이 실비로 납부한다.</p>
+
+<p><strong>제9조 (계약 해지)</strong><br>갑 또는 을이 본 계약을 위반한 경우 상대방은 계약을 해지할 수 있으며, 이 경우 손해배상 책임을 진다.</p>
+
+<p><strong>제10조 (분쟁 해결)</strong><br>본 계약과 관련한 분쟁은 임차 주택 소재지 관할 법원을 제1심 법원으로 한다.</p>
+
+<p><strong>제11조 (특약 사항)</strong><br>① 주차 1대 포함<br>② 반려동물 불가<br>③ 계약 만료 2개월 전 갱신 여부 통보</p>
+
+<p style="margin-top:24px">2026년 6월 10일</p>
+<p>임대인(갑): ○○○ (인)<br>임차인(을): ○○○ (인)<br>중개업자: ○○공인중개사 (인)</p>
+`
+
 const leaseResult: AnalysisResult = {
   contractName: '마포구 합정동 월세 임대차계약서',
   contractMeta: '임대인 ○○○ · 보증금 5,000만 원 · 월세 80만 원 · 계약 기간 2026.07 – 2028.06',
@@ -145,9 +212,40 @@ const leaseResult: AnalysisResult = {
       lawRef: '민법 제629조 · 주택임대차보호법 제3조',
     },
   ],
+  contractHtml: leaseHtml,
 }
 
 /* ── 3. 프리랜서 계약서 ─────────────────────────────────── */
+const freelanceHtml = `
+<p><strong>영상 편집 용역 계약서</strong></p>
+<p>발주사 ○○미디어(이하 "발주사")와 수급인 ○○○(이하 "수급인")은 아래와 같이 영상 편집 용역 계약을 체결한다.</p>
+
+<p><strong>제1조 (용역의 내용)</strong><br>수급인은 발주사가 제공하는 영상 소스를 편집하여 최종 결과물을 납품한다.<br>납품 형식: MP4 (1920×1080, H.264)<br>계약 기간: 2026년 9월 1일 ~ 2026년 8월 31일</p>
+
+<p><strong>제2조 (납품 일정)</strong><br>수급인은 발주사의 요청일로부터 7영업일 이내에 초안을 납품한다.</p>
+
+<p><strong>제3조 (용역 대금)</strong><br>용역 대금은 건당 금 ○○○만 원으로 한다.<br><span class="hl-danger">용역 대금은 납품 후 발주사의 내부 결재 완료 시점으로부터 60일 이내에 지급한다. 단, 발주사의 내부 사정에 따라 지급이 지연될 수 있다.</span></p>
+
+<p><strong>제4조 (수정 요청)</strong><br><span class="hl-warn">발주사는 납품 후 최종 승인 전까지 수정을 요청할 수 있으며, 수급인은 이에 응해야 한다.</span></p>
+
+<p><strong>제5조 (검수 및 승인)</strong><br>발주사는 납품일로부터 5영업일 이내에 검수 결과를 통보한다. 기간 내 통보가 없는 경우 승인된 것으로 본다.</p>
+
+<p><strong>제6조 (하자 보증)</strong><br>수급인은 납품일로부터 30일간 결함에 대해 무상으로 수정한다.</p>
+
+<p><strong>제7조 (저작권)</strong><br><span class="hl-danger">본 계약에 따라 제작된 모든 결과물의 저작권 일체는 납품 즉시 발주사에 무상으로 귀속되며, 수급인은 어떠한 권리도 주장할 수 없다.</span></p>
+
+<p><strong>제8조 (비밀 유지)</strong><br><span class="hl-warn">수급인은 본 계약과 관련하여 알게 된 모든 정보를 영구적으로 제3자에게 공개하거나 이용할 수 없다.</span></p>
+
+<p><strong>제9조 (손해배상)</strong><br>수급인의 귀책사유로 납기를 지연한 경우 지연 1일당 용역 대금의 0.1%를 손해배상액으로 지급한다.</p>
+
+<p><strong>제10조 (계약 해지)</strong><br><span class="hl-danger">발주사는 사업 내부 사정에 의해 언제든지 서면 통보로 계약을 해지할 수 있으며, 이 경우 기납품 부분 대금만을 지급한다.</span></p>
+
+<p><strong>제11조 (분쟁 해결)</strong><br>본 계약과 관련한 분쟁은 발주사 본사 소재지 관할 법원을 제1심 법원으로 한다.</p>
+
+<p style="margin-top:24px">2026년 6월 8일</p>
+<p>발주사: ○○미디어 대표 ○○○ (인)<br>수급인: ○○○ (인)</p>
+`
+
 const freelanceResult: AnalysisResult = {
   contractName: '영상 편집 프리랜서 계약서',
   contractMeta: '발주사 ○○미디어 · 계약 기간 2026.09.01 – 2026.08.31',
@@ -206,9 +304,40 @@ const freelanceResult: AnalysisResult = {
       lawRef: '부정경쟁방지법 제2조 · 민법 제103조',
     },
   ],
+  contractHtml: freelanceHtml,
 }
 
-/* ── 4. 렌탈 서비스 계약서 (ResultPage RESULT와 동일) ──── */
+/* ── 4. 렌탈 서비스 계약서 ──────────────────────────────── */
+const rentalHtml = `
+<p><strong>정수기 렌탈 서비스 이용계약서</strong></p>
+<p>공급사 ○○렌탈(이하 "회사")과 소비자 ○○○(이하 "고객")은 아래와 같이 렌탈 서비스 이용계약을 체결한다.</p>
+
+<p><strong>제1조 (목적)</strong><br>본 계약은 회사가 고객에게 정수기를 렌탈하고 관련 서비스를 제공함에 있어 필요한 사항을 정함을 목적으로 한다.</p>
+
+<p><strong>제2조 (렌탈 제품)</strong><br>렌탈 제품: ○○정수기 ○○ 모델<br>설치 주소: 고객 지정 주소<br>설치 예정일: 계약 체결 후 14일 이내</p>
+
+<p><strong>제3조 (약정 기간)</strong><br><span class="hl-warn">약정 기간은 계약 체결일로부터 60개월로 하며, 계약 기간 동안 렌탈료가 부과된다.</span></p>
+
+<p><strong>제4조 (렌탈료 납부)</strong><br>월 렌탈료: 39,900원<br>납부 방법: 자동이체(매월 지정일)</p>
+
+<p><strong>제5조 (렌탈료 조정)</strong><br><span class="hl-danger">회사는 소비자 물가지수 변동 및 원자재·서비스 비용 상승에 따라 렌탈료를 조정할 수 있으며, 변경 30일 전 고지한다.</span></p>
+
+<p><strong>제6조 (관리 서비스)</strong><br>회사는 연 2회 정기점검 및 필터 교체 서비스를 무상으로 제공한다. 방문 일정은 사전 협의 후 진행한다.</p>
+
+<p><strong>제7조 (제품 교체)</strong><br><span class="hl-warn">회사는 서비스 운영상 필요한 경우 동급 사양의 제품으로 교체할 수 있으며, 소비자는 이에 동의한다.</span></p>
+
+<p><strong>제8조 (자동 연장)</strong><br><span class="hl-danger">계약 만료일 45일 전까지 서면으로 해지 의사를 통보하지 않을 경우, 동일 조건으로 1년간 자동 연장된다.</span></p>
+
+<p><strong>제9조 (중도 해지)</strong><br><span class="hl-danger">계약 기간 중 중도 해지 시 잔여 약정 렌탈료의 40%에 해당하는 금액을 위약금으로 납부하여야 한다.</span></p>
+
+<p><strong>제10조 (소유권)</strong><br>렌탈 기간 중 제품의 소유권은 회사에 있으며, 고객은 선량한 관리자의 주의 의무로 제품을 관리하여야 한다.</p>
+
+<p><strong>제11조 (소유권 이전)</strong><br><span class="hl-warn">약정 기간 만료 후 소비자가 소유권 이전을 신청하고 이전 수수료를 납부한 경우에 한하여 소유권이 이전된다.</span></p>
+
+<p style="margin-top:24px">2026년 6월 5일</p>
+<p>공급사: ○○렌탈 대표 ○○○ (인)<br>소비자: ○○○ (인)</p>
+`
+
 const rentalResult: AnalysisResult = {
   contractName: '정수기 렌탈 서비스 이용계약서',
   contractMeta: '공급사 ○○렌탈 · 월 렌탈료 39,900원 · 약정 60개월',
@@ -275,9 +404,38 @@ const rentalResult: AnalysisResult = {
       lawRef: '소비자분쟁해결기준 (가전제품 렌탈 분야)',
     },
   ],
+  contractHtml: rentalHtml,
 }
 
 /* ── 5. Adobe Creative Cloud 구독 약관 ─────────────────── */
+const adobeHtml = `
+<p><strong>Adobe Creative Cloud 구독 서비스 이용약관 (요약)</strong></p>
+<p>본 약관은 Adobe Inc.(이하 "Adobe")와 이용자(이하 "귀하") 간의 Adobe Creative Cloud 서비스 이용에 관한 조건을 규정합니다.</p>
+
+<p><strong>제1조 (서비스 내용)</strong><br>Adobe Creative Cloud 연간 플랜(월 결제)은 Photoshop, Illustrator, Premiere Pro 등 20개 이상의 앱 및 100GB 클라우드 스토리지를 포함합니다.</p>
+
+<p><strong>제2조 (구독료 및 결제)</strong><br>월 구독료: ₩62,000/월(VAT 포함)<br>결제 방식: 등록된 결제 수단으로 매월 자동 청구<br>연간 약정 총액: ₩744,000</p>
+
+<p><strong>제3조 (약관 변경)</strong><br><span class="hl-warn">Adobe는 본 약관을 수정할 권리가 있으며, 변경 사항은 Adobe.com에 게시되며 게시 30일 후 효력이 발생합니다. 서비스 계속 이용 시 변경 약관에 동의한 것으로 봅니다.</span></p>
+
+<p><strong>제4조 (라이선스)</strong><br>Adobe는 구독 기간 동안 서비스를 사용할 수 있는 비독점적, 양도불가 라이선스를 부여합니다. 구독 종료 시 라이선스는 즉시 소멸합니다.</p>
+
+<p><strong>제5조 (콘텐츠 소유권)</strong><br>귀하가 Adobe 서비스로 제작한 콘텐츠의 소유권은 귀하에게 있습니다. Adobe는 서비스 개선 목적 이외에 귀하의 콘텐츠를 사용하지 않습니다.</p>
+
+<p><strong>제6조 (개인정보)</strong><br>Adobe의 개인정보처리방침에 따라 귀하의 정보가 수집·이용됩니다. 자세한 사항은 Adobe 개인정보처리방침을 참조하세요.</p>
+
+<p><strong>제7조 (서비스 변경 및 중단)</strong><br>Adobe는 서비스의 기능을 변경하거나 특정 기능을 종료할 수 있으며, 이 경우 사전에 고지합니다.</p>
+
+<p><strong>제8조 (조기 종료 수수료)</strong><br><span class="hl-warn">연간 약정 플랜을 구매일로부터 14일 이후 취소하는 경우, 잔여 약정 기간 요금의 50%에 해당하는 조기 종료 수수료가 부과됩니다.</span></p>
+
+<p><strong>제9조 (책임 제한)</strong><br>Adobe는 서비스 이용으로 인한 간접적, 부수적 손해에 대해 책임을 지지 않습니다. 최대 책임 금액은 최근 12개월간 납부한 구독료를 초과하지 않습니다.</p>
+
+<p><strong>제10조 (준거법)</strong><br>본 약관은 미국 캘리포니아 주 법을 준거법으로 하며, 분쟁은 캘리포니아 산타클라라 카운티 법원에서 해결합니다.</p>
+
+<p style="margin-top:24px">본 서비스를 이용함으로써 귀하는 위 약관에 동의한 것으로 간주됩니다.</p>
+<p>Adobe Inc.<br>345 Park Avenue, San Jose, CA 95110-2704, USA</p>
+`
+
 const adobeResult: AnalysisResult = {
   contractName: 'Adobe Creative Cloud 구독 약관',
   contractMeta: 'Adobe Inc. · 연간 구독 · 월 결제',
@@ -309,6 +467,7 @@ const adobeResult: AnalysisResult = {
       lawRef: '약관규제법 제3조 (약관의 명시·설명의무) · 제6조',
     },
   ],
+  contractHtml: adobeHtml,
 }
 
 /* ── 6. 사무실 임대차 재계약서 ─────────────────────────── */
@@ -335,6 +494,35 @@ const officeLeaseResult: AnalysisResult = {
       lawRef: '상가건물 임대차보호법 제10조의8 · 민법 제618조',
     },
   ],
+  contractHtml: `
+<p><strong>상가 임대차 재계약서</strong></p>
+<p>임대인 ○○빌딩 주식회사(이하 "갑")와 임차인 ○○○(이하 "을")은 아래와 같이 임대차 재계약을 체결한다.</p>
+
+<p><strong>제1조 (목적물 표시)</strong><br>소재지: 서울특별시 ○○구 ○○동 ○○빌딩 4층 401호<br>면적: 전용 82.5㎡(약 25평)</p>
+
+<p><strong>제2조 (보증금 및 임대료)</strong><br>보증금: 금 오천만 원정(₩50,000,000)<br>월임대료: 금 백오십만 원정(₩1,500,000), 매월 10일 지급</p>
+
+<p><strong>제3조 (임대차 기간)</strong><br>2026년 6월 1일부터 2028년 5월 31일까지 (24개월)</p>
+
+<p><strong>제4조 (사용 목적)</strong><br>을은 임차 목적물을 사무용도로만 사용하며, 갑의 서면 동의 없이 용도를 변경할 수 없다.</p>
+
+<p><strong>제5조 (관리비)</strong><br><span class="hl-warn">을은 월 임대료 외에 공동 관리비 일체를 별도로 납부하여야 하며, 관리비는 실비 기준으로 산정한다.</span></p>
+
+<p><strong>제6조 (원상복구)</strong><br>을은 계약 종료 시 임차 목적물을 계약 당시 상태로 원상복구하여야 한다. 단, 통상의 사용에 따른 마모는 제외한다.</p>
+
+<p><strong>제7조 (수선 의무)</strong><br>소규모 수선(30만 원 이하)은 을이 부담하며, 대규모 수선은 갑이 부담한다.</p>
+
+<p><strong>제8조 (전대 및 양도 금지)</strong><br>을은 갑의 서면 동의 없이 임차권을 양도하거나 임차 목적물을 전대할 수 없다.</p>
+
+<p><strong>제9조 (계약 갱신)</strong><br>계약 만료 3개월 전까지 갱신 여부를 서면 통보한다. 상가건물 임대차보호법에 따라 을은 계약갱신요구권을 행사할 수 있다.</p>
+
+<p><strong>제10조 (보증금 반환)</strong><br>갑은 계약 종료 및 을의 명도 완료 후 7일 이내에 보증금을 반환한다.</p>
+
+<p><strong>제11조 (특약 사항)</strong><br>① 주차 2대 무상 제공<br>② 임대 목적물 내 시설물 현황은 별첨 목록 기준<br>③ 임대료 인상은 상가건물 임대차보호법이 정하는 범위 내로 한정</p>
+
+<p style="margin-top:24px">2026년 5월 20일</p>
+<p>임대인(갑): ○○빌딩 주식회사 대표이사 ○○○ (인)<br>임차인(을): ○○○ (인)</p>
+`,
 }
 
 /* ── 결과 맵 (계약 ID → 분석 결과) ─────────────────────── */
