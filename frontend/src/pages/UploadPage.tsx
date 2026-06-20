@@ -4,7 +4,7 @@ import Navbar from '../components/common/Navbar'
 import api from '../services/api'
 
 /* ── Types ─────────────────────────────────────────── */
-type ContractType = 'employment' | 'lease' | 'freelance' | 'subscription' | 'other'
+type ContractType = 'employment' | 'lease' | 'freelance' | 'subscription' | 'rental' | 'other'
 
 interface FileInfo {
   file: File
@@ -18,6 +18,7 @@ const CONTRACT_TYPES: { id: ContractType; emoji: string; label: string; wide?: b
   { id: 'lease',        emoji: '🏠', label: '임대차계약서' },
   { id: 'freelance',    emoji: '💻', label: '프리랜서 계약서' },
   { id: 'subscription', emoji: '📋', label: '구독·이용약관' },
+  { id: 'rental',       emoji: '🔒', label: '렌탈·약정계약' },
   { id: 'other',        emoji: '📝', label: '기타 계약서', wide: true },
 ]
 
