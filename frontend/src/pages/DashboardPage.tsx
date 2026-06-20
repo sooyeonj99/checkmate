@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { MOCK_RESULT_MAP } from '../data/mockResults'
 
 /* ── Types ──────────────────────────────────────────── */
 type RiskLevel = 'danger' | 'warn' | 'safe'
@@ -25,7 +26,7 @@ const MOCK_CONTRACTS: Contract[] = [
     name: '(주)테크스타트 근로계약서',
     type: '근로계약서',
     typeEmoji: '👷',
-    score: 28,
+    score: 72,
     risk: 'danger',
     expiryDate: '2026-07-20',
     daysLeft: 30,
@@ -37,7 +38,7 @@ const MOCK_CONTRACTS: Contract[] = [
     name: '마포구 합정동 월세 임대차계약서',
     type: '임대차계약서',
     typeEmoji: '🏠',
-    score: 61,
+    score: 54,
     risk: 'warn',
     expiryDate: '2028-06-30',
     daysLeft: 740,
@@ -49,7 +50,7 @@ const MOCK_CONTRACTS: Contract[] = [
     name: '영상 편집 프리랜서 계약서',
     type: '프리랜서 계약서',
     typeEmoji: '💻',
-    score: 22,
+    score: 78,
     risk: 'danger',
     expiryDate: '2026-08-31',
     daysLeft: 72,
@@ -73,7 +74,7 @@ const MOCK_CONTRACTS: Contract[] = [
     name: 'Adobe Creative Cloud 구독 약관',
     type: '구독·이용약관',
     typeEmoji: '📋',
-    score: 82,
+    score: 18,
     risk: 'safe',
     expiryDate: '2027-01-05',
     daysLeft: 199,
@@ -85,7 +86,7 @@ const MOCK_CONTRACTS: Contract[] = [
     name: '사무실 임대차 재계약서',
     type: '임대차계약서',
     typeEmoji: '🏠',
-    score: 77,
+    score: 23,
     risk: 'safe',
     expiryDate: '2028-06-01',
     daysLeft: 711,
@@ -96,8 +97,8 @@ const MOCK_CONTRACTS: Contract[] = [
 
 /* ── Risk helpers ───────────────────────────────────── */
 function scoreColor(score: number) {
-  if (score < 40) return 'var(--risk-high)'
-  if (score < 65) return 'var(--risk-mid)'
+  if (score >= 61) return 'var(--risk-high)'
+  if (score >= 31) return 'var(--risk-mid)'
   return 'var(--risk-safe)'
 }
 
@@ -376,7 +377,7 @@ function ContractRow({ contract: c }: { contract: Contract }) {
       <td className="dash-cell-action">
         <button
           className="dash-view-btn"
-          onClick={() => navigate('/result')}
+          onClick={() => navigate('/result', { state: { directResult: MOCK_RESULT_MAP[c.id] } })}
         >
           결과 보기
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">

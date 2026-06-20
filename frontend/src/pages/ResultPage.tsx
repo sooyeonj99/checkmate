@@ -444,9 +444,10 @@ function ContractTextView() {
 /* ── Page ──────────────────────────────────────────── */
 export default function ResultPage() {
   const location = useLocation()
+  const directResult = (location.state as any)?.directResult as AnalysisResult | undefined
   const rawResult = (location.state as any)?.analysisResult
-  const isMock = (location.state as any)?.isMock || !rawResult
-  const result: AnalysisResult = rawResult ? transformApiResult(rawResult) : RESULT
+  const isMock = (location.state as any)?.isMock || (!directResult && !rawResult)
+  const result: AnalysisResult = directResult ?? (rawResult ? transformApiResult(rawResult) : RESULT)
 
   const [activeTab, setActiveTab] = useState<'result' | 'contract'>('result')
 
