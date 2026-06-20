@@ -28,9 +28,19 @@ export default function Navbar() {
           <li><a href="#features">서비스 소개</a></li>
           <li><a href="#how-it-works">이용방법</a></li>
           <li><a href="#targets">대상</a></li>
+          <li><Link to="/dashboard">대시보드</Link></li>
         </ul>
 
-        <button className="navbar-cta" onClick={() => navigate('/upload')}>무료 체험하기</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Link to="/dashboard" className="navbar-dashboard-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+              <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+            </svg>
+            <span>대시보드</span>
+          </Link>
+          <button className="navbar-cta" onClick={() => navigate('/upload')}>무료 체험하기</button>
+        </div>
       </div>
     </nav>
   )
