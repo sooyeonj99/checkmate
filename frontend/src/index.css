@@ -1557,6 +1557,8 @@ img, svg {
   align-items: center;
   gap: 16px;
   margin-bottom: 24px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .file-type-icon {
@@ -3525,11 +3527,34 @@ img, svg {
 @media (max-width: 480px) {
   .dash-summary-grid { grid-template-columns: 1fr 1fr; }
   .dash-summary-value { font-size: 28px; }
-  /* 위험도 점수 컬럼 숨김 */
+
+  /* 위험도·만료일 컬럼 숨김 (480px 이하) */
   .dash-table th:nth-child(3),
   .dash-table td:nth-child(3) { display: none; }
-  .dash-table td, .dash-table th { padding: 12px 10px; }
-  .dash-view-btn { padding: 7px 10px; font-size: 11px; }
+
+  /* 고정 테이블 레이아웃: 이름이 white-space:nowrap 이어도 overflow 발생 안 함 */
+  .dash-table { table-layout: fixed; width: 100%; }
+
+  /* 상태 컬럼 고정폭 */
+  .dash-table th:nth-child(5),
+  .dash-table td:nth-child(5) { width: 68px; }
+
+  /* 결과 보기 컬럼 고정폭 — 아이콘만 표시 */
+  .dash-table th:nth-child(6),
+  .dash-table td:nth-child(6) { width: 44px; }
+  .dash-view-btn-text { display: none; }
+  .dash-view-btn { padding: 7px 8px; font-size: 11px; }
+
+  /* 상태 배지 축소 */
+  .dash-status-badge { padding: 4px 8px; font-size: 11px; gap: 3px; }
+
+  /* 이름 컬럼 내용 말줄임 */
+  .dash-table td, .dash-table th { padding: 12px 8px; }
+  .dash-cell-name { gap: 8px; }
+  .dash-contract-emoji { font-size: 18px; }
+
+  /* 파일 상태 배지 숨김 (업로드 파일 미리보기) */
+  .file-status { display: none; }
 }
 
 /* ════════════════════════════════════════════════════════

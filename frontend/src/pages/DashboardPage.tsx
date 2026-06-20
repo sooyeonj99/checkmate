@@ -379,7 +379,7 @@ function ContractRow({ contract: c }: { contract: Contract }) {
           className="dash-view-btn"
           onClick={() => navigate('/result', { state: { directResult: MOCK_RESULT_MAP[c.id] } })}
         >
-          결과 보기
+          <span className="dash-view-btn-text">결과 보기</span>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
             <path d="M5 12h14M13 6l6 6-6 6"/>
           </svg>
