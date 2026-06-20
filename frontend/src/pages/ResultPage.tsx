@@ -372,10 +372,9 @@ function ClauseList({ clauses }: { clauses: Clause[] }) {
 function ExpertCard({ grade }: { grade: RiskLevel }) {
   const isHigh = grade === 'danger'
   const links = [
-    { icon: '🏛', label: '대한법률구조공단 (무료)', href: 'https://www.klac.or.kr' },
+    { icon: '🏛', label: '대한법률구조공단', href: 'https://www.klac.or.kr' },
     { icon: '📞', label: '법률상담 132', href: 'tel:132' },
     { icon: '📋', label: '공정거래위원회 약관심사', href: 'https://www.ftc.go.kr' },
-    { icon: '👥', label: '프리랜서유니온 법률지원', href: '#' },
   ]
 
   return (
@@ -384,7 +383,7 @@ function ExpertCard({ grade }: { grade: RiskLevel }) {
         {isHigh ? '⚠ 이 계약서는 위험도가 높습니다' : '이 계약서는 주의가 필요합니다'}
       </div>
       <p className="expert-desc">
-        체결 전 전문가 검토를 권장합니다. 아래 기관에서 무료 또는 저렴한 법률 상담을 받을 수 있습니다.
+        계약서 관련 도움을 받을 수 있는 공공 기관 정보입니다.
       </p>
       <div className="expert-chips">
         {links.map(({ icon, label, href }) => (
@@ -511,7 +510,7 @@ export default function ResultPage() {
             <div className="section-eyebrow" style={{ marginTop: 32 }}>위험 조항 상세 분석</div>
             <ClauseList clauses={result.clauses} />
 
-            <div className="section-eyebrow">전문가 연계</div>
+            <div className="section-eyebrow">관련 기관 정보</div>
             <ExpertCard grade={result.grade} />
           </>
         ) : (
