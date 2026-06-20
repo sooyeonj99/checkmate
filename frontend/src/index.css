@@ -1648,6 +1648,8 @@ img, svg {
   gap: 20px;
   position: sticky;
   top: 88px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .panel-card {
@@ -1655,6 +1657,9 @@ img, svg {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 24px;
+  overflow: hidden;
+  min-width: 0;
+  width: 100%;
 }
 
 .panel-card-title {
@@ -1694,6 +1699,9 @@ img, svg {
   cursor: pointer;
   transition: border-color 0.2s, background 0.2s, transform 0.15s;
   text-align: center;
+  overflow: hidden;
+  min-width: 0;
+  width: 100%;
 }
 
 .contract-type-btn:hover {
@@ -1720,6 +1728,11 @@ img, svg {
   color: var(--text-secondary);
   transition: color 0.2s;
   line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  width: 100%;
 }
 
 .contract-type-btn.wide {
@@ -3315,7 +3328,7 @@ img, svg {
   display: flex;
   align-items: center;
   gap: 12px;
-  min-width: 200px;
+  min-width: 0;
 }
 
 .dash-contract-emoji {
@@ -3329,6 +3342,10 @@ img, svg {
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
 }
 
 .dash-contract-date {
@@ -3494,13 +3511,25 @@ img, svg {
   .dash-new-btn-lg { width: 100%; justify-content: center; }
   .dash-toolbar { flex-direction: column; align-items: flex-start; }
   .dash-filter-tabs { flex-wrap: wrap; }
+  /* 모바일: 유형 컬럼 숨김 */
   .dash-table th:nth-child(2),
   .dash-table td:nth-child(2) { display: none; }
+  /* 모바일: 만료일 컬럼 숨김 */
+  .dash-table th:nth-child(4),
+  .dash-table td:nth-child(4) { display: none; }
+  .dash-table td, .dash-table th { padding: 14px 12px; }
+  .dash-contract-name { font-size: 13px; }
+  .dash-contract-date { display: none; }
 }
 
 @media (max-width: 480px) {
   .dash-summary-grid { grid-template-columns: 1fr 1fr; }
   .dash-summary-value { font-size: 28px; }
+  /* 위험도 점수 컬럼 숨김 */
+  .dash-table th:nth-child(3),
+  .dash-table td:nth-child(3) { display: none; }
+  .dash-table td, .dash-table th { padding: 12px 10px; }
+  .dash-view-btn { padding: 7px 10px; font-size: 11px; }
 }
 
 /* ════════════════════════════════════════════════════════
@@ -3629,7 +3658,5 @@ img, svg {
 
 /* ── 대시보드 추가 ────────────────────────────────────── */
 @media (max-width: 480px) {
-  .dash-table th:nth-child(3),
-  .dash-table td:nth-child(3) { display: none; }
   .dash-summary-card { padding: 16px; }
 }
