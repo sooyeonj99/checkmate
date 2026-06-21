@@ -24,15 +24,20 @@ interface SubscriptionDetail {
   name: string
   typeEmoji: string
   type: string
+  billingType: 'monthly' | 'annual'
   startDate: string
   endDate: string
-  monthlyFee: number
-  monthlyUsage: number
   usedMonths: number
   remainingMonths: number
   totalPaid: number
-  terminationPenalty: number
   status: ContractStatus
+  // 월 결제 전용
+  monthlyFee?: number
+  nextBillingDate?: string
+  // 년 결제 전용
+  annualFee?: number
+  monthlyUsage?: number
+  terminationPenalty?: number
 }
 
 /* ── Mock data ──────────────────────────────────────── */
@@ -94,30 +99,31 @@ const SUBSCRIPTION_DETAILS: SubscriptionDetail[] = [
     name: '정수기 렌탈 서비스',
     typeEmoji: '🔒',
     type: '렌탈·약정계약',
+    billingType: 'monthly',
     startDate: '2021-06-20',
     endDate: '2031-06-20',
-    monthlyFee: 35000,
-    monthlyUsage: 1,
     usedMonths: 60,
     remainingMonths: 60,
     totalPaid: 2100000,
-    terminationPenalty: 1050000,
     status: 'danger',
+    monthlyFee: 35000,
+    nextBillingDate: '매월 20일',
   },
   {
     id: '5',
     name: 'Adobe Creative Cloud',
     typeEmoji: '📋',
     type: '구독·이용약관',
+    billingType: 'annual',
     startDate: '2026-01-05',
     endDate: '2027-01-05',
-    monthlyFee: 65000,
-    monthlyUsage: 28,
     usedMonths: 5,
     remainingMonths: 7,
     totalPaid: 325000,
-    terminationPenalty: 227500,
     status: 'safe',
+    annualFee: 780000,
+    monthlyUsage: 28,
+    terminationPenalty: 227500,
   },
 ]
 
@@ -246,6 +252,21 @@ export default function DashboardPage() {
             <SummaryCard icon="⏰" label="만료 임박" value={expiringContracts.length} sub="30일 이내 만료" accent="warn" />
           </div>
 
+          {/* ── Subscription/Rental section ── */}
+          <div className="sub-detail-section">
+            <div className="sub-detail-section-header">
+              <div>
+                <h2 className="dash-title" style={{ fontSize: 18, marginBottom: 4 }}>구독·렌탈 현황</h2>
+                <p className="dash-subtitle" style={{ fontSize: 13 }}>장기 약정 계약의 이용 현황과 위약금을 한눈에 파악하세요</p>
+              </div>
+            </div>
+            <div className="sub-detail-grid">
+              {SUBSCRIPTION_DETAILS.map((s) => (
+                <SubscriptionCard key={s.id} data={s} />
+              ))}
+            </div>
+          </div>
+
           {/* ── Expiry alert banner ── */}
           {!dismissedBanner && expiringContracts.length > 0 && (
             <div className="dash-alert-banner">
@@ -332,21 +353,6 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* ── Subscription/Rental section ── */}
-          <div className="sub-detail-section">
-            <div className="sub-detail-section-header">
-              <div>
-                <h2 className="dash-title" style={{ fontSize: 18, marginBottom: 4 }}>구독·렌탈 현황</h2>
-                <p className="dash-subtitle" style={{ fontSize: 13 }}>장기 약정 계약의 이용 현황과 위약금을 한눈에 파악하세요</p>
-              </div>
-            </div>
-            <div className="sub-detail-grid">
-              {SUBSCRIPTION_DETAILS.map((s) => (
-                <SubscriptionCard key={s.id} data={s} />
-              ))}
-            </div>
-          </div>
-
         </div>
       </main>
     </div>
@@ -357,6 +363,21 @@ export default function DashboardPage() {
 function SubscriptionCard({ data: s }: { data: SubscriptionDetail }) {
   const fmt = (n: number) => n.toLocaleString('ko-KR') + '원'
   const statusLabel = s.status === 'danger' ? '⚠ 위험' : s.status === 'warn' ? '△ 주의' : '✓ 안전'
+  const isMonthly = s.billingType === 'monthly'
+
+  const metrics = isMonthly
+    ? [
+        { label: '1개월 요금', value: fmt(s.monthlyFee ?? 0) },
+        { label: '사용한 개월수', value: `${s.usedMonths}개월` },
+        { label: '현재까지 낸 요금', value: fmt(s.totalPaid), cls: 'accent' },
+        { label: '매월 결제일', value: s.nextBillingDate ?? '-' },
+      ]
+    : [
+        { label: '년 이용료', value: fmt(s.annualFee ?? 0) },
+        { label: '이번달 사용 횟수', value: `${s.monthlyUsage ?? 0}회` },
+        { label: '총 납부 금액', value: fmt(s.totalPaid), cls: 'accent' },
+        { label: '해지 위약금', value: fmt(s.terminationPenalty ?? 0), cls: 'danger' },
+      ]
 
   return (
     <div className="sub-detail-card">
@@ -366,7 +387,12 @@ function SubscriptionCard({ data: s }: { data: SubscriptionDetail }) {
           <div className="sub-detail-name">{s.name}</div>
           <div className="sub-detail-type">{s.type}</div>
         </div>
-        <span className={`dash-status-badge ${s.status}`}>{statusLabel}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+          <span className={`sub-billing-badge ${isMonthly ? 'monthly' : 'annual'}`}>
+            {isMonthly ? '월 결제' : '년 결제'}
+          </span>
+          <span className={`dash-status-badge ${s.status}`}>{statusLabel}</span>
+        </div>
       </div>
 
       <div className="sub-detail-period">
@@ -386,22 +412,12 @@ function SubscriptionCard({ data: s }: { data: SubscriptionDetail }) {
       </div>
 
       <div className="sub-detail-metrics">
-        <div className="sub-detail-metric">
-          <div className="sub-detail-metric-label">월 이용료</div>
-          <div className="sub-detail-metric-value">{fmt(s.monthlyFee)}</div>
-        </div>
-        <div className="sub-detail-metric">
-          <div className="sub-detail-metric-label">이번 달 사용</div>
-          <div className="sub-detail-metric-value">{s.monthlyUsage}회</div>
-        </div>
-        <div className="sub-detail-metric">
-          <div className="sub-detail-metric-label">총 납부 금액</div>
-          <div className="sub-detail-metric-value accent">{fmt(s.totalPaid)}</div>
-        </div>
-        <div className="sub-detail-metric">
-          <div className="sub-detail-metric-label">지금 해지 위약금</div>
-          <div className="sub-detail-metric-value danger">{fmt(s.terminationPenalty)}</div>
-        </div>
+        {metrics.map((m) => (
+          <div key={m.label} className="sub-detail-metric">
+            <div className="sub-detail-metric-label">{m.label}</div>
+            <div className={`sub-detail-metric-value${m.cls ? ` ${m.cls}` : ''}`}>{m.value}</div>
+          </div>
+        ))}
       </div>
     </div>
   )

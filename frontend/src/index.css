@@ -4018,6 +4018,23 @@ img, svg {
 .sub-detail-metric-value.accent { color: var(--accent-bright); }
 .sub-detail-metric-value.danger { color: var(--risk-high); }
 
+.sub-billing-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 99px;
+}
+.sub-billing-badge.monthly {
+  background: rgba(37,99,235,0.1);
+  color: var(--accent-bright);
+  border: 1px solid rgba(37,99,235,0.2);
+}
+.sub-billing-badge.annual {
+  background: rgba(139,92,246,0.1);
+  color: #7c3aed;
+  border: 1px solid rgba(139,92,246,0.2);
+}
+
 @media (max-width: 768px) {
   .sub-mgmt-inner { grid-template-columns: 1fr; gap: 32px; }
   .sub-detail-grid { grid-template-columns: 1fr; }
