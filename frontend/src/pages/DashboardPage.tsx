@@ -34,18 +34,6 @@ const MOCK_CONTRACTS: Contract[] = [
     analyzedAt: '2026-06-15',
   },
   {
-    id: '2',
-    name: '마포구 합정동 월세 임대차계약서',
-    type: '임대차계약서',
-    typeEmoji: '🏠',
-    score: 54,
-    risk: 'warn',
-    expiryDate: '2028-06-30',
-    daysLeft: 740,
-    status: 'warn',
-    analyzedAt: '2026-06-10',
-  },
-  {
     id: '3',
     name: '영상 편집 프리랜서 계약서',
     type: '프리랜서 계약서',
@@ -80,18 +68,6 @@ const MOCK_CONTRACTS: Contract[] = [
     daysLeft: 199,
     status: 'safe',
     analyzedAt: '2026-05-28',
-  },
-  {
-    id: '6',
-    name: '사무실 임대차 재계약서',
-    type: '임대차계약서',
-    typeEmoji: '🏠',
-    score: 23,
-    risk: 'safe',
-    expiryDate: '2028-06-01',
-    daysLeft: 711,
-    status: 'safe',
-    analyzedAt: '2026-05-20',
   },
 ]
 
