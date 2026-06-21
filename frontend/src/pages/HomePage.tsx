@@ -1,10 +1,8 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import Navbar from '../components/common/Navbar'
 
 /* ── Hero ─────────────────────────────────────────── */
 function HeroSection() {
-  const navigate = useNavigate()
-
   return (
     <section className="hero" id="upload">
       <div className="hero-bg" />
@@ -23,39 +21,7 @@ function HeroSection() {
           계약서를 업로드하면 30초 안에 위험 조항을 분석해 드립니다.
         </p>
 
-        {/* Analysis Result Preview Card */}
-        <div className="hero-result-preview" onClick={() => navigate('/upload')} style={{ cursor: 'pointer' }}>
-          <div className="hero-preview-eyebrow">AI 분석 결과 예시 · 클릭하면 바로 시작</div>
-          <div className="hero-preview-card">
-            <div className="hero-preview-top">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 22 }}>📋</span>
-                <div>
-                  <div className="hero-preview-filename">프리랜서_용역계약서.pdf</div>
-                  <div className="hero-preview-meta">분석 완료 · 30초 소요</div>
-                </div>
-              </div>
-              <div className="hero-preview-score-badge danger">
-                <span className="hero-preview-score-num">72</span>
-                <span className="hero-preview-score-label">위험</span>
-              </div>
-            </div>
-            <div className="hero-preview-bar-track">
-              <div className="hero-preview-bar-fill" style={{ width: '72%', background: 'var(--risk-high)' }} />
-            </div>
-            <div className="hero-preview-tags">
-              <span className="hero-preview-tag danger">⚠ 포괄임금제</span>
-              <span className="hero-preview-tag danger">⚠ 경업금지 과도</span>
-              <span className="hero-preview-tag warn">△ 일방적 계약변경</span>
-              <span className="hero-preview-tag safe">✓ 기간 조항 안전</span>
-            </div>
-            <div className="hero-preview-footer">
-              ✨ AI 개선 제안 3건 포함 · 법적 근거 제시
-            </div>
-          </div>
-        </div>
-
-        <div className="hero-actions">
+        <div className="hero-actions hero-actions-lg">
           <Link to="/upload" className="btn-primary">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>

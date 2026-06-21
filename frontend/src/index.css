@@ -294,6 +294,18 @@ img, svg {
   flex-wrap: wrap;
   margin-bottom: 64px;
 }
+.hero-actions-lg .btn-primary,
+.hero-actions-lg .btn-ghost {
+  padding: 18px 44px;
+  font-size: 17px;
+  border-radius: var(--radius-lg);
+  gap: 10px;
+}
+.hero-actions-lg .btn-primary svg,
+.hero-actions-lg .btn-ghost svg {
+  width: 20px;
+  height: 20px;
+}
 
 .hero-stats {
   display: flex;
