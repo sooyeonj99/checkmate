@@ -396,18 +396,20 @@ function SubscriptionCard({ data: s }: { data: SubscriptionDetail }) {
       </div>
 
       <div className="sub-detail-period">
+        <div className="sub-detail-period-dates">
+          <span>{s.startDate}</span>
+          <span>{s.endDate}</span>
+        </div>
         <span className="sub-detail-period-bar">
           <span
             className="sub-detail-period-fill"
             style={{ width: `${(s.usedMonths / (s.usedMonths + s.remainingMonths)) * 100}%` }}
           />
         </span>
-        <div className="sub-detail-period-labels">
-          <span>{s.startDate}</span>
-          <span style={{ color: 'var(--text-muted)' }}>
-            이용 {s.usedMonths}개월 / 잔여 {s.remainingMonths}개월
-          </span>
-          <span>{s.endDate}</span>
+        <div className="sub-detail-period-info">
+          <span>이용 <strong>{s.usedMonths}개월</strong></span>
+          <span className="sub-detail-period-divider" />
+          <span>잔여 <strong>{s.remainingMonths}개월</strong></span>
         </div>
       </div>
 
