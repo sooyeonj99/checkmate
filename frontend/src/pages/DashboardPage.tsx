@@ -19,6 +19,22 @@ interface Contract {
   analyzedAt: string
 }
 
+interface SubscriptionDetail {
+  id: string
+  name: string
+  typeEmoji: string
+  type: string
+  startDate: string
+  endDate: string
+  monthlyFee: number
+  monthlyUsage: number
+  usedMonths: number
+  remainingMonths: number
+  totalPaid: number
+  terminationPenalty: number
+  status: ContractStatus
+}
+
 /* ── Mock data ──────────────────────────────────────── */
 const MOCK_CONTRACTS: Contract[] = [
   {
@@ -68,6 +84,40 @@ const MOCK_CONTRACTS: Contract[] = [
     daysLeft: 199,
     status: 'safe',
     analyzedAt: '2026-05-28',
+  },
+]
+
+/* ── Subscription mock data ─────────────────────────── */
+const SUBSCRIPTION_DETAILS: SubscriptionDetail[] = [
+  {
+    id: '4',
+    name: '정수기 렌탈 서비스',
+    typeEmoji: '🔒',
+    type: '렌탈·약정계약',
+    startDate: '2021-06-20',
+    endDate: '2031-06-20',
+    monthlyFee: 35000,
+    monthlyUsage: 1,
+    usedMonths: 60,
+    remainingMonths: 60,
+    totalPaid: 2100000,
+    terminationPenalty: 1050000,
+    status: 'danger',
+  },
+  {
+    id: '5',
+    name: 'Adobe Creative Cloud',
+    typeEmoji: '📋',
+    type: '구독·이용약관',
+    startDate: '2026-01-05',
+    endDate: '2027-01-05',
+    monthlyFee: 65000,
+    monthlyUsage: 28,
+    usedMonths: 5,
+    remainingMonths: 7,
+    totalPaid: 325000,
+    terminationPenalty: 227500,
+    status: 'safe',
   },
 ]
 
@@ -282,8 +332,77 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          {/* ── Subscription/Rental section ── */}
+          <div className="sub-detail-section">
+            <div className="sub-detail-section-header">
+              <div>
+                <h2 className="dash-title" style={{ fontSize: 18, marginBottom: 4 }}>구독·렌탈 현황</h2>
+                <p className="dash-subtitle" style={{ fontSize: 13 }}>장기 약정 계약의 이용 현황과 위약금을 한눈에 파악하세요</p>
+              </div>
+            </div>
+            <div className="sub-detail-grid">
+              {SUBSCRIPTION_DETAILS.map((s) => (
+                <SubscriptionCard key={s.id} data={s} />
+              ))}
+            </div>
+          </div>
+
         </div>
       </main>
+    </div>
+  )
+}
+
+/* ── Subscription card ──────────────────────────────── */
+function SubscriptionCard({ data: s }: { data: SubscriptionDetail }) {
+  const fmt = (n: number) => n.toLocaleString('ko-KR') + '원'
+  const statusLabel = s.status === 'danger' ? '⚠ 위험' : s.status === 'warn' ? '△ 주의' : '✓ 안전'
+
+  return (
+    <div className="sub-detail-card">
+      <div className="sub-detail-header">
+        <span style={{ fontSize: 22 }}>{s.typeEmoji}</span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="sub-detail-name">{s.name}</div>
+          <div className="sub-detail-type">{s.type}</div>
+        </div>
+        <span className={`dash-status-badge ${s.status}`}>{statusLabel}</span>
+      </div>
+
+      <div className="sub-detail-period">
+        <span className="sub-detail-period-bar">
+          <span
+            className="sub-detail-period-fill"
+            style={{ width: `${(s.usedMonths / (s.usedMonths + s.remainingMonths)) * 100}%` }}
+          />
+        </span>
+        <div className="sub-detail-period-labels">
+          <span>{s.startDate}</span>
+          <span style={{ color: 'var(--text-muted)' }}>
+            이용 {s.usedMonths}개월 / 잔여 {s.remainingMonths}개월
+          </span>
+          <span>{s.endDate}</span>
+        </div>
+      </div>
+
+      <div className="sub-detail-metrics">
+        <div className="sub-detail-metric">
+          <div className="sub-detail-metric-label">월 이용료</div>
+          <div className="sub-detail-metric-value">{fmt(s.monthlyFee)}</div>
+        </div>
+        <div className="sub-detail-metric">
+          <div className="sub-detail-metric-label">이번 달 사용</div>
+          <div className="sub-detail-metric-value">{s.monthlyUsage}회</div>
+        </div>
+        <div className="sub-detail-metric">
+          <div className="sub-detail-metric-label">총 납부 금액</div>
+          <div className="sub-detail-metric-value accent">{fmt(s.totalPaid)}</div>
+        </div>
+        <div className="sub-detail-metric">
+          <div className="sub-detail-metric-label">지금 해지 위약금</div>
+          <div className="sub-detail-metric-value danger">{fmt(s.terminationPenalty)}</div>
+        </div>
+      </div>
     </div>
   )
 }

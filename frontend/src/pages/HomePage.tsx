@@ -1,14 +1,9 @@
-import { useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/common/Navbar'
 
 /* ── Hero ─────────────────────────────────────────── */
 function HeroSection() {
   const navigate = useNavigate()
-  const [dragOver, setDragOver] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  const goToUpload = () => navigate('/upload')
 
   return (
     <section className="hero" id="upload">
@@ -28,31 +23,34 @@ function HeroSection() {
           계약서를 업로드하면 30초 안에 위험 조항을 분석해 드립니다.
         </p>
 
-        {/* Upload Zone */}
-        <div className="upload-zone-wrapper">
-          <div
-            id="upload-zone"
-            className={`upload-zone${dragOver ? ' drag-over' : ''}`}
-            onClick={() => inputRef.current?.click()}
-            onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={(e) => { e.preventDefault(); setDragOver(false); goToUpload() }}
-          >
-            <input
-              ref={inputRef}
-              type="file"
-              accept=".pdf,.jpg,.jpeg,.png"
-              style={{ display: 'none' }}
-              onChange={goToUpload}
-            />
-            <div className="upload-icon">📄</div>
-            <h3>계약서를 여기에 드래그하거나 클릭하여 업로드</h3>
-            <p>PDF, JPG, PNG 파일 지원 · 최대 20MB</p>
-            <div className="upload-formats">
-              <span className="upload-format-tag">PDF</span>
-              <span className="upload-format-tag">JPG</span>
-              <span className="upload-format-tag">PNG</span>
-              <span className="upload-format-tag">무료 · 즉시 분석</span>
+        {/* Analysis Result Preview Card */}
+        <div className="hero-result-preview" onClick={() => navigate('/upload')} style={{ cursor: 'pointer' }}>
+          <div className="hero-preview-eyebrow">AI 분석 결과 예시 · 클릭하면 바로 시작</div>
+          <div className="hero-preview-card">
+            <div className="hero-preview-top">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 22 }}>📋</span>
+                <div>
+                  <div className="hero-preview-filename">프리랜서_용역계약서.pdf</div>
+                  <div className="hero-preview-meta">분석 완료 · 30초 소요</div>
+                </div>
+              </div>
+              <div className="hero-preview-score-badge danger">
+                <span className="hero-preview-score-num">72</span>
+                <span className="hero-preview-score-label">위험</span>
+              </div>
+            </div>
+            <div className="hero-preview-bar-track">
+              <div className="hero-preview-bar-fill" style={{ width: '72%', background: 'var(--risk-high)' }} />
+            </div>
+            <div className="hero-preview-tags">
+              <span className="hero-preview-tag danger">⚠ 포괄임금제</span>
+              <span className="hero-preview-tag danger">⚠ 경업금지 과도</span>
+              <span className="hero-preview-tag warn">△ 일방적 계약변경</span>
+              <span className="hero-preview-tag safe">✓ 기간 조항 안전</span>
+            </div>
+            <div className="hero-preview-footer">
+              ✨ AI 개선 제안 3건 포함 · 법적 근거 제시
             </div>
           </div>
         </div>
@@ -313,6 +311,88 @@ function HowItWorksSection() {
   )
 }
 
+/* ── Subscription Management ───────────────────────── */
+function SubscriptionSection() {
+  return (
+    <section className="section sub-mgmt-section" id="subscription">
+      <div className="container">
+        <div className="sub-mgmt-inner">
+          {/* Left */}
+          <div className="sub-mgmt-left">
+            <div className="section-tag">구독·렌탈 관리</div>
+            <h2 className="section-title">
+              장기 약정 계약,<br />
+              <span className="gradient-text">이제 제대로 파악하세요</span>
+            </h2>
+            <p className="section-desc" style={{ marginBottom: 32 }}>
+              구독·렌탈·장기계약의 이용 현황과<br />
+              중도 해지 위약금을 한눈에 확인합니다.
+            </p>
+            <div className="sub-mgmt-items">
+              {[
+                { icon: '📅', title: '이용 기간 추적', desc: '계약 시작부터 오늘까지 정확한 이용 기간' },
+                { icon: '⏱️', title: '잔여 기간 확인', desc: '계약 종료까지 남은 일수 실시간 표시' },
+                { icon: '💰', title: '누적 납부 금액', desc: '지금까지 지불한 총액을 자동 계산' },
+                { icon: '🚫', title: '중도해지 위약금', desc: '지금 해지 시 발생하는 위약금 즉시 산출' },
+              ].map((item) => (
+                <div key={item.title} className="sub-mgmt-item">
+                  <span className="sub-mgmt-item-icon">{item.icon}</span>
+                  <div>
+                    <div className="sub-mgmt-item-title">{item.title}</div>
+                    <div className="sub-mgmt-item-desc">{item.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right — mockup card */}
+          <div className="sub-mgmt-right">
+            <div className="sub-mock-card">
+              <div className="sub-mock-header">
+                <span style={{ fontSize: 20 }}>🔒</span>
+                <div>
+                  <div className="sub-mock-name">정수기 렌탈 서비스</div>
+                  <div className="sub-mock-type">렌탈·약정계약 · 10년</div>
+                </div>
+                <span className="dash-status-badge danger" style={{ marginLeft: 'auto' }}>⚠ 위험</span>
+              </div>
+              <div className="sub-mock-metrics">
+                <div className="sub-mock-metric">
+                  <div className="sub-mock-metric-label">이용 기간</div>
+                  <div className="sub-mock-metric-value">5년 0개월</div>
+                </div>
+                <div className="sub-mock-metric">
+                  <div className="sub-mock-metric-label">잔여 기간</div>
+                  <div className="sub-mock-metric-value">5년 0개월</div>
+                </div>
+                <div className="sub-mock-metric">
+                  <div className="sub-mock-metric-label">월 이용료</div>
+                  <div className="sub-mock-metric-value">35,000원</div>
+                </div>
+                <div className="sub-mock-metric">
+                  <div className="sub-mock-metric-label">이번 달 사용</div>
+                  <div className="sub-mock-metric-value">1회</div>
+                </div>
+              </div>
+              <div className="sub-mock-totals">
+                <div className="sub-mock-total-row">
+                  <span className="sub-mock-total-label">💰 총 납부 금액</span>
+                  <span className="sub-mock-total-value">2,100,000원</span>
+                </div>
+                <div className="sub-mock-total-row penalty">
+                  <span className="sub-mock-total-label">🚫 지금 해지 시 위약금</span>
+                  <span className="sub-mock-total-value" style={{ color: 'var(--risk-high)' }}>1,050,000원</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 /* ── Targets ───────────────────────────────────────── */
 const TARGETS = [
   { emoji: '💻', title: '프리랜서', desc: '용역·외주 계약의 대금, IP 귀속, 비밀유지 조항 분석', concern: '저작권 분쟁' },
@@ -419,6 +499,7 @@ export default function HomePage() {
         <HeroSection />
         <FeaturesSection />
         <HowItWorksSection />
+        <SubscriptionSection />
         <TargetsSection />
         <CTASection />
       </main>

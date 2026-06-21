@@ -3708,3 +3708,309 @@ img, svg {
 @media (max-width: 480px) {
   .dash-summary-card { padding: 16px; }
 }
+
+/* ── Hero 결과 미리보기 카드 ──────────────────────────── */
+.hero-result-preview {
+  width: 100%;
+  margin: 28px 0;
+}
+.hero-preview-eyebrow {
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+  text-align: center;
+}
+.hero-preview-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 20px 24px;
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.hero-result-preview:hover .hero-preview-card {
+  box-shadow: 0 4px 24px rgba(37,99,235,0.12);
+  transform: translateY(-2px);
+}
+.hero-preview-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.hero-preview-filename {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.hero-preview-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.hero-preview-score-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  background: var(--risk-high-bg);
+  border: 1px solid rgba(217,64,64,0.2);
+}
+.hero-preview-score-num {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--risk-high);
+  line-height: 1;
+}
+.hero-preview-score-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--risk-high);
+}
+.hero-preview-bar-track {
+  height: 5px;
+  background: var(--bg-input);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.hero-preview-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.6s ease;
+}
+.hero-preview-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+.hero-preview-tag {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 99px;
+}
+.hero-preview-tag.danger {
+  background: var(--risk-high-bg);
+  color: var(--risk-high);
+  border: 1px solid rgba(217,64,64,0.2);
+}
+.hero-preview-tag.warn {
+  background: var(--risk-mid-bg);
+  color: var(--risk-mid);
+  border: 1px solid rgba(196,132,10,0.2);
+}
+.hero-preview-tag.safe {
+  background: var(--risk-safe-bg);
+  color: var(--risk-safe);
+  border: 1px solid rgba(46,139,46,0.2);
+}
+.hero-preview-footer {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+/* ── 홈 구독·렌탈 섹션 ───────────────────────────────── */
+.sub-mgmt-section { background: var(--bg-surface); }
+.sub-mgmt-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+}
+.sub-mgmt-items {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.sub-mgmt-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.sub-mgmt-item-icon {
+  font-size: 20px;
+  width: 40px;
+  height: 40px;
+  background: var(--bg-base);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.sub-mgmt-item-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+.sub-mgmt-item-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.sub-mock-card {
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+}
+.sub-mock-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.sub-mock-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.sub-mock-type {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.sub-mock-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.sub-mock-metric {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+}
+.sub-mock-metric-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.sub-mock-metric-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.sub-mock-totals {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.sub-mock-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+.sub-mock-total-label { color: var(--text-secondary); }
+.sub-mock-total-value { font-weight: 700; color: var(--text-primary); }
+.sub-mock-total-row.penalty {
+  background: var(--risk-high-bg);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(217,64,64,0.15);
+}
+
+/* ── 대시보드 구독·렌탈 현황 ─────────────────────────── */
+.sub-detail-section {
+  margin-top: 32px;
+}
+.sub-detail-section-header {
+  margin-bottom: 16px;
+}
+.sub-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.sub-detail-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+}
+.sub-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.sub-detail-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sub-detail-type {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.sub-detail-period {
+  margin-bottom: 16px;
+}
+.sub-detail-period-bar {
+  display: block;
+  height: 6px;
+  background: var(--bg-input);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.sub-detail-period-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent-gradient);
+  border-radius: 99px;
+}
+.sub-detail-period-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+.sub-detail-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.sub-detail-metric {
+  background: var(--bg-base);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+}
+.sub-detail-metric-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.sub-detail-metric-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.sub-detail-metric-value.accent { color: var(--accent-bright); }
+.sub-detail-metric-value.danger { color: var(--risk-high); }
+
+@media (max-width: 768px) {
+  .sub-mgmt-inner { grid-template-columns: 1fr; gap: 32px; }
+  .sub-detail-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .hero-preview-card { padding: 16px; }
+  .hero-preview-score-num { font-size: 18px; }
+}
