@@ -435,7 +435,6 @@ function ContractRow({ contract: c }: { contract: Contract }) {
     <tr className={`dash-row${isExpiringSoon ? ' expiring' : ''}`}>
       {/* 이름 */}
       <td className="dash-cell-name">
-        <span className="dash-contract-emoji">{c.typeEmoji}</span>
         <div>
           <p className="dash-contract-name">{c.name}</p>
           <p className="dash-contract-date">분석일 {c.analyzedAt}</p>

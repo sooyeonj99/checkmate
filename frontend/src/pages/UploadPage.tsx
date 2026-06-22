@@ -14,11 +14,11 @@ interface FileInfo {
 }
 
 const CONTRACT_TYPES: { id: ContractType; emoji: string; label: string; wide?: boolean }[] = [
-  { id: 'employment',   emoji: '👷', label: '근로계약서' },
-  { id: 'lease',        emoji: '🏠', label: '임대차계약서' },
-  { id: 'freelance',    emoji: '💻', label: '프리랜서 계약서' },
-  { id: 'subscription', emoji: '📋', label: '구독·이용약관' },
   { id: 'rental',       emoji: '🔒', label: '렌탈·약정계약' },
+  { id: 'subscription', emoji: '📋', label: '구독·이용약관' },
+  { id: 'employment',   emoji: '👷', label: '근로계약서' },
+  { id: 'freelance',    emoji: '💻', label: '프리랜서 계약서' },
+  { id: 'lease',        emoji: '🏠', label: '임대차계약서' },
   { id: 'other',        emoji: '📝', label: '기타 계약서', wide: true },
 ]
 

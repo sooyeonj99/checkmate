@@ -535,76 +535,6 @@ function CompetitionSection() {
   )
 }
 
-/* ── Growth Roadmap ────────────────────────────────── */
-function RoadmapSection() {
-  const phases = [
-    {
-      phase: 'Phase 1',
-      period: '현재',
-      title: 'B2C MVP',
-      items: ['개인 계약서 AI 분석', '위험도 리포트', '구독 관리 대시보드'],
-      status: 'current',
-    },
-    {
-      phase: 'Phase 2',
-      period: '2026 하반기',
-      title: '프리미엄 전환',
-      items: ['유료 구독 전환', '계약 이력 클라우드', '만료 알림 + 갱신 제안'],
-      status: 'next',
-    },
-    {
-      phase: 'Phase 3',
-      period: '2027',
-      title: 'B2B SaaS',
-      items: ['소상공인 계약관리 플랫폼', '프리랜서 계약 포털', '팀 협업 기능'],
-      status: 'future',
-    },
-    {
-      phase: 'Phase 4',
-      period: '2028~',
-      title: '법률 데이터 플랫폼',
-      items: ['기업용 계약관리 SaaS', '계약 데이터 API', '법률·계약 데이터 사업화'],
-      status: 'future',
-    },
-  ]
-
-  return (
-    <section className="section roadmap-section" id="roadmap">
-      <div className="container">
-        <div className="section-header" style={{ textAlign: 'center' }}>
-          <div className="section-tag">GROWTH ROADMAP</div>
-          <h2 className="section-title">
-            개인에서 기업까지,<br />
-            <span className="gradient-text">단계적 성장 전략</span>
-          </h2>
-          <p className="section-desc" style={{ margin: '0 auto 48px' }}>
-            B2C MVP → 구독 수익화 → B2B SaaS → 법률 데이터 플랫폼
-          </p>
-        </div>
-
-        <div className="roadmap-grid">
-          {phases.map((p, i) => (
-            <div key={p.phase} className={`roadmap-card ${p.status}`}>
-              <div className="roadmap-phase-num">{i + 1}</div>
-              <div className="roadmap-period">{p.period}</div>
-              <div className="roadmap-phase">{p.phase}</div>
-              <div className="roadmap-title">{p.title}</div>
-              <ul className="roadmap-items">
-                {p.items.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-              {p.status === 'current' && (
-                <div className="roadmap-badge">✓ 진행 중</div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
 /* ── Targets ───────────────────────────────────────── */
 const TARGETS = [
   { emoji: '💻', title: '프리랜서', desc: '용역·외주 계약의 대금, IP 귀속 조항 분석', concern: '저작권 분쟁', pay: '계약 1건당 수입의 10~30% 손실 방지' },
@@ -716,7 +646,6 @@ export default function HomePage() {
         <SubscriptionSection />
         <BMSection />
         <CompetitionSection />
-        <RoadmapSection />
         <TargetsSection />
         <CTASection />
       </main>
