@@ -123,7 +123,7 @@ const SUBSCRIPTION_DETAILS: SubscriptionDetail[] = [
     totalPaid: 325000,
     status: 'safe',
     annualFee: 780000,
-    monthlyUsage: 28,
+    nextBillingDate: '2027-01-05',
     terminationPenalty: 227500,
   },
 ]
@@ -269,6 +269,7 @@ export default function DashboardPage() {
           </div>
 
           {/* ── Expiry alert banner ── */}
+          <div style={{ height: 24 }} />
           {!dismissedBanner && expiringContracts.length > 0 && (
             <div className="dash-alert-banner">
               <div className="dash-alert-left">
@@ -375,7 +376,7 @@ function SubscriptionCard({ data: s }: { data: SubscriptionDetail }) {
       ]
     : [
         { label: '년 이용료', value: fmt(s.annualFee ?? 0) },
-        { label: '이번달 사용 횟수', value: `${s.monthlyUsage ?? 0}회` },
+        { label: '결제 예정일', value: s.nextBillingDate ?? '-' },
         { label: '총 납부 금액', value: fmt(s.totalPaid), cls: 'accent' },
         { label: '해지 위약금', value: fmt(s.terminationPenalty ?? 0), cls: 'danger' },
       ]
