@@ -361,29 +361,29 @@ function SubscriptionSection() {
               <div className="sub-mock-metrics">
                 <div className="sub-mock-metric">
                   <div className="sub-mock-metric-label">이용 기간</div>
-                  <div className="sub-mock-metric-value">5년 0개월</div>
+                  <div className="sub-mock-metric-value">7년 0개월</div>
                 </div>
                 <div className="sub-mock-metric">
                   <div className="sub-mock-metric-label">잔여 기간</div>
-                  <div className="sub-mock-metric-value">5년 0개월</div>
+                  <div className="sub-mock-metric-value">3년 0개월</div>
                 </div>
                 <div className="sub-mock-metric">
                   <div className="sub-mock-metric-label">월 이용료</div>
                   <div className="sub-mock-metric-value">35,000원</div>
                 </div>
                 <div className="sub-mock-metric">
-                  <div className="sub-mock-metric-label">이번 달 사용</div>
-                  <div className="sub-mock-metric-value">1회</div>
+                  <div className="sub-mock-metric-label">사용한 개월수</div>
+                  <div className="sub-mock-metric-value">84개월</div>
                 </div>
               </div>
               <div className="sub-mock-totals">
                 <div className="sub-mock-total-row">
                   <span className="sub-mock-total-label">💰 총 납부 금액</span>
-                  <span className="sub-mock-total-value">2,100,000원</span>
+                  <span className="sub-mock-total-value">2,940,000원</span>
                 </div>
                 <div className="sub-mock-total-row penalty">
                   <span className="sub-mock-total-label">🚫 지금 해지 시 위약금</span>
-                  <span className="sub-mock-total-value" style={{ color: 'var(--risk-high)' }}>1,050,000원</span>
+                  <span className="sub-mock-total-value" style={{ color: 'var(--risk-high)' }}>1,260,000원</span>
                 </div>
               </div>
             </div>
