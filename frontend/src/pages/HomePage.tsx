@@ -9,7 +9,7 @@ function HeroSection() {
       <div className="hero-grid" />
 
       <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '800px' }}>
-        <div className="hero-badge">AI 계약서 분석 서비스</div>
+        <div className="hero-badge">계약 리스크 관리 플랫폼</div>
 
         <h1>
           계약서의 함정,<br />
@@ -17,8 +17,8 @@ function HeroSection() {
         </h1>
 
         <p className="hero-slogan">
-          <strong>"누구나 이해할 수 있게,</strong> 누구도 피해 보지 않게"<br />
-          계약서를 업로드하면 30초 안에 위험 조항을 분석해 드립니다.
+          <strong>서명 전 30초</strong>로 위험 조항을 찾고,<br />
+          구독·렌탈 계약은 대시보드로 한눈에 관리하세요.
         </p>
 
         <div className="hero-actions hero-actions-lg">
@@ -26,17 +26,16 @@ function HeroSection() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
             </svg>
-            계약서 업로드하기
+            무료로 계약서 분석하기
           </Link>
-          <a href="#how-it-works" className="btn-ghost">
+          <a href="#bm" className="btn-ghost">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>
             </svg>
-            이용방법 보기
+            요금제 보기
           </a>
         </div>
 
-        {/* Stats */}
         <div className="hero-stats">
           <div className="hero-stat">
             <div className="hero-stat-value">98.3%</div>
@@ -51,9 +50,40 @@ function HeroSection() {
             <div className="hero-stat-label">위험 조항 발견율</div>
           </div>
           <div className="hero-stat">
-            <div className="hero-stat-value">5만+</div>
-            <div className="hero-stat-label">분석 완료 건수</div>
+            <div className="hero-stat-value">₩0</div>
+            <div className="hero-stat-label">시작 비용</div>
           </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ── Pain Point ─────────────────────────────────────── */
+function PainPointSection() {
+  return (
+    <section className="section pain-section">
+      <div className="container">
+        <div className="section-header" style={{ textAlign: 'center' }}>
+          <div className="section-tag">PROBLEM</div>
+          <h2 className="section-title">
+            계약서, 읽어도<br />
+            <span className="gradient-text">모르면 손해입니다</span>
+          </h2>
+        </div>
+        <div className="pain-grid">
+          {[
+            { stat: '78%', desc: '계약서를 제대로 읽지 않고 서명하는 직장인 비율', src: '고용노동부 실태조사' },
+            { stat: '연 4.2조', desc: '계약서 분쟁으로 발생하는 사회적 손실 추정액', src: '법무부 통계' },
+            { stat: '평균 150만원', desc: '변호사 계약서 검토 비용 (1건 기준)', src: '대한변협' },
+            { stat: '30초', desc: 'Checkmate AI가 동일한 검토를 완료하는 시간', src: 'Checkmate', accent: true },
+          ].map((p) => (
+            <div key={p.stat} className={`pain-card${p.accent ? ' accent' : ''}`}>
+              <div className="pain-stat">{p.stat}</div>
+              <p className="pain-desc">{p.desc}</p>
+              <div className="pain-src">출처: {p.src}</div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -63,18 +93,10 @@ function HeroSection() {
 /* ── Features ──────────────────────────────────────── */
 const FEATURES = [
   {
-    icon: '📤',
-    color: 'rgba(79,142,247,0.15)',
-    title: 'PDF · 이미지 업로드',
-    desc: '계약서를 PDF 또는 사진으로 찍어 바로 업로드하세요. OCR 기술로 텍스트를 자동 추출합니다.',
-    badge: null,
-    demo: null,
-  },
-  {
     icon: '🔍',
     color: 'rgba(239,68,68,0.15)',
     title: 'AI 위험 조항 분석',
-    desc: '수백만 건의 계약 분쟁 데이터로 훈련된 AI가 위험 / 주의 / 안전 3단계로 조항을 분류합니다.',
+    desc: '수백만 건의 계약 분쟁 데이터로 학습한 AI가 위험 / 주의 / 안전 3단계로 조항을 분류합니다.',
     badge: { text: 'AI 핵심 기능', color: 'var(--risk-high)', bg: 'var(--risk-high-bg)' },
     demo: (
       <div className="risk-demo">
@@ -98,7 +120,7 @@ const FEATURES = [
     icon: '📊',
     color: 'rgba(245,158,11,0.15)',
     title: '위험도 점수 산출',
-    desc: '계약 전체를 0~100점으로 수치화합니다. 낮을수록 안전한 계약입니다.',
+    desc: '계약 전체를 0~100점으로 수치화합니다. 점수가 높을수록 위험한 계약입니다.',
     badge: { text: '0~100점 수치화', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
     demo: (
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 16 }}>
@@ -126,11 +148,27 @@ const FEATURES = [
     demo: null,
   },
   {
-    icon: '📋',
+    icon: '📁',
+    color: 'rgba(79,142,247,0.15)',
+    title: '계약 이력 대시보드',
+    desc: '분석한 모든 계약서를 대시보드에서 관리합니다. 만료 임박 알림, 구독·렌탈 현황도 한눈에 확인.',
+    badge: { text: '반복 사용 핵심', color: 'var(--accent)', bg: 'rgba(37,99,235,0.08)' },
+    demo: null,
+  },
+  {
+    icon: '🔒',
     color: 'rgba(139,92,246,0.15)',
+    title: '구독·렌탈 비용 관리',
+    desc: '이용 중인 구독·렌탈 계약의 월 요금, 총 납부액, 해지 위약금을 자동으로 계산합니다.',
+    badge: { text: '위약금 즉시 산출', color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)' },
+    demo: null,
+  },
+  {
+    icon: '📋',
+    color: 'rgba(245,158,11,0.15)',
     title: '분석 리포트 출력',
-    desc: '조항별 위험도, 점수, 수정 제안을 보기 좋게 정리한 리포트를 화면에서 바로 확인하세요.',
-    badge: { text: '공유 가능', color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)' },
+    desc: '조항별 위험도, 점수, 수정 제안을 정리한 리포트를 화면에서 바로 확인하고 활용하세요.',
+    badge: { text: '공유 가능', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
     demo: null,
   },
 ]
@@ -142,11 +180,11 @@ function FeaturesSection() {
         <div className="section-header">
           <div className="section-tag">FEATURES</div>
           <h2 className="section-title">
-            계약서 분석의 모든 것,<br />
-            <span className="gradient-text">한 곳에서</span>
+            단순 분석을 넘어<br />
+            <span className="gradient-text">계약 리스크 관리 플랫폼</span>
           </h2>
           <p className="section-desc">
-            업로드부터 리포트까지 5단계로 완성되는 AI 계약서 분석 솔루션
+            계약서 검토부터 이력 관리·구독 비용 추적까지, 계약의 모든 단계를 지원합니다
           </p>
         </div>
 
@@ -213,14 +251,13 @@ function HowItWorksSection() {
           </div>
         </div>
 
-        {/* Report Preview mockup */}
         <div className="report-preview">
           <div className="report-preview-header">
             <div className="report-title-group">
               <span className="report-icon">📄</span>
               <div>
                 <div className="report-file-name">프리랜서_용역계약서.pdf</div>
-                <div className="report-file-type">분석 완료 · 2025.06.16</div>
+                <div className="report-file-type">분석 완료 · 2026.06.16</div>
               </div>
             </div>
             <div className="score-ring-wrapper">
@@ -283,7 +320,6 @@ function SubscriptionSection() {
     <section className="section sub-mgmt-section" id="subscription">
       <div className="container">
         <div className="sub-mgmt-inner">
-          {/* Left */}
           <div className="sub-mgmt-left">
             <div className="section-tag">구독·렌탈 관리</div>
             <h2 className="section-title">
@@ -312,7 +348,6 @@ function SubscriptionSection() {
             </div>
           </div>
 
-          {/* Right — mockup card */}
           <div className="sub-mgmt-right">
             <div className="sub-mock-card">
               <div className="sub-mock-header">
@@ -359,13 +394,224 @@ function SubscriptionSection() {
   )
 }
 
+/* ── Business Model / Pricing ──────────────────────── */
+function BMSection() {
+  return (
+    <section className="section bm-section" id="bm">
+      <div className="container">
+        <div className="section-header" style={{ textAlign: 'center' }}>
+          <div className="section-tag">BUSINESS MODEL</div>
+          <h2 className="section-title">
+            무료로 시작해서<br />
+            <span className="gradient-text">필요한 만큼 확장하세요</span>
+          </h2>
+          <p className="section-desc" style={{ margin: '0 auto 48px' }}>
+            개인부터 기업까지, 단계별로 성장하는 구독 수익 구조
+          </p>
+        </div>
+
+        <div className="bm-grid">
+          {/* Free */}
+          <div className="bm-card">
+            <div className="bm-card-top">
+              <div className="bm-plan">무료</div>
+              <div className="bm-price">₩0<span>/월</span></div>
+              <p className="bm-desc">계약서 분석이 처음인 분</p>
+            </div>
+            <ul className="bm-features">
+              <li>✓ 계약서 분석 3건/월</li>
+              <li>✓ 위험도 점수 확인</li>
+              <li>✓ 위험 조항 태그</li>
+              <li style={{ color: 'var(--text-muted)' }}>— 계약 대시보드</li>
+              <li style={{ color: 'var(--text-muted)' }}>— 구독 관리 기능</li>
+              <li style={{ color: 'var(--text-muted)' }}>— 수정 제안 전문</li>
+            </ul>
+            <Link to="/upload" className="bm-btn secondary">무료 시작하기</Link>
+          </div>
+
+          {/* Premium */}
+          <div className="bm-card featured">
+            <div className="bm-popular">가장 인기</div>
+            <div className="bm-card-top">
+              <div className="bm-plan">프리미엄</div>
+              <div className="bm-price">₩9,900<span>/월</span></div>
+              <p className="bm-desc">계약이 잦은 프리랜서·직장인</p>
+            </div>
+            <ul className="bm-features">
+              <li>✓ 계약서 분석 <strong>무제한</strong></li>
+              <li>✓ 위험도 점수 + 상세 분석</li>
+              <li>✓ 조항별 AI 수정 제안</li>
+              <li>✓ 계약 이력 대시보드</li>
+              <li>✓ 구독·렌탈 비용 관리</li>
+              <li>✓ 만료 임박 알림</li>
+            </ul>
+            <Link to="/upload" className="bm-btn primary">14일 무료 체험</Link>
+          </div>
+
+          {/* Business */}
+          <div className="bm-card">
+            <div className="bm-card-top">
+              <div className="bm-plan">기업 <span className="bm-coming">출시 예정</span></div>
+              <div className="bm-price">₩49,000<span>/월</span></div>
+              <p className="bm-desc">소상공인·팀 단위 계약 관리</p>
+            </div>
+            <ul className="bm-features">
+              <li>✓ 팀원 최대 10명</li>
+              <li>✓ 프리미엄 전 기능</li>
+              <li>✓ 팀 계약 공유·협업</li>
+              <li>✓ 계약 리스크 리포트</li>
+              <li>✓ API 연동</li>
+              <li>✓ 전담 고객 지원</li>
+            </ul>
+            <button className="bm-btn secondary" disabled>출시 알림 받기</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ── Competition ───────────────────────────────────── */
+function CompetitionSection() {
+  const rows = [
+    { feature: '분석 속도', checkmate: '30초', lawyer: '3~7일', others: '1~2일' },
+    { feature: '비용(1건)', checkmate: '무료', lawyer: '50~150만원', others: '건당 과금' },
+    { feature: '조항별 수정 제안', checkmate: '✓', lawyer: '✓', others: '✗' },
+    { feature: '구독·렌탈 관리', checkmate: '✓', lawyer: '✗', others: '✗' },
+    { feature: '계약 이력 대시보드', checkmate: '✓', lawyer: '✗', others: '일부' },
+    { feature: '24시간 이용', checkmate: '✓', lawyer: '✗', others: '✓' },
+  ]
+
+  return (
+    <section className="section competition-section" id="competition">
+      <div className="container">
+        <div className="section-header" style={{ textAlign: 'center' }}>
+          <div className="section-tag">WHY CHECKMATE</div>
+          <h2 className="section-title">
+            기존 서비스와<br />
+            <span className="gradient-text">무엇이 다른가요?</span>
+          </h2>
+        </div>
+
+        <div className="comp-table-wrap">
+          <table className="comp-table">
+            <thead>
+              <tr>
+                <th>항목</th>
+                <th className="comp-us">✅ Checkmate</th>
+                <th>법률 사무소</th>
+                <th>유사 앱</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.feature}>
+                  <td>{r.feature}</td>
+                  <td className="comp-us comp-highlight">{r.checkmate}</td>
+                  <td>{r.lawyer}</td>
+                  <td>{r.others}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="comp-diff-grid">
+          {[
+            { icon: '⚡', title: '속도', desc: '법률 사무소 대비 100배 빠른 30초 분석' },
+            { icon: '💸', title: '비용', desc: '변호사 검토비 150만원 → 월 9,900원 구독' },
+            { icon: '🔄', title: '반복 사용', desc: '계약 대시보드로 매월 돌아오는 구조' },
+            { icon: '🏢', title: 'B2B 확장', desc: '개인 → 소상공인 → 기업 SaaS로 성장' },
+          ].map((d) => (
+            <div key={d.title} className="comp-diff-card">
+              <div className="comp-diff-icon">{d.icon}</div>
+              <div className="comp-diff-title">{d.title}</div>
+              <div className="comp-diff-desc">{d.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ── Growth Roadmap ────────────────────────────────── */
+function RoadmapSection() {
+  const phases = [
+    {
+      phase: 'Phase 1',
+      period: '현재',
+      title: 'B2C MVP',
+      items: ['개인 계약서 AI 분석', '위험도 리포트', '구독 관리 대시보드'],
+      status: 'current',
+    },
+    {
+      phase: 'Phase 2',
+      period: '2026 하반기',
+      title: '프리미엄 전환',
+      items: ['유료 구독 전환', '계약 이력 클라우드', '만료 알림 + 갱신 제안'],
+      status: 'next',
+    },
+    {
+      phase: 'Phase 3',
+      period: '2027',
+      title: 'B2B SaaS',
+      items: ['소상공인 계약관리 플랫폼', '프리랜서 계약 포털', '팀 협업 기능'],
+      status: 'future',
+    },
+    {
+      phase: 'Phase 4',
+      period: '2028~',
+      title: '법률 데이터 플랫폼',
+      items: ['기업용 계약관리 SaaS', '계약 데이터 API', '법률·계약 데이터 사업화'],
+      status: 'future',
+    },
+  ]
+
+  return (
+    <section className="section roadmap-section" id="roadmap">
+      <div className="container">
+        <div className="section-header" style={{ textAlign: 'center' }}>
+          <div className="section-tag">GROWTH ROADMAP</div>
+          <h2 className="section-title">
+            개인에서 기업까지,<br />
+            <span className="gradient-text">단계적 성장 전략</span>
+          </h2>
+          <p className="section-desc" style={{ margin: '0 auto 48px' }}>
+            B2C MVP → 구독 수익화 → B2B SaaS → 법률 데이터 플랫폼
+          </p>
+        </div>
+
+        <div className="roadmap-grid">
+          {phases.map((p, i) => (
+            <div key={p.phase} className={`roadmap-card ${p.status}`}>
+              <div className="roadmap-phase-num">{i + 1}</div>
+              <div className="roadmap-period">{p.period}</div>
+              <div className="roadmap-phase">{p.phase}</div>
+              <div className="roadmap-title">{p.title}</div>
+              <ul className="roadmap-items">
+                {p.items.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+              {p.status === 'current' && (
+                <div className="roadmap-badge">✓ 진행 중</div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 /* ── Targets ───────────────────────────────────────── */
 const TARGETS = [
-  { emoji: '💻', title: '프리랜서', desc: '용역·외주 계약의 대금, IP 귀속, 비밀유지 조항 분석', concern: '저작권 분쟁' },
-  { emoji: '👷', title: '근로자', desc: '근로계약서의 임금, 초과근무, 퇴직금 조항 검토', concern: '임금 체불' },
-  { emoji: '🏠', title: '임차인', desc: '임대차 계약의 보증금, 원상복구, 임대료 인상 분석', concern: '보증금 피해' },
-  { emoji: '🏪', title: '소상공인', desc: '가맹·입점·공급 계약의 불공정 조항 탐지', concern: '불공정 계약' },
-  { emoji: '🎓', title: '청년층', desc: '첫 계약 경험자를 위한 쉬운 해설과 용어 설명', concern: '계약 미숙' },
+  { emoji: '💻', title: '프리랜서', desc: '용역·외주 계약의 대금, IP 귀속 조항 분석', concern: '저작권 분쟁', pay: '계약 1건당 수입의 10~30% 손실 방지' },
+  { emoji: '👷', title: '직장인', desc: '근로계약서의 포괄임금, 경업금지 조항 검토', concern: '임금 체불', pay: '부당 조항 협상 근거 확보' },
+  { emoji: '🏪', title: '소상공인', desc: '가맹·입점·공급 계약의 불공정 조항 탐지', concern: '불공정 계약', pay: '법무팀 없이 전문 수준 검토' },
+  { emoji: '📱', title: '구독 이용자', desc: '구독·렌탈 계약 이용 현황과 위약금 관리', concern: '숨은 위약금', pay: '해지 전 위약금 미리 파악' },
+  { emoji: '🎓', title: '사회초년생', desc: '첫 계약서를 위한 쉬운 AI 해설과 수정 제안', concern: '계약 미숙', pay: '변호사 비용 없이 안전한 계약' },
 ]
 
 function TargetsSection() {
@@ -375,11 +621,11 @@ function TargetsSection() {
         <div className="section-header" style={{ textAlign: 'center' }}>
           <div className="section-tag">WHO WE HELP</div>
           <h2 className="section-title">
-            이런 분들을 위해<br />
-            <span className="gradient-text">만들었습니다</span>
+            이런 분들이<br />
+            <span className="gradient-text">Checkmate를 씁니다</span>
           </h2>
           <p className="section-desc" style={{ margin: '0 auto' }}>
-            법률 지식 없이 계약서를 서명해야 하는 모든 분들의 든든한 파트너
+            계약서 앞에서 혼자가 아니어도 됩니다
           </p>
         </div>
 
@@ -389,6 +635,7 @@ function TargetsSection() {
               <div className="target-emoji">{t.emoji}</div>
               <h3>{t.title}</h3>
               <p>{t.desc}</p>
+              <div className="target-pay">{t.pay}</div>
               <span className="target-concern">{t.concern} 방지</span>
             </div>
           ))}
@@ -443,13 +690,13 @@ function Footer() {
           </div>
 
           <ul className="footer-links">
-            <li><a href="#">서비스 소개</a></li>
-            <li><a href="#">이용약관</a></li>
-            <li><a href="#">개인정보처리방침</a></li>
+            <li><a href="#features">서비스 소개</a></li>
+            <li><a href="#bm">요금제</a></li>
+            <li><a href="#roadmap">성장 로드맵</a></li>
             <li><a href="#">문의하기</a></li>
           </ul>
 
-          <p className="footer-copy">© 2025 Checkmate. All rights reserved.</p>
+          <p className="footer-copy">© 2026 Checkmate. All rights reserved.</p>
         </div>
       </div>
     </footer>
@@ -463,9 +710,13 @@ export default function HomePage() {
       <Navbar />
       <main>
         <HeroSection />
+        <PainPointSection />
         <FeaturesSection />
         <HowItWorksSection />
         <SubscriptionSection />
+        <BMSection />
+        <CompetitionSection />
+        <RoadmapSection />
         <TargetsSection />
         <CTASection />
       </main>
