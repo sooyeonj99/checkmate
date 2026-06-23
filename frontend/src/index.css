@@ -2882,20 +2882,30 @@ img, svg {
   font-weight: 700;
 }
 
-.hl-danger {
-  background: #ffe0e0;
+.hl-danger, mark.ct-hl-danger {
+  background: rgba(239,68,68,0.15);
   color: #7a1f1f;
   border-radius: 3px;
   padding: 1px 3px;
-  border-bottom: 1px solid rgba(217,64,64,0.35);
+  border-bottom: 2px solid rgba(239,68,68,0.5);
 }
 
-.hl-warn {
-  background: #fff3cc;
+.hl-warn, mark.ct-hl-warn {
+  background: rgba(245,158,11,0.15);
   color: #6b3f0a;
   border-radius: 3px;
   padding: 1px 3px;
-  border-bottom: 1px solid rgba(196,132,10,0.35);
+  border-bottom: 2px solid rgba(245,158,11,0.5);
+}
+
+.contract-text-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-muted);
 }
 
 .contract-text-legend {

@@ -34,6 +34,44 @@ interface AnalysisResult {
   analysisTime: string
   problemTags: ProblemTag[]
   clauses: Clause[]
+  contractHtml?: string
+}
+
+/* ── 계약서 원문 텍스트 → 하이라이트 HTML 변환 ────────── */
+function buildContractHtml(rawText: string, clauses: any[]): string {
+  if (!rawText) return ''
+
+  // HTML 이스케이프
+  let html = rawText
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+
+  // 각 조항 원문을 위험도에 맞게 하이라이트
+  for (const c of clauses) {
+    const orig: string = (c.original ?? '').trim()
+    if (orig.length < 6) continue
+    const escaped = orig
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const cls = c.risk === 'danger' ? 'ct-hl-danger' : c.risk === 'warn' ? 'ct-hl-warn' : ''
+    if (!cls) continue
+    try {
+      html = html.replace(
+        new RegExp(escaped.replace(/\s+/g, '\\s+'), 'g'),
+        `<mark class="${cls}">$&</mark>`,
+      )
+    } catch { /* 정규식 오류 무시 */ }
+  }
+
+  // 빈 줄로 단락 분리
+  return html
+    .split(/\n{2,}/)
+    .filter(Boolean)
+    .map((p) => `<p>${p.replace(/\n/g, '<br/>')}</p>`)
+    .join('\n')
 }
 
 /* ── 백엔드 응답 → 프론트 형식 변환 ─────────────────── */
@@ -78,6 +116,7 @@ function transformApiResult(data: any): AnalysisResult {
     analysisTime: data.analysis_time ?? '',
     problemTags,
     clauses,
+    contractHtml: buildContractHtml(data.contract_text ?? '', data.clauses ?? []),
   }
 }
 
@@ -148,6 +187,44 @@ const RESULT: AnalysisResult = {
       lawRef: '민법 제186조 (부동산물권변동) · 소비자분쟁해결기준 (가전제품 렌탈 분야)',
     },
   ],
+  contractHtml: `
+<p><strong>가전제품 렌탈 서비스 이용계약서</strong></p>
+<p>공급사 ○○렌탈(이하 "회사")과 소비자는 아래와 같이 가전제품 렌탈 서비스 이용 계약을 체결합니다.</p>
+
+<p><strong>제1조 (계약의 목적)</strong><br/>
+본 계약은 회사가 소비자에게 제공하는 가전제품 렌탈 서비스의 이용 조건과 당사자 간 권리·의무를 정함을 목적으로 합니다.</p>
+
+<p><strong>제2조 (계약의 구성)</strong><br/>
+본 계약은 이용계약서, 별도 상품설명서, 렌탈 이용 안내문으로 구성되며, 상호 보완적으로 적용됩니다.</p>
+
+<p><strong>제3조 (약정 기간 및 렌탈료)</strong><br/>
+<mark class="ct-hl-warn">약정 기간은 계약 체결일로부터 기산하며, 계약 기간 동안 렌탈료가 부과된다.</mark> 월 렌탈료는 39,900원이며 약정 기간은 60개월로 합니다.</p>
+
+<p><strong>제4조 (렌탈료 납부)</strong><br/>
+렌탈료는 매월 지정된 결제일에 자동이체 또는 카드 청구 방식으로 납부합니다. 연체 시 미납 렌탈료의 연 15%에 해당하는 연체료가 부과됩니다.</p>
+
+<p><strong>제5조 (렌탈료 조정)</strong><br/>
+<mark class="ct-hl-danger">회사는 소비자 물가지수 변동 및 원자재·서비스 비용 상승에 따라 렌탈료를 조정할 수 있으며, 변경 30일 전 고지한다.</mark></p>
+
+<p><strong>제6조 (설치 및 A/S)</strong><br/>
+제품 설치는 계약 체결 후 7영업일 이내에 진행하며, 정기 점검 및 필터 교체 서비스를 분기별로 제공합니다. A/S는 회사가 지정한 서비스 센터를 통해 처리합니다.</p>
+
+<p><strong>제7조 (제품 관리 및 교체)</strong><br/>
+소비자는 선량한 관리자의 주의로 제품을 사용하여야 하며, 소비자의 고의·과실로 인한 파손은 소비자가 수리 비용을 부담합니다.<br/>
+<mark class="ct-hl-warn">회사는 서비스 운영상 필요한 경우 동급 사양의 제품으로 교체할 수 있으며, 소비자는 이에 동의한다.</mark></p>
+
+<p><strong>제8조 (계약 갱신 및 해지)</strong><br/>
+<mark class="ct-hl-danger">계약 만료일 45일 전까지 서면으로 해지 의사를 통보하지 않을 경우, 동일 조건으로 1년간 자동 연장된다.</mark> 해지 의사 표시는 고객센터 방문, 우편, 내용증명 중 하나의 방법으로 하여야 합니다.</p>
+
+<p><strong>제9조 (중도 해지 위약금)</strong><br/>
+<mark class="ct-hl-danger">계약 기간 중 중도 해지 시 잔여 약정 렌탈료의 40%에 해당하는 금액을 위약금으로 납부하여야 한다.</mark> 위약금은 해지 신청일로부터 30일 이내에 납부하여야 합니다.</p>
+
+<p><strong>제10조 (회사의 의무)</strong><br/>
+회사는 렌탈 제품의 정상 작동을 보장하고, 제품 결함 발생 시 7일 이내 수리 또는 동급 제품으로 교환합니다. 회사의 귀책으로 인한 서비스 중단 시 렌탈료를 감면합니다.</p>
+
+<p><strong>제11조 (소유권 이전)</strong><br/>
+<mark class="ct-hl-warn">약정 기간 만료 후 소비자가 소유권 이전을 신청하고 이전 수수료를 납부한 경우에 한하여 소유권이 이전된다.</mark> 소유권 이전 수수료는 제품 기준가의 5%로 합니다.</p>
+`,
 }
 
 /* ── Helpers ───────────────────────────────────────── */
@@ -404,11 +481,27 @@ function ExpertCard({ grade }: { grade: RiskLevel }) {
 
 /* ── ContractTextView ──────────────────────────────── */
 function ContractTextView({ contractName, html }: { contractName: string; html: string }) {
+  if (!html) {
+    return (
+      <div className="contract-text-card">
+        <div className="section-eyebrow" style={{ marginBottom: 16 }}>{contractName} 전문</div>
+        <div className="contract-text-empty">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ opacity: 0.3, marginBottom: 12 }}>
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+          </svg>
+          <p style={{ margin: 0, fontSize: 14, color: 'var(--text-muted)' }}>
+            계약서 원문을 표시하려면 PDF 또는 DOCX 파일을 업로드하세요.<br/>
+            이미지(JPG/PNG)로 분석한 경우 원문이 제공되지 않습니다.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="contract-text-card">
       <div className="section-eyebrow" style={{ marginBottom: 16 }}>{contractName} 전문</div>
-      {/* NOTE: dangerouslySetInnerHTML is safe here — content is controlled static data.
-          Production should sanitize with DOMPurify if rendering user-uploaded text. */}
       <div
         className="contract-text-scroll"
         dangerouslySetInnerHTML={{ __html: html }}
@@ -502,7 +595,7 @@ export default function ResultPage() {
         ) : (
           <ContractTextView
             contractName={result.contractName}
-            html={(result as any).contractHtml ?? ''}
+            html={result.contractHtml ?? ''}
           />
         )}
 

@@ -144,22 +144,23 @@ async def analyze_with_gemini(
     model = _init_model()
 
     start = time.time()
+    extracted_text: str | None = None
 
     if ext in {".jpg", ".jpeg", ".png"}:
         image = PIL.Image.open(file_path)
         response = model.generate_content([_PROMPT_IMAGE, image])
 
     elif ext == ".pdf":
-        text = _extract_pdf_text(file_path)
-        if not text:
+        extracted_text = _extract_pdf_text(file_path)
+        if not extracted_text:
             raise ValueError("PDF에서 텍스트를 추출할 수 없습니다. 스캔 이미지 PDF는 JPG/PNG로 변환 후 업로드해 주세요.")
-        response = model.generate_content(_PROMPT.format(text=text[:10000]))
+        response = model.generate_content(_PROMPT.format(text=extracted_text[:10000]))
 
     elif ext == ".docx":
-        text = _extract_docx_text(file_path)
-        if not text:
+        extracted_text = _extract_docx_text(file_path)
+        if not extracted_text:
             raise ValueError("DOCX에서 텍스트를 추출할 수 없습니다.")
-        response = model.generate_content(_PROMPT.format(text=text[:10000]))
+        response = model.generate_content(_PROMPT.format(text=extracted_text[:10000]))
 
     else:
         raise ValueError(f"AI 분석을 지원하지 않는 형식입니다: {ext.upper()}")
@@ -167,4 +168,5 @@ async def analyze_with_gemini(
     elapsed = round(time.time() - start, 1)
     result = _parse_response(response.text, contract_id, filename)
     result.analysis_time = f"{elapsed}초"
+    result.contract_text = extracted_text
     return result

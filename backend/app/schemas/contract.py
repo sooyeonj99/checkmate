@@ -37,3 +37,4 @@ class AnalysisResult(BaseModel):
     analysis_time: str    # 분석 소요 시간
     clauses: list[ClauseResult]
     analyzed_at: str
+    contract_text: Optional[str] = None   # 원본 계약서 전문 텍스트
