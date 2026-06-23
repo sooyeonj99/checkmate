@@ -1,13 +1,22 @@
 import { useState, useRef, useEffect } from 'react'
 
-function ChatLogo({ size = 24 }: { size?: number }) {
+function ChatLogo({ size = 32 }: { size?: number }) {
+  const id = 'cg' + size
   return (
-    <div className="chat-avatar-logo" style={{ width: size, height: size }}>
-      <svg width={size * 0.56} height={size * 0.56} viewBox="0 0 24 24" fill="none">
-        <path d="M12 2L3 7V12C3 16.97 6.84 21.61 12 23C17.16 21.61 21 16.97 21 12V7L12 2Z" fill="white" fillOpacity="0.9"/>
-        <path d="M9 12L11 14L15 10" stroke="#1e3a8a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    </div>
+    <svg width={size} height={size} viewBox="0 0 36 36" fill="none"
+      style={{ flexShrink: 0, borderRadius: 8, marginBottom: 2 }}>
+      <defs>
+        <linearGradient id={id} x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#3b82f6" />
+          <stop offset="100%" stopColor="#1d4ed8" />
+        </linearGradient>
+      </defs>
+      <rect width="36" height="36" rx="9" fill={`url(#${id})`} />
+      <path d="M18 7L8 12.5V18C8 24.08 12.34 29.72 18 31.5C23.66 29.72 28 24.08 28 18V12.5L18 7Z"
+        fill="white" fillOpacity="0.92" />
+      <path d="M14 18L17 21L23 15" stroke="#1e3a8a" strokeWidth="2.4"
+        strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   )
 }
 
@@ -90,7 +99,7 @@ export default function ChatWidget() {
       {open && (
         <div className="chat-window">
           <div className="chat-header">
-            <ChatLogo size={28} />
+            <ChatLogo size={36} />
             <div>
               <div className="chat-header-title">CHECKMATE AI</div>
               <div className="chat-header-sub">계약서 상담 전문 AI</div>
@@ -145,7 +154,7 @@ export default function ChatWidget() {
         onClick={() => setOpen((v) => !v)}
         aria-label="AI 상담"
       >
-        {open ? '✕' : '💬'}
+        {open ? '✕' : <ChatLogo size={28} />}
       </button>
     </>
   )
