@@ -5,6 +5,7 @@ import LoadingPage from './pages/LoadingPage'
 import ResultPage from './pages/ResultPage'
 import AuthPage from './pages/AuthPage'
 import DashboardPage from './pages/DashboardPage'
+import ChatWidget from './components/ChatWidget'
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
       </Routes>
+      <ChatWidget />
     </BrowserRouter>
   )
 }
