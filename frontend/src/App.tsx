@@ -6,6 +6,8 @@ import LoadingPage from './pages/LoadingPage'
 import ResultPage from './pages/ResultPage'
 import AuthPage from './pages/AuthPage'
 import DashboardPage from './pages/DashboardPage'
+import TermsPage from './pages/TermsPage'
+import PrivacyPage from './pages/PrivacyPage'
 import ChatWidget from './components/ChatWidget'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -22,6 +24,8 @@ function AppRoutes() {
         <Route path="/loading" element={<LoadingPage />} />
         <Route path="/result" element={<ResultPage />} />
         <Route path="/auth" element={<AuthPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
         <Route
           path="/dashboard"
           element={

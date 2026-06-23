@@ -36,8 +36,8 @@ export default function AuthPage() {
       </div>
 
       <p className="auth-footer-note">
-        계약서를 업로드하면 <Link to="/" className="auth-link">이용약관</Link> 및{' '}
-        <Link to="/" className="auth-link">개인정보처리방침</Link>에 동의한 것으로 간주합니다.
+        서비스를 이용하면 <Link to="/terms" className="auth-link">이용약관</Link> 및{' '}
+        <Link to="/privacy" className="auth-link">개인정보처리방침</Link>에 동의한 것으로 간주합니다.
       </p>
     </div>
   )
@@ -202,12 +202,12 @@ function SignupForm({ onSuccess }: { onSuccess: () => void }) {
         <label className="auth-check-row">
           <input type="checkbox" checked={agreeTerms} onChange={(e) => setAgreeTerms(e.target.checked)} />
           <span className="auth-checkmark" />
-          <span className="auth-check-label"><Link to="/" className="auth-link">[필수] 이용약관</Link>에 동의합니다</span>
+          <span className="auth-check-label"><Link to="/terms" target="_blank" className="auth-link">[필수] 이용약관</Link>에 동의합니다</span>
         </label>
         <label className="auth-check-row">
           <input type="checkbox" checked={agreePrivacy} onChange={(e) => setAgreePrivacy(e.target.checked)} />
           <span className="auth-checkmark" />
-          <span className="auth-check-label"><Link to="/" className="auth-link">[필수] 개인정보 처리방침</Link>에 동의합니다</span>
+          <span className="auth-check-label"><Link to="/privacy" target="_blank" className="auth-link">[필수] 개인정보처리방침</Link>에 동의합니다</span>
         </label>
       </div>
 
