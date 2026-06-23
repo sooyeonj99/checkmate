@@ -1,5 +1,16 @@
 import { useState, useRef, useEffect } from 'react'
 
+function ChatLogo({ size = 24 }: { size?: number }) {
+  return (
+    <div className="chat-avatar-logo" style={{ width: size, height: size }}>
+      <svg width={size * 0.56} height={size * 0.56} viewBox="0 0 24 24" fill="none">
+        <path d="M12 2L3 7V12C3 16.97 6.84 21.61 12 23C17.16 21.61 21 16.97 21 12V7L12 2Z" fill="white" fillOpacity="0.9"/>
+        <path d="M9 12L11 14L15 10" stroke="#1e3a8a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    </div>
+  )
+}
+
 interface Message {
   role: 'user' | 'model'
   content: string
@@ -79,7 +90,7 @@ export default function ChatWidget() {
       {open && (
         <div className="chat-window">
           <div className="chat-header">
-            <span className="chat-header-icon">🤖</span>
+            <ChatLogo size={28} />
             <div>
               <div className="chat-header-title">CHECKMATE AI</div>
               <div className="chat-header-sub">계약서 상담 전문 AI</div>
@@ -90,13 +101,13 @@ export default function ChatWidget() {
           <div className="chat-messages">
             {messages.map((m, i) => (
               <div key={i} className={`chat-msg ${m.role}`}>
-                {m.role === 'model' && <span className="chat-avatar">🤖</span>}
+                {m.role === 'model' && <ChatLogo />}
                 <div className="chat-bubble">{m.content}</div>
               </div>
             ))}
             {loading && (
               <div className="chat-msg model">
-                <span className="chat-avatar">🤖</span>
+                <ChatLogo />
                 <div className="chat-bubble chat-typing">
                   <span /><span /><span />
                 </div>

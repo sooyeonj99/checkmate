@@ -4453,6 +4453,15 @@ img, svg {
 .chat-msg.user { flex-direction: row-reverse; }
 
 .chat-avatar { font-size: 20px; flex-shrink: 0; margin-bottom: 2px; }
+.chat-avatar-logo {
+  flex-shrink: 0;
+  margin-bottom: 2px;
+  border-radius: 8px;
+  background: var(--accent-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 .chat-bubble {
   max-width: 78%;
