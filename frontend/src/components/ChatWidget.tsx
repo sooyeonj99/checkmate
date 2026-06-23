@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 function ChatLogo({ size = 32 }: { size?: number }) {
   const id = 'cg' + size
@@ -177,6 +178,7 @@ const WELCOME = `안녕하세요! 👋 Checkmate AI 상담사입니다.
 아래 자주 묻는 질문을 선택하거나, 직접 입력해 주세요!`
 
 export default function ChatWidget() {
+  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([
     { role: 'model', content: WELCOME },
@@ -184,6 +186,7 @@ export default function ChatWidget() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [showQuick, setShowQuick] = useState(true)
+  const [showActions, setShowActions] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -198,6 +201,7 @@ export default function ChatWidget() {
   async function send(text: string = input.trim()) {
     if (!text || loading) return
     setShowQuick(false)
+    setShowActions(false)
 
     const history = messages.map((m) => ({ role: m.role, content: m.content }))
     const next: Message[] = [...messages, { role: 'user', content: text }]
@@ -205,7 +209,6 @@ export default function ChatWidget() {
     setInput('')
     setLoading(true)
 
-    // 로컬 FAQ 먼저 확인
     const localAnswer = getLocalAnswer(text)
 
     try {
@@ -220,13 +223,13 @@ export default function ChatWidget() {
       const data = await res.json()
       setMessages([...next, { role: 'model', content: data.reply }])
     } catch {
-      // Gemini 실패 시 로컬 응답 사용
       const fallback = localAnswer
         ?? `죄송해요, 현재 AI 연결이 원활하지 않습니다.\n\n아래 자주 묻는 질문 버튼을 이용하거나, 잠시 후 다시 시도해 주세요. 😊`
       setMessages([...next, { role: 'model', content: fallback }])
       if (!localAnswer) setShowQuick(true)
     } finally {
       setLoading(false)
+      setShowActions(true)
     }
   }
 
@@ -240,6 +243,7 @@ export default function ChatWidget() {
   function reset() {
     setMessages([{ role: 'model', content: WELCOME }])
     setShowQuick(true)
+    setShowActions(false)
     setInput('')
   }
 
@@ -277,6 +281,18 @@ export default function ChatWidget() {
                     {q.label}
                   </button>
                 ))}
+              </div>
+            )}
+
+            {/* 응답 후 액션 버튼 */}
+            {showActions && !loading && (
+              <div className="chat-action-wrap">
+                <button className="chat-action-btn upload" onClick={() => { setOpen(false); navigate('/upload') }}>
+                  📎 계약서 업로드하기
+                </button>
+                <button className="chat-action-btn reset" onClick={reset}>
+                  🏠 처음으로
+                </button>
               </div>
             )}
 
