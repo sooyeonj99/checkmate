@@ -31,7 +31,7 @@ export default function AuthPage() {
         {tab === 'login' ? (
           <LoginForm onSuccess={() => navigate('/dashboard')} />
         ) : (
-          <SignupForm onSuccess={() => setTab('login')} />
+          <SignupForm onSwitchToLogin={() => setTab('login')} />
         )}
       </div>
 
@@ -51,10 +51,13 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
   const [showPw, setShowPw] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [needsVerification, setNeedsVerification] = useState(false)
+  const [resendDone, setResendDone] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setNeedsVerification(false)
     setLoading(true)
     try {
       const res = await fetch('/api/v1/auth/login', {
@@ -63,7 +66,10 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
         body: JSON.stringify({ email, password }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.detail ?? '로그인 실패')
+      if (!res.ok) {
+        if (res.status === 403) setNeedsVerification(true)
+        throw new Error(data.detail ?? '로그인 실패')
+      }
       login(data.access_token, data.user)
       onSuccess()
     } catch (e: unknown) {
@@ -73,9 +79,33 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
     }
   }
 
+  const handleResend = async () => {
+    try {
+      await fetch('/api/v1/auth/resend-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      setResendDone(true)
+      setNeedsVerification(false)
+      setError('인증 메일을 재발송했습니다. 메일함을 확인해 주세요.')
+    } catch {
+      setError('재발송 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.')
+    }
+  }
+
   return (
     <form className="auth-form" onSubmit={handleSubmit}>
-      {error && <div className="auth-error-banner">{error}</div>}
+      {error && (
+        <div className={`auth-error-banner${needsVerification ? ' auth-error-verify' : ''}`}>
+          {error}
+          {needsVerification && !resendDone && (
+            <button type="button" className="auth-resend-btn" onClick={handleResend}>
+              인증 메일 재발송
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="auth-field">
         <label className="auth-label">이메일</label>
@@ -108,7 +138,7 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
 }
 
 /* ── 회원가입 폼 ── */
-function SignupForm({ onSuccess }: { onSuccess: () => void }) {
+function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -119,6 +149,9 @@ function SignupForm({ onSuccess }: { onSuccess: () => void }) {
   const [agreePrivacy, setAgreePrivacy] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  // 가입 성공 후 이메일 인증 안내 화면
+  const [emailSent, setEmailSent] = useState(false)
+  const [sentEmail, setSentEmail] = useState('')
 
   const allAgreed = agreeTerms && agreePrivacy
   const pwMatch = password === confirm || confirm === ''
@@ -142,12 +175,44 @@ function SignupForm({ onSuccess }: { onSuccess: () => void }) {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.detail ?? '회원가입 실패')
-      onSuccess()
+      // 이메일 인증 안내 화면으로 전환
+      setSentEmail(email)
+      setEmailSent(true)
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : '회원가입 중 오류가 발생했습니다.')
     } finally {
       setLoading(false)
     }
+  }
+
+  // 이메일 발송 완료 화면
+  if (emailSent) {
+    return (
+      <div className="auth-email-sent">
+        <div className="auth-email-sent-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.5">
+            <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+        </div>
+        <h3 className="auth-email-sent-title">이메일을 확인해 주세요</h3>
+        <p className="auth-email-sent-desc">
+          <strong>{sentEmail}</strong>으로 인증 메일을 보냈습니다.<br />
+          메일함에서 <strong>이메일 인증하기</strong> 버튼을 클릭하면<br />
+          로그인할 수 있습니다.
+        </p>
+        <div className="auth-email-sent-tip">
+          메일이 보이지 않으면 스팸 폴더를 확인해 주세요.
+        </div>
+        <button
+          type="button"
+          className="auth-submit-btn"
+          style={{ marginTop: 8 }}
+          onClick={onSwitchToLogin}
+        >
+          로그인 화면으로 이동
+        </button>
+      </div>
+    )
   }
 
   return (
@@ -223,15 +288,18 @@ function SignupForm({ onSuccess }: { onSuccess: () => void }) {
 
 /* ── 소셜 버튼 (공통) ── */
 function SocialButtons() {
+  const navigate = useNavigate()
+  const goComingSoon = () => navigate('/coming-soon')
+
   return (
     <div className="auth-social-btns">
-      <button type="button" className="auth-social-btn auth-kakao">
+      <button type="button" className="auth-social-btn auth-kakao" onClick={goComingSoon}>
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
           <path d="M9 1.5C4.858 1.5 1.5 4.134 1.5 7.379c0 2.093 1.393 3.933 3.504 5.004l-.894 3.268c-.08.29.254.52.504.348l3.807-2.518A8.97 8.97 0 009 13.258c4.142 0 7.5-2.634 7.5-5.879C16.5 4.134 13.142 1.5 9 1.5z" fill="currentColor"/>
         </svg>
         카카오로 계속하기
       </button>
-      <button type="button" className="auth-social-btn auth-google">
+      <button type="button" className="auth-social-btn auth-google" onClick={goComingSoon}>
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
           <path d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
           <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.859-3.048.859-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>

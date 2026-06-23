@@ -13,6 +13,7 @@ class UserResponse(BaseModel):
     email: str
     username: str
     is_active: bool
+    is_verified: bool
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -27,3 +28,12 @@ class Token(BaseModel):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+
+
+class RegisterResponse(BaseModel):
+    message: str
+    email: str
+
+
+class ResendVerificationRequest(BaseModel):
+    email: EmailStr

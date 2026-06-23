@@ -25,6 +25,15 @@ class Settings(BaseSettings):
     # ── AI 분석 (Gemini) ─────────────────────────────────
     GEMINI_API_KEY: Optional[str] = None
 
+    # ── 이메일 (SMTP) ─────────────────────────────────────
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_SSL: bool = False          # True = SSL(465포트), False = STARTTLS(587포트)
+    SMTP_USER: Optional[str] = None # 발송 이메일 주소
+    SMTP_PASSWORD: Optional[str] = None  # 앱 비밀번호
+    SMTP_FROM: Optional[str] = None      # 표시될 발신자 이메일 (미설정 시 SMTP_USER)
+    FRONTEND_URL: str = "http://localhost:3000/checkmate"
+
     class Config:
         env_file = ".env"
 
