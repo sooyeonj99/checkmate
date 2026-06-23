@@ -11,11 +11,15 @@ from fastapi.responses import JSONResponse
 
 from app.api.v1.router import api_router
 from app.core.config import settings
+from app.db.session import engine
+from app.db.base import Base
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """서버 시작/종료 시 실행되는 작업"""
+    # DB 테이블 자동 생성 (SQLite 개발용)
+    Base.metadata.create_all(bind=engine)
     # 업로드 디렉토리 생성
     os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
     print(f"✅ 서버 시작 | 업로드 폴더: {settings.UPLOAD_DIR}")

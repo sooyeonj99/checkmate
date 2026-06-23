@@ -11,7 +11,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def register(user_in: UserCreate, db: Session = Depends(get_db)):
     if get_user_by_email(db, user_in.email):
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(status_code=400, detail="이미 사용 중인 이메일입니다.")
     return create_user(db, user_in)
 
 
@@ -21,6 +21,9 @@ def login(credentials: LoginRequest, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
+            detail="이메일 또는 비밀번호가 올바르지 않습니다.",
         )
-    return Token(access_token=create_access_token({"sub": str(user.id)}))
+    return Token(
+        access_token=create_access_token({"sub": str(user.id)}),
+        user=user,
+    )

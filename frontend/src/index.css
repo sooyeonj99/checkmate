@@ -3624,11 +3624,92 @@ img, svg {
   background: rgba(255,255,255,0.06);
 }
 
+/* ── Navbar 유저 드롭다운 ── */
+.navbar-user-wrap {
+  position: relative;
+  cursor: pointer;
+}
+.navbar-user-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px 6px 6px;
+  border-radius: 99px;
+  border: 1.5px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.06);
+  transition: background 0.15s;
+}
+.navbar-user-btn:hover { background: rgba(255,255,255,0.12); }
+.navbar-user-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent-blue);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.navbar-user-name { font-size: 13px; color: #fff; font-weight: 500; }
+.navbar-user-caret { font-size: 10px; color: rgba(255,255,255,0.6); }
+
+.navbar-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 210px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.14);
+  border: 1px solid var(--border-light);
+  overflow: hidden;
+  z-index: 200;
+  animation: dropIn 0.15s ease;
+}
+@keyframes dropIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.navbar-dropdown-info { padding: 14px 16px 10px; }
+.navbar-dropdown-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.navbar-dropdown-email { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.navbar-dropdown-divider { height: 1px; background: var(--border-light); }
+.navbar-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px 16px;
+  font-size: 13.5px;
+  color: var(--text-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.12s;
+}
+.navbar-dropdown-item:hover { background: #f8f9fb; }
+.navbar-dropdown-item.logout { color: #ef4444; }
+
+/* ── Auth 에러 배너 ── */
+.auth-error-banner {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  margin-bottom: 4px;
+}
+
 @media (max-width: 768px) {
   .navbar-links { display: none; }
   .navbar-cta   { padding: 9px 12px; font-size: 13px; white-space: nowrap; }
   .navbar-dashboard-btn { padding: 8px 10px; font-size: 12px; }
   .navbar-dashboard-btn span { display: none; }
+  .navbar-user-name { display: none; }
 }
 
 /* ── 홈 히어로 ────────────────────────────────────────── */

@@ -1,15 +1,31 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
   const navigate = useNavigate()
+  const { user, isLoggedIn, logout } = useAuth()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
     window.addEventListener('scroll', onScroll)
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  // 드롭다운 외부 클릭 시 닫기
+  useEffect(() => {
+    if (!dropdownOpen) return
+    const close = () => setDropdownOpen(false)
+    window.addEventListener('click', close)
+    return () => window.removeEventListener('click', close)
+  }, [dropdownOpen])
+
+  const handleLogout = () => {
+    logout()
+    navigate('/')
+  }
 
   return (
     <nav className="navbar" style={{ borderBottomColor: scrolled ? 'rgba(255,255,255,0.07)' : 'transparent' }}>
@@ -39,7 +55,37 @@ export default function Navbar() {
             </svg>
             <span>대시보드</span>
           </Link>
-          <button className="navbar-cta" onClick={() => navigate('/upload')}>무료 체험하기</button>
+
+          {isLoggedIn ? (
+            <div className="navbar-user-wrap" onClick={(e) => { e.stopPropagation(); setDropdownOpen((v) => !v) }}>
+              <div className="navbar-user-btn">
+                <div className="navbar-user-avatar">{user!.username.charAt(0).toUpperCase()}</div>
+                <span className="navbar-user-name">{user!.username}</span>
+                <span className="navbar-user-caret">▾</span>
+              </div>
+              {dropdownOpen && (
+                <div className="navbar-dropdown">
+                  <div className="navbar-dropdown-info">
+                    <div className="navbar-dropdown-name">{user!.username}</div>
+                    <div className="navbar-dropdown-email">{user!.email}</div>
+                  </div>
+                  <div className="navbar-dropdown-divider" />
+                  <Link to="/dashboard" className="navbar-dropdown-item" onClick={() => setDropdownOpen(false)}>
+                    📊 대시보드
+                  </Link>
+                  <Link to="/upload" className="navbar-dropdown-item" onClick={() => setDropdownOpen(false)}>
+                    📎 계약서 분석
+                  </Link>
+                  <div className="navbar-dropdown-divider" />
+                  <button className="navbar-dropdown-item logout" onClick={handleLogout}>
+                    🚪 로그아웃
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button className="navbar-cta" onClick={() => navigate('/auth')}>로그인 / 회원가입</button>
+          )}
         </div>
       </div>
     </nav>

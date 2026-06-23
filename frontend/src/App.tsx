@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider, useAuth } from './context/AuthContext'
 import HomePage from './pages/HomePage'
 import UploadPage from './pages/UploadPage'
 import LoadingPage from './pages/LoadingPage'
@@ -7,18 +8,40 @@ import AuthPage from './pages/AuthPage'
 import DashboardPage from './pages/DashboardPage'
 import ChatWidget from './components/ChatWidget'
 
-export default function App() {
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isLoggedIn } = useAuth()
+  return isLoggedIn ? <>{children}</> : <Navigate to="/auth" replace />
+}
+
+function AppRoutes() {
   return (
-    <BrowserRouter basename="/checkmate">
+    <>
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/upload" element={<UploadPage />} />
         <Route path="/loading" element={<LoadingPage />} />
         <Route path="/result" element={<ResultPage />} />
         <Route path="/auth" element={<AuthPage />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
       <ChatWidget />
+    </>
+  )
+}
+
+export default function App() {
+  return (
+    <BrowserRouter basename="/checkmate">
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
     </BrowserRouter>
   )
 }
