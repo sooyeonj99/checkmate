@@ -4,6 +4,25 @@ import { useAuth } from '../context/AuthContext'
 
 type Tab = 'login' | 'signup'
 
+/* ── JSON 안전 파싱 헬퍼 ──────────────────────────────
+   GitHub Pages 등 백엔드 없는 환경에서 HTML이 반환될 때
+   JSON 파싱 오류 대신 알아볼 수 있는 메시지를 표시한다. */
+async function safeJson(res: Response): Promise<any> {
+  const ct = res.headers.get('content-type') ?? ''
+  if (!ct.includes('application/json')) {
+    throw new Error('서버에 연결할 수 없습니다.\n백엔드 서버가 실행 중인지 확인해 주세요.')
+  }
+  return res.json()
+}
+
+/* GitHub Pages 여부 감지 */
+const IS_GITHUB_PAGES = window.location.hostname.endsWith('github.io')
+
+/* 데모 계정 (GitHub Pages 전용) */
+const DEMO_EMAIL = 'test@test.com'
+const DEMO_PASSWORD = '12345678ab'
+const DEMO_USER = { id: 1, email: DEMO_EMAIL, username: 'test' }
+
 export default function AuthPage() {
   const [tab, setTab] = useState<Tab>('login')
   const navigate = useNavigate()
@@ -19,6 +38,19 @@ export default function AuthPage() {
       </Link>
 
       <div className="auth-card">
+        {/* GitHub Pages 데모 안내 배너 */}
+        {IS_GITHUB_PAGES && (
+          <div className="auth-deploy-banner">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0, marginTop: 1 }}>
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <span>
+              <strong>데모 모드</strong>입니다. 테스트 계정으로 로그인해 기능을 체험할 수 있습니다.<br/>
+              <span style={{ opacity: 0.8, fontSize: 12 }}>이메일: test@test.com &nbsp;/&nbsp; 비밀번호: 12345678ab</span>
+            </span>
+          </div>
+        )}
+
         <div className="auth-tabs">
           <button className={`auth-tab${tab === 'login' ? ' active' : ''}`} onClick={() => setTab('login')}>
             로그인
@@ -59,13 +91,27 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
     setError('')
     setNeedsVerification(false)
     setLoading(true)
+
+    /* ── GitHub Pages 데모 로그인 ── */
+    if (IS_GITHUB_PAGES) {
+      await new Promise((r) => setTimeout(r, 600)) // 로그인 중 UX
+      if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
+        login('demo-token', DEMO_USER)
+        onSuccess()
+      } else {
+        setError(`데모 모드에서는 테스트 계정만 사용할 수 있습니다.\n(test@test.com / 12345678ab)`)
+      }
+      setLoading(false)
+      return
+    }
+
     try {
       const res = await fetch('/api/v1/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       })
-      const data = await res.json()
+      const data = await safeJson(res)
       if (!res.ok) {
         if (res.status === 403) setNeedsVerification(true)
         throw new Error(data.detail ?? '로그인 실패')
@@ -81,11 +127,12 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
 
   const handleResend = async () => {
     try {
-      await fetch('/api/v1/auth/resend-verification', {
+      const res = await fetch('/api/v1/auth/resend-verification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       })
+      await safeJson(res)
       setResendDone(true)
       setNeedsVerification(false)
       setError('인증 메일을 재발송했습니다. 메일함을 확인해 주세요.')
@@ -98,7 +145,7 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
     <form className="auth-form" onSubmit={handleSubmit}>
       {error && (
         <div className={`auth-error-banner${needsVerification ? ' auth-error-verify' : ''}`}>
-          {error}
+          {error.split('\n').map((line, i) => <div key={i}>{line}</div>)}
           {needsVerification && !resendDone && (
             <button type="button" className="auth-resend-btn" onClick={handleResend}>
               인증 메일 재발송
@@ -149,7 +196,6 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
   const [agreePrivacy, setAgreePrivacy] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  // 가입 성공 후 이메일 인증 안내 화면
   const [emailSent, setEmailSent] = useState(false)
   const [sentEmail, setSentEmail] = useState('')
 
@@ -173,9 +219,8 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, username, password }),
       })
-      const data = await res.json()
+      const data = await safeJson(res)
       if (!res.ok) throw new Error(data.detail ?? '회원가입 실패')
-      // 이메일 인증 안내 화면으로 전환
       setSentEmail(email)
       setEmailSent(true)
     } catch (e: unknown) {
@@ -185,7 +230,30 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
     }
   }
 
-  // 이메일 발송 완료 화면
+  /* GitHub Pages 데모 모드: 회원가입 불가 안내 */
+  if (IS_GITHUB_PAGES) {
+    return (
+      <div className="auth-email-sent">
+        <div className="auth-email-sent-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.5">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        <h3 className="auth-email-sent-title">데모 모드</h3>
+        <p className="auth-email-sent-desc">
+          현재 데모 환경에서는 회원가입을 지원하지 않습니다.<br/>
+          테스트 계정으로 로그인해 기능을 체험해 보세요.
+        </p>
+        <div className="auth-email-sent-tip">
+          test@test.com &nbsp;/&nbsp; 12345678ab
+        </div>
+        <button type="button" className="auth-submit-btn" style={{ marginTop: 8 }} onClick={onSwitchToLogin}>
+          로그인 화면으로
+        </button>
+      </div>
+    )
+  }
+
   if (emailSent) {
     return (
       <div className="auth-email-sent">
@@ -203,12 +271,7 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
         <div className="auth-email-sent-tip">
           메일이 보이지 않으면 스팸 폴더를 확인해 주세요.
         </div>
-        <button
-          type="button"
-          className="auth-submit-btn"
-          style={{ marginTop: 8 }}
-          onClick={onSwitchToLogin}
-        >
+        <button type="button" className="auth-submit-btn" style={{ marginTop: 8 }} onClick={onSwitchToLogin}>
           로그인 화면으로 이동
         </button>
       </div>
@@ -217,7 +280,11 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
 
   return (
     <form className="auth-form" onSubmit={handleSubmit}>
-      {error && <div className="auth-error-banner">{error}</div>}
+      {error && (
+        <div className="auth-error-banner">
+          {error.split('\n').map((line, i) => <div key={i}>{line}</div>)}
+        </div>
+      )}
 
       <div className="auth-field">
         <label className="auth-label">이름 (닉네임)</label>

@@ -37,4 +37,5 @@ class AnalysisResult(BaseModel):
     analysis_time: str    # 분석 소요 시간
     clauses: list[ClauseResult]
     analyzed_at: str
-    contract_text: Optional[str] = None   # 원본 계약서 전문 텍스트
+    contract_text: Optional[str] = None   # 마스킹된 계약서 전문 텍스트
+    masked_count: int = 0                 # Presidio가 마스킹한 개인정보 항목 수

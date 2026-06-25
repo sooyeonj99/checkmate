@@ -71,14 +71,14 @@ export default function Navbar() {
                   </div>
                   <div className="navbar-dropdown-divider" />
                   <Link to="/dashboard" className="navbar-dropdown-item" onClick={() => setDropdownOpen(false)}>
-                    📊 대시보드
+                    대시보드
                   </Link>
                   <Link to="/upload" className="navbar-dropdown-item" onClick={() => setDropdownOpen(false)}>
-                    📎 계약서 분석
+                    계약서 분석
                   </Link>
                   <div className="navbar-dropdown-divider" />
                   <button className="navbar-dropdown-item logout" onClick={handleLogout}>
-                    🚪 로그아웃
+                    로그아웃
                   </button>
                 </div>
               )}

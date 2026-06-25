@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import { MOCK_RESULT_MAP } from '../data/mockResults'
 
 /* ── Types ──────────────────────────────────────────── */
@@ -178,9 +179,23 @@ function SummaryCard({
 /* ── Main Page ──────────────────────────────────────── */
 export default function DashboardPage() {
   const navigate = useNavigate()
+  const { user, logout } = useAuth()
   const [filter, setFilter] = useState<'all' | RiskLevel>('all')
   const [sortKey, setSortKey] = useState<'score' | 'expiry' | 'analyzed'>('analyzed')
   const [dismissedBanner, setDismissedBanner] = useState(false)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+
+  useEffect(() => {
+    if (!dropdownOpen) return
+    const close = () => setDropdownOpen(false)
+    window.addEventListener('click', close)
+    return () => window.removeEventListener('click', close)
+  }, [dropdownOpen])
+
+  const handleLogout = () => {
+    logout()
+    navigate('/')
+  }
 
   const expiringContracts = MOCK_CONTRACTS.filter((c) => c.daysLeft <= 30 && c.daysLeft > 0)
 
@@ -224,7 +239,37 @@ export default function DashboardPage() {
             </svg>
             새 계약서 분석
           </button>
-          <div className="dash-avatar">J</div>
+          <div
+            className="navbar-user-wrap"
+            onClick={(e) => { e.stopPropagation(); setDropdownOpen((v) => !v) }}
+          >
+            <div className="navbar-user-btn">
+              <div className="navbar-user-avatar">
+                {user?.username.charAt(0).toUpperCase() ?? '?'}
+              </div>
+              <span className="navbar-user-name">{user?.username}</span>
+              <span className="navbar-user-caret">▾</span>
+            </div>
+            {dropdownOpen && (
+              <div className="navbar-dropdown">
+                <div className="navbar-dropdown-info">
+                  <div className="navbar-dropdown-name">{user?.username}</div>
+                  <div className="navbar-dropdown-email">{user?.email}</div>
+                </div>
+                <div className="navbar-dropdown-divider" />
+                <Link to="/dashboard" className="navbar-dropdown-item" onClick={() => setDropdownOpen(false)}>
+                  대시보드
+                </Link>
+                <Link to="/upload" className="navbar-dropdown-item" onClick={() => setDropdownOpen(false)}>
+                  계약서 분석
+                </Link>
+                <div className="navbar-dropdown-divider" />
+                <button className="navbar-dropdown-item logout" onClick={handleLogout}>
+                  로그아웃
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 

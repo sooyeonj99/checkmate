@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 /* ── Types ─────────────────────────────────────────── */
 type RiskLevel = 'danger' | 'warn' | 'safe'
@@ -239,11 +239,12 @@ function gradeLabel(grade: RiskLevel): string {
 }
 
 /* ── ResultNav ─────────────────────────────────────── */
-function ResultNav({ date }: { date: string }) {
+function ResultNav({ date, onPdf }: { date: string; onPdf: () => void }) {
+  const navigate = useNavigate()
   return (
     <nav className="result-nav">
       <div className="result-nav-inner">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Link to="/" className="result-nav-logo">
             <div className="logo-sm">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -254,6 +255,15 @@ function ResultNav({ date }: { date: string }) {
             <span className="gradient-text">CHECKMATE</span>
           </Link>
           <span style={{ color: 'var(--border)', fontSize: 16 }}>|</span>
+          {/* 대시보드 버튼 */}
+          <button className="result-nav-back" onClick={() => navigate('/dashboard')}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+              <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+            </svg>
+            대시보드
+          </button>
+          {/* 새 분석 버튼 */}
           <Link to="/upload" className="result-nav-back">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M19 12H5M12 5l-7 7 7 7"/>
@@ -277,7 +287,7 @@ function ResultNav({ date }: { date: string }) {
             </svg>
             공유
           </button>
-          <button className="result-download-btn" onClick={() => window.print()}>
+          <button className="result-download-btn" onClick={onPdf}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
             </svg>
@@ -410,7 +420,7 @@ function ClauseItem({ clause, isOpen, onToggle }: ClauseItemProps) {
 
           {/* Suggestion */}
           <div className="result-quote-block suggest">
-            <div className="result-quote-label sugg">AI 수정 제안 문구</div>
+            <div className="result-quote-label sugg">판례 및 법적 기준 대안</div>
             <div className="result-quote-text">"{clause.suggestion}"</div>
           </div>
 
@@ -530,9 +540,21 @@ export default function ResultPage() {
 
   const [activeTab, setActiveTab] = useState<'result' | 'contract'>('result')
 
+  /* PDF: 모든 조항 펼침 → 인쇄 → 복원 */
+  const handlePdf = useCallback(() => {
+    document.body.classList.add('print-expand')
+    // 다음 프레임에서 인쇄 (CSS 적용 대기)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.print()
+        document.body.classList.remove('print-expand')
+      })
+    })
+  }, [])
+
   return (
     <div className="result-page">
-      <ResultNav date={result.analysisDate} />
+      <ResultNav date={result.analysisDate} onPdf={handlePdf} />
 
       {/* 베타 테스트 배너 */}
       {isMock && (

@@ -2339,6 +2339,11 @@ img, svg {
   font-size: 13px;
   color: rgba(255,255,255,0.5);
   transition: color 0.2s;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
 }
 
 .result-nav-back:hover { color: rgba(255,255,255,0.8); }
@@ -3612,7 +3617,7 @@ img, svg {
 }
 
 /* ── 네비게이션 바 ─────────────────────────────────────── */
-.navbar .container { flex-wrap: nowrap; overflow: hidden; }
+.navbar .container { flex-wrap: nowrap; overflow: visible; }
 
 .navbar-dashboard-btn {
   display: inline-flex;
@@ -4922,6 +4927,23 @@ img, svg {
 }
 .auth-resend-btn:hover { background: rgba(245,158,11,0.25); }
 
+/* ── GitHub Pages 데모 배너 ── */
+.auth-deploy-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+.auth-deploy-banner strong { font-weight: 600; }
+.auth-deploy-banner svg { margin-top: 1px; color: #2563eb; }
+
 /* ── 준비중 페이지 ── */
 .coming-soon-page {
   min-height: 100vh;
@@ -5114,3 +5136,45 @@ img, svg {
   margin: 0 auto 20px;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── PDF 인쇄 스타일 ──────────────────────────────────────── */
+/* JS: body.print-expand 클래스 → 모든 조항 펼침 */
+.print-expand .result-clause-body {
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+@media print {
+  /* 인쇄 불필요 요소 숨김 */
+  .result-nav-actions,
+  .result-nav-back,
+  .result-nav-logo .logo-sm,
+  .result-share-btn,
+  .result-download-btn,
+  .result-tab-btn,
+  .expert-chips,
+  .result-footer { display: none !important; }
+
+  /* 배경 색상 출력 허용 */
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  /* 조항 본문 전부 표시 */
+  .result-clause-body {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  .result-clause-body-inner { display: block !important; }
+  .result-clause-chevron { display: none !important; }
+
+  /* 계약서 원문 스크롤 해제 */
+  .contract-text-scroll {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* 페이지 여백 */
+  @page { margin: 20mm; }
+
+  /* 페이지 분할 방지 */
+  .result-clause { page-break-inside: avoid; }
+}
