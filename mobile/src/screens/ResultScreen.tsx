@@ -1,9 +1,11 @@
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import {
   View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, LayoutAnimation, UIManager, Platform,
+  TouchableOpacity, LayoutAnimation, UIManager, Platform, Alert,
+  ActivityIndicator,
 } from 'react-native'
 import { useNavigation, useRoute } from '@react-navigation/native'
+import api from '../services/api'
 import { colors } from '../theme/colors'
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -47,9 +49,7 @@ function transformApiResult(data: any): AnalysisResult {
     suggestion: c.suggestion ?? '',
     lawRef: c.law_ref ?? '',
   }))
-
   const grade = data.grade === '위험' ? 'danger' : data.grade === '주의' ? 'warn' : 'safe'
-
   return {
     contractName: data.filename ?? '계약서',
     score: data.score ?? 0,
@@ -66,9 +66,17 @@ export default function ResultScreen() {
   const navigation = useNavigation<any>()
   const route = useRoute<any>()
   const rawResult = route.params?.analysisResult
+  const contractId = route.params?.contractId as string | undefined
+  const isSavedParam = route.params?.isSaved === true
+  const isMock = !rawResult
+
   const result: AnalysisResult = rawResult ? transformApiResult(rawResult) : MOCK_RESULT
 
   const [openId, setOpenId] = useState<number | null>(1)
+  const [saveState, setSaveState] = useState<'pending' | 'saved'>(
+    (isMock || isSavedParam) ? 'saved' : 'pending'
+  )
+  const [saving, setSaving] = useState(false)
 
   const scoreColor = result.score >= 61 ? colors.danger : result.score >= 31 ? colors.warn : colors.safe
   const gradeLabel = result.grade === 'danger' ? '⚠ 위험' : result.grade === 'warn' ? '⚡ 주의' : '✓ 안전'
@@ -77,6 +85,45 @@ export default function ResultScreen() {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
     setOpenId((prev) => (prev === id ? null : id))
   }
+
+  const handleSave = useCallback(async () => {
+    if (!contractId || !rawResult) { setSaveState('saved'); return }
+    setSaving(true)
+    try {
+      await api.post(`/contracts/${contractId}/save`, rawResult)
+      setSaveState('saved')
+      Alert.alert('저장 완료', '분석 결과가 대시보드에 저장되었습니다.')
+    } catch (e: any) {
+      if (e?.response?.status === 409) {
+        setSaveState('saved')
+      } else {
+        setSaveState('saved')
+        Alert.alert('알림', '저장 중 오류가 발생했지만 결과는 확인할 수 있습니다.')
+      }
+    } finally {
+      setSaving(false)
+    }
+  }, [contractId, rawResult])
+
+  const handleDiscard = useCallback(() => {
+    Alert.alert(
+      '저장 안 함',
+      '결과를 저장하지 않으면 다시 볼 수 없습니다. 계속하시겠습니까?',
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '저장 안 함',
+          style: 'destructive',
+          onPress: async () => {
+            if (contractId) {
+              api.delete(`/contracts/${contractId}`).catch(() => {})
+            }
+            navigation.navigate('Dashboard')
+          },
+        },
+      ]
+    )
+  }, [contractId, navigation])
 
   return (
     <View style={styles.root}>
@@ -92,7 +139,6 @@ export default function ResultScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Contract name */}
         <Text style={styles.eyebrow}>분석 완료</Text>
         <Text style={styles.contractName} numberOfLines={2}>{result.contractName}</Text>
 
@@ -123,6 +169,35 @@ export default function ResultScreen() {
             </View>
           </View>
         </View>
+
+        {/* 저장 배너 */}
+        {saveState === 'pending' && (
+          <View style={styles.saveBanner}>
+            <Text style={styles.saveBannerTitle}>분석 결과를 저장할까요?</Text>
+            <Text style={styles.saveBannerSub}>저장하면 대시보드에서 언제든지 다시 확인할 수 있습니다.</Text>
+            <View style={styles.saveBannerBtns}>
+              <TouchableOpacity
+                style={[styles.saveBtn, saving && { opacity: 0.5 }]}
+                onPress={handleSave}
+                disabled={saving}
+              >
+                {saving
+                  ? <ActivityIndicator size="small" color="#fff" />
+                  : <Text style={styles.saveBtnText}>결과 저장</Text>
+                }
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.discardBtn} onPress={handleDiscard}>
+                <Text style={styles.discardBtnText}>저장 안 함</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {saveState === 'saved' && !isMock && !isSavedParam && (
+          <View style={styles.savedNotice}>
+            <Text style={styles.savedNoticeText}>✓ 대시보드에 저장되었습니다</Text>
+          </View>
+        )}
 
         {/* Clauses */}
         <Text style={styles.sectionTitle}>위험 조항 상세 분석</Text>
@@ -163,27 +238,19 @@ function ClauseItem({
       {isOpen && (
         <View style={styles.clauseBody}>
           <Text style={styles.clauseDesc}>{clause.desc}</Text>
-
-          {/* Original */}
           <View style={[styles.quoteBlock, { borderLeftColor: levelColor }]}>
             <Text style={styles.quoteLabel}>계약서 원문</Text>
             <Text style={styles.quoteText}>"{clause.original}"</Text>
           </View>
-
-          {/* Problem */}
           {clause.problem && (
             <View style={styles.problemRow}>
               <Text style={styles.problemText}>⚠ 문제점: {clause.problem}</Text>
             </View>
           )}
-
-          {/* Suggestion */}
           <View style={[styles.quoteBlock, { borderLeftColor: colors.safe }]}>
             <Text style={[styles.quoteLabel, { color: colors.safe }]}>판례 및 법적 기준 대안</Text>
             <Text style={styles.quoteText}>"{clause.suggestion}"</Text>
           </View>
-
-          {/* Law ref */}
           {clause.lawRef && (
             <Text style={styles.lawRef}>📌 법적 근거: {clause.lawRef}</Text>
           )}
@@ -193,29 +260,19 @@ function ClauseItem({
   )
 }
 
-/* ── Mock data (API 실패 시 표시) ── */
 const MOCK_RESULT: AnalysisResult = {
   contractName: '분석 결과 없음',
-  score: 0,
-  grade: 'safe',
-  dangerCount: 0,
-  warnCount: 0,
-  safeCount: 0,
-  analysisTime: '-',
-  clauses: [],
+  score: 0, grade: 'safe',
+  dangerCount: 0, warnCount: 0, safeCount: 0,
+  analysisTime: '-', clauses: [],
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 56,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingTop: 56, paddingBottom: 16,
+    borderBottomWidth: 1, borderBottomColor: colors.border,
   },
   backBtn: { width: 64 },
   backText: { color: colors.primary, fontSize: 13 },
@@ -226,14 +283,8 @@ const styles = StyleSheet.create({
   eyebrow: { color: colors.primary, fontSize: 11, fontWeight: '700', letterSpacing: 1, marginBottom: 4 },
   contractName: { color: colors.text, fontSize: 18, fontWeight: '800', marginBottom: 16 },
   scoreCard: {
-    backgroundColor: colors.bgCard,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 16,
-    marginBottom: 24,
-    flexDirection: 'row',
-    gap: 12,
+    backgroundColor: colors.bgCard, borderRadius: 16, borderWidth: 1, borderColor: colors.border,
+    padding: 16, marginBottom: 16, flexDirection: 'row', gap: 12,
   },
   scoreLeft: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   scoreNum: { fontSize: 52, fontWeight: '900' },
@@ -243,29 +294,42 @@ const styles = StyleSheet.create({
   scoreRight: { flex: 1 },
   metricGrid: { flexWrap: 'wrap', flexDirection: 'row', gap: 8 },
   metricItem: {
-    width: '47%',
-    backgroundColor: colors.bg,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 10,
+    width: '47%', backgroundColor: colors.bg, borderRadius: 10,
+    borderWidth: 1, borderColor: colors.border, padding: 10,
   },
   metricLabel: { color: colors.textMuted, fontSize: 10, marginBottom: 3 },
   metricValue: { fontSize: 15, fontWeight: '700' },
+  // 저장 배너
+  saveBanner: {
+    backgroundColor: 'rgba(79,142,247,0.08)', borderRadius: 14,
+    borderWidth: 1, borderColor: 'rgba(79,142,247,0.25)',
+    padding: 16, marginBottom: 20,
+  },
+  saveBannerTitle: { color: colors.text, fontSize: 15, fontWeight: '700', marginBottom: 4 },
+  saveBannerSub: { color: colors.textMuted, fontSize: 13, marginBottom: 14 },
+  saveBannerBtns: { flexDirection: 'row', gap: 10 },
+  saveBtn: {
+    flex: 1, backgroundColor: colors.primary, borderRadius: 10,
+    paddingVertical: 12, alignItems: 'center',
+  },
+  saveBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  discardBtn: {
+    flex: 1, borderRadius: 10, borderWidth: 1, borderColor: colors.border,
+    paddingVertical: 12, alignItems: 'center',
+  },
+  discardBtnText: { color: colors.textMuted, fontWeight: '600', fontSize: 14 },
+  savedNotice: {
+    backgroundColor: 'rgba(34,197,94,0.08)', borderRadius: 10,
+    borderWidth: 1, borderColor: 'rgba(34,197,94,0.2)',
+    padding: 12, marginBottom: 16, alignItems: 'center',
+  },
+  savedNoticeText: { color: colors.safe, fontSize: 13, fontWeight: '600' },
   sectionTitle: { color: colors.textMuted, fontSize: 11, fontWeight: '600', letterSpacing: 1, marginBottom: 10 },
   clauseCard: {
-    backgroundColor: colors.bgCard,
-    borderRadius: 12,
-    borderWidth: 1,
-    marginBottom: 10,
-    overflow: 'hidden',
+    backgroundColor: colors.bgCard, borderRadius: 12, borderWidth: 1,
+    marginBottom: 10, overflow: 'hidden',
   },
-  clauseHead: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 14,
-    gap: 8,
-  },
+  clauseHead: { flexDirection: 'row', alignItems: 'center', padding: 14, gap: 8 },
   clauseBadge: { borderRadius: 6, paddingVertical: 3, paddingHorizontal: 8 },
   clauseBadgeText: { fontSize: 11, fontWeight: '700' },
   clauseTitle: { flex: 1, color: colors.text, fontSize: 14, fontWeight: '600' },
@@ -274,20 +338,12 @@ const styles = StyleSheet.create({
   clauseBody: { padding: 14, paddingTop: 0, borderTopWidth: 1, borderTopColor: colors.border },
   clauseDesc: { color: colors.textSecondary, fontSize: 13, lineHeight: 20, marginBottom: 12 },
   quoteBlock: {
-    borderLeftWidth: 3,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    padding: 12,
-    marginBottom: 10,
+    borderLeftWidth: 3, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.03)',
+    padding: 12, marginBottom: 10,
   },
   quoteLabel: { color: colors.textMuted, fontSize: 11, fontWeight: '600', marginBottom: 5 },
   quoteText: { color: colors.textSecondary, fontSize: 13, lineHeight: 19 },
-  problemRow: {
-    backgroundColor: colors.dangerBg,
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 10,
-  },
+  problemRow: { backgroundColor: colors.dangerBg, borderRadius: 8, padding: 10, marginBottom: 10 },
   problemText: { color: colors.danger, fontSize: 12, lineHeight: 18 },
   lawRef: { color: colors.textMuted, fontSize: 11, lineHeight: 17 },
 })

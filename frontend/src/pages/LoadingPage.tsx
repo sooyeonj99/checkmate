@@ -318,6 +318,7 @@ export default function LoadingPage() {
       navigate('/result', {
         state: {
           analysisResult: apiResultRef.current,
+          contractId,
           isMock: useMock || !apiResultRef.current,
         },
       })

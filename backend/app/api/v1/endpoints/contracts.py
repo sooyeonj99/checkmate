@@ -10,10 +10,15 @@ from datetime import datetime
 from typing import Optional
 
 import aiofiles
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.db.session import get_db
+from app.models.saved_contract import SavedContract
+from app.models.user import User
 from app.schemas.contract import AnalysisResult, ClauseResult, ContractUploadResponse
+from app.api.v1.endpoints.users import get_current_user
 
 router = APIRouter(prefix="/contracts", tags=["계약서"])
 
@@ -158,6 +163,121 @@ async def delete_contract(contract_id: str):
             detail="계약서를 찾을 수 없습니다.",
         )
     shutil.rmtree(contract_dir)
+
+
+# ── 분석 결과 저장 (대시보드 등록) ────────────────────────────────────
+
+@router.post(
+    "/{contract_id}/save",
+    status_code=status.HTTP_201_CREATED,
+    summary="분석 결과 대시보드 저장",
+)
+async def save_contract(
+    contract_id: str,
+    result: AnalysisResult,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    # 중복 저장 방지
+    existing = db.query(SavedContract).filter_by(
+        user_id=current_user.id, contract_id=contract_id
+    ).first()
+    if existing:
+        raise HTTPException(status_code=409, detail="이미 저장된 분석 결과입니다.")
+
+    saved = SavedContract(
+        user_id=current_user.id,
+        contract_id=contract_id,
+        filename=result.filename,
+        contract_type=result.contract_type,
+        score=result.score,
+        grade=result.grade,
+        danger_count=result.danger_count,
+        warn_count=result.warn_count,
+        safe_count=result.safe_count,
+        analysis_time=result.analysis_time,
+        result_json=result.model_dump(),
+    )
+    db.add(saved)
+    db.commit()
+    db.refresh(saved)
+
+    # 업로드 파일 정리 (저장했으므로 더 이상 필요 없음)
+    contract_dir = os.path.join(settings.UPLOAD_DIR, contract_id)
+    if os.path.isdir(contract_dir):
+        shutil.rmtree(contract_dir)
+
+    return {"id": saved.id, "saved_at": saved.saved_at.isoformat()}
+
+
+# ── 저장된 계약서 목록 ────────────────────────────────────────────────
+
+@router.get(
+    "/saved",
+    summary="저장된 분석 결과 목록",
+)
+async def list_saved_contracts(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    rows = (
+        db.query(SavedContract)
+        .filter_by(user_id=current_user.id)
+        .order_by(SavedContract.saved_at.desc())
+        .all()
+    )
+    return [
+        {
+            "id": r.id,
+            "contract_id": r.contract_id,
+            "filename": r.filename,
+            "contract_type": r.contract_type,
+            "score": r.score,
+            "grade": r.grade,
+            "danger_count": r.danger_count,
+            "warn_count": r.warn_count,
+            "safe_count": r.safe_count,
+            "analysis_time": r.analysis_time,
+            "saved_at": r.saved_at.isoformat(),
+        }
+        for r in rows
+    ]
+
+
+# ── 저장된 계약서 상세 조회 ───────────────────────────────────────────
+
+@router.get(
+    "/saved/{saved_id}",
+    summary="저장된 분석 결과 상세",
+)
+async def get_saved_contract(
+    saved_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    row = db.query(SavedContract).filter_by(id=saved_id, user_id=current_user.id).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="저장된 계약서를 찾을 수 없습니다.")
+    return row.result_json
+
+
+# ── 저장된 계약서 삭제 ────────────────────────────────────────────────
+
+@router.delete(
+    "/saved/{saved_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="저장된 분석 결과 삭제",
+)
+async def delete_saved_contract(
+    saved_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    row = db.query(SavedContract).filter_by(id=saved_id, user_id=current_user.id).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="저장된 계약서를 찾을 수 없습니다.")
+    db.delete(row)
+    db.commit()
 
 
 # ── 목업 분석 결과 (Gemini 미연결 또는 오류 시 반환) ───────────────

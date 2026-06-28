@@ -1,7 +1,22 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { MOCK_RESULT_MAP } from '../data/mockResults'
+
+/* ── Saved contract types (API) ─────────────────────── */
+interface SavedContractItem {
+  id: number
+  contract_id: string
+  filename: string
+  contract_type: string
+  score: number
+  grade: string
+  danger_count: number
+  warn_count: number
+  safe_count: number
+  analysis_time: string
+  saved_at: string
+}
 
 /* ── Types ──────────────────────────────────────────── */
 type RiskLevel = 'danger' | 'warn' | 'safe'
@@ -185,6 +200,52 @@ export default function DashboardPage() {
   const [dismissedBanner, setDismissedBanner] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
 
+  /* 저장된 계약서 */
+  const [savedContracts, setSavedContracts] = useState<SavedContractItem[]>([])
+  const [savedLoading, setSavedLoading] = useState(true)
+  const [deletingId, setDeletingId] = useState<number | null>(null)
+
+  const fetchSaved = useCallback(async () => {
+    const token = localStorage.getItem('cm_token')
+    if (!token) { setSavedLoading(false); return }
+    try {
+      const res = await fetch('/api/v1/contracts/saved', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (res.ok) setSavedContracts(await res.json())
+    } finally {
+      setSavedLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { fetchSaved() }, [fetchSaved])
+
+  const handleDeleteSaved = useCallback(async (id: number) => {
+    if (!confirm('이 분석 결과를 삭제할까요?')) return
+    setDeletingId(id)
+    const token = localStorage.getItem('cm_token')
+    try {
+      await fetch(`/api/v1/contracts/saved/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      setSavedContracts((prev) => prev.filter((c) => c.id !== id))
+    } finally {
+      setDeletingId(null)
+    }
+  }, [])
+
+  const handleViewSaved = useCallback(async (item: SavedContractItem) => {
+    const token = localStorage.getItem('cm_token')
+    const res = await fetch(`/api/v1/contracts/saved/${item.id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (res.ok) {
+      const analysisResult = await res.json()
+      navigate('/result', { state: { analysisResult, isSaved: true } })
+    }
+  }, [navigate])
+
   useEffect(() => {
     if (!dropdownOpen) return
     const close = () => setDropdownOpen(false)
@@ -296,6 +357,70 @@ export default function DashboardPage() {
             <SummaryCard icon="⚠️" label="위험 계약" value={dangerCount} sub="즉시 검토 필요" accent="danger" />
             <SummaryCard icon="📊" label="이번 달 분석" value={thisMonthCount} sub="2026년 6월 기준" accent="safe" />
             <SummaryCard icon="⏰" label="만료 임박" value={expiringContracts.length} sub="30일 이내 만료" accent="warn" />
+          </div>
+
+          {/* ── 저장된 AI 분석 결과 ── */}
+          <div className="saved-contracts-section">
+            <div className="saved-contracts-header">
+              <div>
+                <h2 className="dash-title" style={{ fontSize: 18, marginBottom: 4 }}>저장된 AI 분석 결과</h2>
+                <p className="dash-subtitle" style={{ fontSize: 13 }}>결과 저장을 완료한 계약서를 여기서 다시 확인하거나 삭제할 수 있습니다</p>
+              </div>
+              <button className="btn-primary" style={{ fontSize: 13, padding: '8px 16px' }} onClick={() => navigate('/upload')}>
+                + 새 분석
+              </button>
+            </div>
+
+            {savedLoading ? (
+              <div className="saved-loading">불러오는 중...</div>
+            ) : savedContracts.length === 0 ? (
+              <div className="saved-empty">
+                <span style={{ fontSize: 32 }}>📋</span>
+                <p>저장된 분석 결과가 없습니다.</p>
+                <p style={{ fontSize: 13 }}>계약서를 분석한 후 결과 저장을 선택하면 여기에 표시됩니다.</p>
+              </div>
+            ) : (
+              <div className="saved-grid">
+                {savedContracts.map((item) => {
+                  const gradeColor =
+                    item.grade === '위험' ? 'var(--risk-high)' :
+                    item.grade === '주의' ? 'var(--risk-mid)' :
+                    'var(--risk-safe)'
+                  return (
+                    <div key={item.id} className="saved-card">
+                      <div className="saved-card-top">
+                        <div className="saved-card-type">{item.contract_type}</div>
+                        <span className="saved-card-grade" style={{ color: gradeColor }}>{item.grade}</span>
+                      </div>
+                      <div className="saved-card-name">{item.filename}</div>
+                      <div className="saved-card-score" style={{ color: gradeColor }}>
+                        위험도 <strong>{item.score}</strong>점
+                      </div>
+                      <div className="saved-card-counts">
+                        <span className="saved-count danger">{item.danger_count} 위험</span>
+                        <span className="saved-count warn">{item.warn_count} 주의</span>
+                        <span className="saved-count safe">{item.safe_count} 안전</span>
+                      </div>
+                      <div className="saved-card-date">
+                        {new Date(item.saved_at).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })} 저장
+                      </div>
+                      <div className="saved-card-actions">
+                        <button className="saved-view-btn" onClick={() => handleViewSaved(item)}>
+                          결과 보기
+                        </button>
+                        <button
+                          className="saved-delete-btn"
+                          onClick={() => handleDeleteSaved(item.id)}
+                          disabled={deletingId === item.id}
+                        >
+                          {deletingId === item.id ? '삭제 중...' : '삭제'}
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
 
           {/* ── Subscription/Rental section ── */}

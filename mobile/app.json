@@ -12,6 +12,7 @@
     },
     "android": {
       "package": "com.checkmate.app",
+      "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "backgroundColor": "#060d1f",
         "foregroundImage": "./assets/android-icon-foreground.png",

@@ -239,7 +239,7 @@ function gradeLabel(grade: RiskLevel): string {
 }
 
 /* ── ResultNav ─────────────────────────────────────── */
-function ResultNav({ date, onPdf }: { date: string; onPdf: () => void }) {
+function ResultNav({ date, onPdf }: { date: string; onPdf?: () => void }) {
   const navigate = useNavigate()
   return (
     <nav className="result-nav">
@@ -287,7 +287,13 @@ function ResultNav({ date, onPdf }: { date: string; onPdf: () => void }) {
             </svg>
             공유
           </button>
-          <button className="result-download-btn" onClick={onPdf}>
+          <button
+            className="result-download-btn"
+            onClick={onPdf}
+            disabled={!onPdf}
+            title={!onPdf ? '결과를 저장해야 PDF를 받을 수 있습니다' : undefined}
+            style={!onPdf ? { opacity: 0.4, cursor: 'not-allowed' } : undefined}
+          >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
             </svg>
@@ -533,17 +539,54 @@ function ContractTextView({ contractName, html }: { contractName: string; html: 
 /* ── Page ──────────────────────────────────────────── */
 export default function ResultPage() {
   const location = useLocation()
+  const navigate = useNavigate()
   const directResult = (location.state as any)?.directResult as AnalysisResult | undefined
   const rawResult = (location.state as any)?.analysisResult
+  const contractId = (location.state as any)?.contractId as string | undefined
   const isMock = (location.state as any)?.isMock || (!directResult && !rawResult)
+  const isSaved = (location.state as any)?.isSaved === true   // 대시보드에서 열었을 때
   const result: AnalysisResult = directResult ?? (rawResult ? transformApiResult(rawResult) : RESULT)
 
   const [activeTab, setActiveTab] = useState<'result' | 'contract'>('result')
+  const [saveState, setSaveState] = useState<'pending' | 'saved' | 'discarded'>(
+    (isMock || isSaved) ? 'saved' : 'pending'
+  )
+  const [saving, setSaving] = useState(false)
+
+  /* 결과 저장 */
+  const handleSave = useCallback(async () => {
+    if (!contractId || !rawResult) { setSaveState('saved'); return }
+    setSaving(true)
+    try {
+      const token = localStorage.getItem('cm_token')
+      await fetch(`/api/v1/contracts/${contractId}/save`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(rawResult),
+      })
+      setSaveState('saved')
+    } catch {
+      setSaveState('saved')   // 실패해도 PDF는 허용
+    } finally {
+      setSaving(false)
+    }
+  }, [contractId, rawResult])
+
+  /* 저장 안 함 → 파일 삭제 후 대시보드 */
+  const handleDiscard = useCallback(async () => {
+    if (contractId) {
+      const token = localStorage.getItem('cm_token')
+      fetch(`/api/v1/contracts/${contractId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => {})
+    }
+    navigate('/dashboard')
+  }, [contractId, navigate])
 
   /* PDF: 모든 조항 펼침 → 인쇄 → 복원 */
   const handlePdf = useCallback(() => {
     document.body.classList.add('print-expand')
-    // 다음 프레임에서 인쇄 (CSS 적용 대기)
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         window.print()
@@ -554,7 +597,7 @@ export default function ResultPage() {
 
   return (
     <div className="result-page">
-      <ResultNav date={result.analysisDate} onPdf={handlePdf} />
+      <ResultNav date={result.analysisDate} onPdf={saveState === 'saved' ? handlePdf : undefined} />
 
       {/* 베타 테스트 배너 */}
       {isMock && (
@@ -619,6 +662,37 @@ export default function ResultPage() {
             contractName={result.contractName}
             html={result.contractHtml ?? ''}
           />
+        )}
+
+        {/* 저장 여부 선택 배너 */}
+        {saveState === 'pending' && (
+          <div className="result-save-banner">
+            <div className="result-save-banner-text">
+              <span className="result-save-banner-title">분석 결과를 저장할까요?</span>
+              <span className="result-save-banner-sub">저장하면 대시보드에서 언제든지 다시 확인할 수 있습니다.</span>
+            </div>
+            <div className="result-save-banner-actions">
+              <button
+                className="result-save-btn"
+                onClick={handleSave}
+                disabled={saving}
+              >
+                {saving ? '저장 중...' : '결과 저장'}
+              </button>
+              <button
+                className="result-discard-btn"
+                onClick={handleDiscard}
+              >
+                저장 안 함
+              </button>
+            </div>
+          </div>
+        )}
+
+        {saveState === 'saved' && (
+          <div className="result-saved-notice">
+            대시보드에 저장되었습니다. PDF 다운로드가 활성화되었습니다.
+          </div>
         )}
 
         {/* Footer */}

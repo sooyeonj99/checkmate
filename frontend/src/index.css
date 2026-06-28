@@ -2948,6 +2948,77 @@ img, svg {
 
 .result-footer strong { color: var(--text-secondary); }
 
+/* ── 결과 저장 배너 ── */
+.result-save-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  background: linear-gradient(135deg, rgba(79,142,247,0.12) 0%, rgba(79,142,247,0.06) 100%);
+  border: 1px solid rgba(79,142,247,0.3);
+  border-radius: 14px;
+  padding: 20px 24px;
+  margin: 32px 0 16px;
+  flex-wrap: wrap;
+}
+.result-save-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.result-save-banner-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+.result-save-banner-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.result-save-banner-actions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.result-save-btn {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  padding: 10px 22px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.result-save-btn:hover:not(:disabled) { opacity: .85; }
+.result-save-btn:disabled { opacity: .5; cursor: not-allowed; }
+.result-discard-btn {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 10px 22px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+.result-discard-btn:hover { border-color: var(--text-muted); color: var(--text); }
+.result-saved-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #22c55e;
+  background: rgba(34,197,94,0.08);
+  border: 1px solid rgba(34,197,94,0.2);
+  border-radius: 10px;
+  padding: 12px 18px;
+  margin: 24px 0 12px;
+}
+.result-saved-notice::before { content: '✓'; font-weight: 700; }
+
 /* Responsive */
 @media (max-width: 700px) {
   .result-metric-grid { grid-template-columns: repeat(2, 1fr); }
@@ -4030,6 +4101,122 @@ img, svg {
 }
 
 /* ── 대시보드 구독·렌탈 현황 ─────────────────────────── */
+/* ── 저장된 AI 분석 결과 섹션 ── */
+.saved-contracts-section {
+  margin-top: 32px;
+  margin-bottom: 8px;
+}
+.saved-contracts-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.saved-loading {
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 24px 0;
+  text-align: center;
+}
+.saved-empty {
+  background: var(--bg-card);
+  border: 1px dashed var(--border);
+  border-radius: 14px;
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.saved-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+.saved-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color .15s;
+}
+.saved-card:hover { border-color: rgba(79,142,247,0.4); }
+.saved-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.saved-card-type {
+  font-size: 11px;
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.05);
+  border-radius: 6px;
+  padding: 3px 8px;
+}
+.saved-card-grade { font-size: 12px; font-weight: 700; }
+.saved-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.4;
+  word-break: break-all;
+}
+.saved-card-score { font-size: 13px; color: var(--text-muted); }
+.saved-card-score strong { font-size: 18px; }
+.saved-card-counts {
+  display: flex;
+  gap: 6px;
+}
+.saved-count {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+.saved-count.danger { color: var(--risk-high); background: rgba(239,68,68,0.1); }
+.saved-count.warn   { color: var(--risk-mid);  background: rgba(245,158,11,0.1); }
+.saved-count.safe   { color: var(--risk-safe); background: rgba(34,197,94,0.1); }
+.saved-card-date { font-size: 11px; color: var(--text-muted); }
+.saved-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+.saved-view-btn {
+  flex: 1;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 0;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.saved-view-btn:hover { opacity: .85; }
+.saved-delete-btn {
+  background: transparent;
+  color: var(--risk-high);
+  border: 1px solid rgba(239,68,68,0.3);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s;
+}
+.saved-delete-btn:hover { background: rgba(239,68,68,0.08); }
+.saved-delete-btn:disabled { opacity: .5; cursor: not-allowed; }
+
 .sub-detail-section {
   margin-top: 32px;
 }
@@ -5138,27 +5325,35 @@ img, svg {
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── PDF 인쇄 스타일 ──────────────────────────────────────── */
-/* JS: body.print-expand 클래스 → 모든 조항 펼침 */
 .print-expand .result-clause-body {
   max-height: none !important;
   overflow: visible !important;
 }
 
 @media print {
-  /* 인쇄 불필요 요소 숨김 */
-  .result-nav-actions,
-  .result-nav-back,
-  .result-nav-logo .logo-sm,
+  @page { margin: 15mm 18mm; size: A4; }
+
+  /* 배경 색상 출력 허용 */
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+  /* 네비바 전체 숨김 */
+  .result-nav { display: none !important; }
+
+  /* 탭바 숨김 */
+  .result-tabs { display: none !important; }
+
+  /* 불필요 버튼/요소 숨김 */
   .result-share-btn,
   .result-download-btn,
-  .result-tab-btn,
   .expert-chips,
   .result-footer { display: none !important; }
 
-  /* 배경 색상 출력 허용 */
-  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  /* 배경/레이아웃 조정 */
+  body { background: #fff !important; }
+  .result-page { background: #fff !important; }
+  .result-content { max-width: 100% !important; padding: 0 !important; }
 
-  /* 조항 본문 전부 표시 */
+  /* 조항 본문 전부 펼침 */
   .result-clause-body {
     max-height: none !important;
     overflow: visible !important;
@@ -5172,9 +5367,7 @@ img, svg {
     overflow: visible !important;
   }
 
-  /* 페이지 여백 */
-  @page { margin: 20mm; }
-
   /* 페이지 분할 방지 */
-  .result-clause { page-break-inside: avoid; }
+  .result-clause { page-break-inside: avoid; break-inside: avoid; }
+  .score-section { page-break-inside: avoid; break-inside: avoid; }
 }

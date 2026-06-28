@@ -20,7 +20,7 @@ from app.schemas.contract import AnalysisResult, ClauseResult
 
 logger = logging.getLogger(__name__)
 
-GEMINI_MODEL = "gemini-2.0-flash"
+GEMINI_MODEL = "gemini-2.5-flash"
 
 # ── Gemini 프롬프트 (텍스트용) ────────────────────────────────────────────────
 _PROMPT = """당신은 한국 법률 계약서 분석 전문가입니다.

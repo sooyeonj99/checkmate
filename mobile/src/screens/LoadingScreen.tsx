@@ -66,7 +66,7 @@ export default function LoadingScreen() {
 
   const tryNavigate = () => {
     if (apiDone.current && animDone.current) {
-      navigation.replace('Result', { analysisResult: resultRef.current })
+      navigation.replace('Result', { analysisResult: resultRef.current, contractId })
     }
   }
 

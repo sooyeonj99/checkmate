@@ -56,7 +56,16 @@
       "Bash(uvicorn app.main:app --port 8000 --reload)",
       "Bash(Read /tmp/claude-0/-mnt-e-checkmate/1399cd60-75d5-4a80-9ccf-c89a0be5f00c/tasks/b6tbdn9u1.output)",
       "Bash(curl -s -X POST http://localhost:8000/api/v1/auth/register -H 'Content-Type: application/json' -d '{\"email\":\"test@checkmate.kr\",\"username\":\"테스트유저\",\"password\":\"test1234\"}')",
-      "Bash(curl -s -X POST http://localhost:8000/api/v1/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"test@checkmate.kr\",\"password\":\"test1234\"}')"
+      "Bash(curl -s -X POST http://localhost:8000/api/v1/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"test@checkmate.kr\",\"password\":\"test1234\"}')",
+      "Bash(curl -s http://localhost:8000/api/v1/auth/register -X POST -H \"Content-Type: application/json\" -d '{\"email\":\"test@test.com\",\"username\":\"test\",\"password\":\"12345678ab\"}')",
+      "Bash(curl -s http://localhost:8000/)",
+      "Bash(curl -v http://localhost:8000/api/v1/auth/register -X POST -H \"Content-Type: application/json\" -d '{\"email\":\"test2@test.com\",\"username\":\"test2\",\"password\":\"12345678ab\"}')",
+      "Bash(awk '{print $2}')",
+      "Bash(xargs kill -9)",
+      "Bash(nohup python3 -m uvicorn app.main:app --port 8000 --reload)",
+      "Bash(echo \"PID: $!\")",
+      "Bash(curl -s -X POST http://localhost:8000/api/v1/auth/register -H 'Content-Type: application/json' -d '{\"email\":\"test@test.com\",\"username\":\"test\",\"password\":\"12345678ab\"}')",
+      "Bash(curl -s -X POST http://localhost:8000/api/v1/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"test@test.com\",\"password\":\"12345678ab\"}')"
     ],
     "additionalDirectories": [
       "/mnt/e/checkmate/frontend",

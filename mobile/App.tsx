@@ -17,7 +17,7 @@ export type RootStackParamList = {
   Dashboard: undefined
   Upload: undefined
   Loading: { contractId: string; filename: string }
-  Result: { analysisResult?: any }
+  Result: { analysisResult?: any; contractId?: string; isSaved?: boolean }
 }
 
 const Stack = createNativeStackNavigator<RootStackParamList>()

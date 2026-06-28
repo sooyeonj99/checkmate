@@ -64,16 +64,19 @@ function LoginForm({ onLogin }: { onLogin: (token: string, user: any) => Promise
     }
     setLoading(true)
     try {
-      const form = new URLSearchParams()
-      form.append('username', email)
-      form.append('password', password)
-      const { data } = await api.post('/auth/login', form.toString(), {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      const res = await fetch('http://10.0.2.2:8000/api/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
       })
+      const data = await res.json()
+      if (!res.ok) {
+        Alert.alert('로그인 실패', data?.detail ?? `오류 ${res.status}`)
+        return
+      }
       await onLogin(data.access_token, data.user)
     } catch (e: any) {
-      const msg = e?.response?.data?.detail ?? '로그인에 실패했습니다.'
-      Alert.alert('로그인 실패', msg)
+      Alert.alert('네트워크 오류', e?.message ?? '알 수 없는 오류')
     } finally {
       setLoading(false)
     }
@@ -127,14 +130,8 @@ function SignupForm({ onLogin }: { onLogin: (token: string, user: any) => Promis
     }
     setLoading(true)
     try {
-      await api.post('/auth/signup', { username, email, password })
-      // 가입 후 자동 로그인
-      const form = new URLSearchParams()
-      form.append('username', email)
-      form.append('password', password)
-      const { data } = await api.post('/auth/login', form.toString(), {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      })
+      await api.post('/auth/register', { username, email, password })
+      const { data } = await api.post('/auth/login', { email, password })
       await onLogin(data.access_token, data.user)
     } catch (e: any) {
       const msg = e?.response?.data?.detail ?? '회원가입에 실패했습니다.'
