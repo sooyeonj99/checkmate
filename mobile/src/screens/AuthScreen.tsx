@@ -64,19 +64,11 @@ function LoginForm({ onLogin }: { onLogin: (token: string, user: any) => Promise
     }
     setLoading(true)
     try {
-      const res = await fetch('http://10.0.2.2:8000/api/v1/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        Alert.alert('로그인 실패', data?.detail ?? `오류 ${res.status}`)
-        return
-      }
+      const { data } = await api.post('/auth/login', { email, password })
       await onLogin(data.access_token, data.user)
     } catch (e: any) {
-      Alert.alert('네트워크 오류', e?.message ?? '알 수 없는 오류')
+      const msg = e?.response?.data?.detail ?? e?.message ?? '로그인에 실패했습니다.'
+      Alert.alert('로그인 실패', msg)
     } finally {
       setLoading(false)
     }
