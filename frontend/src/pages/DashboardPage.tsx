@@ -316,6 +316,12 @@ export default function DashboardPage() {
                 <div className="navbar-dropdown-info">
                   <div className="navbar-dropdown-name">{user?.username}</div>
                   <div className="navbar-dropdown-email">{user?.email}</div>
+                  <div style={{
+                    marginTop: 4, fontSize: 11, fontWeight: 700,
+                    color: user?.user_type === 'enterprise' ? 'var(--accent)' : '#2e8b2e',
+                  }}>
+                    {user?.user_type === 'enterprise' ? '🏢 기업/법인' : '👤 개인 사용자'}
+                  </div>
                 </div>
                 <div className="navbar-dropdown-divider" />
                 <Link to="/dashboard" className="navbar-dropdown-item" onClick={() => setDropdownOpen(false)}>
@@ -340,7 +346,18 @@ export default function DashboardPage() {
           {/* ── Page heading ── */}
           <div className="dash-heading">
             <div>
-              <h1 className="dash-title">내 계약 대시보드</h1>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                <h1 className="dash-title" style={{ marginBottom: 0 }}>내 계약 대시보드</h1>
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 4,
+                  padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 700,
+                  background: user?.user_type === 'enterprise' ? 'rgba(37,99,235,0.12)' : 'rgba(46,139,46,0.12)',
+                  color: user?.user_type === 'enterprise' ? 'var(--accent)' : '#2e8b2e',
+                  border: `1px solid ${user?.user_type === 'enterprise' ? 'rgba(37,99,235,0.25)' : 'rgba(46,139,46,0.25)'}`,
+                }}>
+                  {user?.user_type === 'enterprise' ? '🏢 기업/법인' : '👤 개인'}
+                </span>
+              </div>
               <p className="dash-subtitle">분석된 계약서를 한눈에 관리하세요</p>
             </div>
             <button className="btn-primary dash-new-btn-lg" onClick={() => navigate('/upload')}>
@@ -525,11 +542,64 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          {/* ── 사용자 유형별 기능 섹션 ── */}
+          <div style={{ marginTop: 32 }}>
+            <div style={{ marginBottom: 16 }}>
+              <h2 className="dash-title" style={{ fontSize: 18, marginBottom: 4 }}>
+                {user?.user_type === 'enterprise' ? '🏢 기업 전용 기능' : '👤 내 플랜 기능'}
+              </h2>
+              <p className="dash-subtitle" style={{ fontSize: 13 }}>
+                {user?.user_type === 'enterprise'
+                  ? '기업/법인 전용 고급 기능을 사용하세요'
+                  : '개인 사용자 기본 기능 목록입니다'}
+              </p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 14 }}>
+              {(user?.user_type === 'enterprise' ? ENTERPRISE_FEATURES : PERSONAL_FEATURES).map((f) => (
+                <div key={f.title} style={{
+                  background: 'var(--bg-card)', border: '1px solid var(--border)',
+                  borderRadius: 14, padding: '18px 20px',
+                  opacity: f.comingSoon ? 0.55 : 1,
+                  display: 'flex', flexDirection: 'column', gap: 8,
+                }}>
+                  <div style={{ fontSize: 26 }}>{f.icon}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontWeight: 700, color: 'var(--text)', fontSize: 14 }}>{f.title}</span>
+                    {f.comingSoon && (
+                      <span style={{
+                        fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10,
+                        background: 'rgba(37,99,235,0.1)', color: 'var(--accent)',
+                      }}>준비중</span>
+                    )}
+                  </div>
+                  <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: 12, lineHeight: 1.5 }}>{f.sub}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ height: 40 }} />
         </div>
       </main>
     </div>
   )
 }
+
+const PERSONAL_FEATURES = [
+  { icon: '🔍', title: 'AI 위험 조항 탐지', sub: 'Gemini AI가 불리한 조항을 자동으로 찾아드립니다', comingSoon: false },
+  { icon: '🔒', title: '개인정보 마스킹', sub: '계약서 내 개인정보를 자동으로 보호합니다', comingSoon: false },
+  { icon: '📋', title: '판례 기반 대안 제시', sub: '법적 근거를 바탕으로 수정 제안을 드립니다', comingSoon: false },
+  { icon: '⚡', title: '빠른 분석', sub: '평균 30초 이내에 분석 결과를 받아보세요', comingSoon: false },
+]
+
+const ENTERPRISE_FEATURES = [
+  { icon: '🔍', title: 'AI 위험 조항 탐지', sub: 'Gemini AI가 불리한 조항을 자동으로 찾아드립니다', comingSoon: false },
+  { icon: '👥', title: '팀 관리', sub: '멤버 초대 및 역할 기반 접근 권한 설정', comingSoon: true },
+  { icon: '📊', title: '대량 분석', sub: '여러 계약서를 동시에 일괄 분석', comingSoon: true },
+  { icon: '📑', title: '리포트 다운로드', sub: 'PDF 형식의 상세 분석 리포트 출력', comingSoon: true },
+  { icon: '🔐', title: '계약서 보안 저장', sub: '암호화된 계약서 클라우드 저장소', comingSoon: true },
+  { icon: '📈', title: '분석 리포트', sub: '월간/분기별 계약 위험 분석 리포트', comingSoon: true },
+]
 
 /* ── Subscription card ──────────────────────────────── */
 function SubscriptionCard({ data: s }: { data: SubscriptionDetail }) {

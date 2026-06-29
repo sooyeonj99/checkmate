@@ -21,7 +21,7 @@ const IS_GITHUB_PAGES = window.location.hostname.endsWith('github.io')
 /* 데모 계정 (GitHub Pages 전용) */
 const DEMO_EMAIL = 'test@test.com'
 const DEMO_PASSWORD = '12345678ab'
-const DEMO_USER = { id: 1, email: DEMO_EMAIL, username: 'test' }
+const DEMO_USER = { id: 1, email: DEMO_EMAIL, username: 'test', user_type: 'personal' as const }
 
 export default function AuthPage() {
   const [tab, setTab] = useState<Tab>('login')
