@@ -98,11 +98,14 @@ export default function ResultScreen() {
       setSaveState('saved')
       Alert.alert('저장 완료', '분석 결과가 대시보드에 저장되었습니다.')
     } catch (e: any) {
-      if (e?.response?.status === 409) {
+      const status = e?.response?.status
+      if (status === 409) {
         setSaveState('saved')
+      } else if (status === 401) {
+        Alert.alert('로그인 만료', '로그인이 만료되었습니다.\n다시 로그인 후 저장해주세요.')
       } else {
         setSaveState('saved')
-        Alert.alert('알림', '저장 중 오류가 발생했지만 결과는 확인할 수 있습니다.')
+        Alert.alert('알림', `저장 중 오류가 발생했습니다. (${status ?? '네트워크 오류'})`)
       }
     } finally {
       setSaving(false)
