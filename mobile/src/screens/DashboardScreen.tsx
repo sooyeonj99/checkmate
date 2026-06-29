@@ -115,7 +115,7 @@ export default function DashboardScreen() {
         {/* 분석 시작 카드 */}
         <TouchableOpacity
           style={styles.analyzeCard}
-          onPress={() => navigation.navigate('Upload')}
+          onPress={() => navigation.navigate('분석하기')}
           activeOpacity={0.85}
         >
           <View style={styles.analyzeCardIcon}>
