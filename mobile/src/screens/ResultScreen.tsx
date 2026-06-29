@@ -32,6 +32,8 @@ interface AnalysisResult {
   warnCount: number
   safeCount: number
   analysisTime: string
+  contractType: string
+  contractText: string
   clauses: Clause[]
 }
 
@@ -58,6 +60,8 @@ function transformApiResult(data: any): AnalysisResult {
     warnCount: data.warn_count ?? 0,
     safeCount: data.safe_count ?? 0,
     analysisTime: data.analysis_time ?? '',
+    contractType: data.contract_type ?? '',
+    contractText: data.contract_text ?? '',
     clauses,
   }
 }
@@ -199,9 +203,35 @@ export default function ResultScreen() {
           </View>
         )}
 
+        {/* 원본 계약서 요약 */}
+        {result.contractText ? (
+          <>
+            <Text style={styles.sectionTitle}>원본 계약서 요약</Text>
+            <View style={styles.contractTextCard}>
+              {result.contractType ? (
+                <View style={styles.contractTypeBadge}>
+                  <Text style={styles.contractTypeText}>{result.contractType}</Text>
+                </View>
+              ) : null}
+              <Text style={styles.contractTextBody} numberOfLines={12}>
+                {result.contractText}
+              </Text>
+              <Text style={styles.maskingNote}>
+                🔒 개인정보는 분석 전 자동 마스킹 처리되었습니다
+              </Text>
+            </View>
+          </>
+        ) : null}
+
         {/* Clauses */}
         <Text style={styles.sectionTitle}>위험 조항 상세 분석</Text>
-        {result.clauses.map((clause) => (
+        {result.clauses.length === 0 ? (
+          <View style={styles.noClauseBox}>
+            <Text style={styles.noClauseIcon}>✓</Text>
+            <Text style={styles.noClauseTitle}>위험·주의 조항이 발견되지 않았습니다</Text>
+            <Text style={styles.noClauseSub}>이 계약서는 전반적으로 안전합니다</Text>
+          </View>
+        ) : result.clauses.map((clause) => (
           <ClauseItem
             key={clause.id}
             clause={clause}
@@ -264,7 +294,7 @@ const MOCK_RESULT: AnalysisResult = {
   contractName: '분석 결과 없음',
   score: 0, grade: 'safe',
   dangerCount: 0, warnCount: 0, safeCount: 0,
-  analysisTime: '-', clauses: [],
+  analysisTime: '-', contractType: '', contractText: '', clauses: [],
 }
 
 const styles = StyleSheet.create({
@@ -346,4 +376,31 @@ const styles = StyleSheet.create({
   problemRow: { backgroundColor: colors.dangerBg, borderRadius: 8, padding: 10, marginBottom: 10 },
   problemText: { color: colors.danger, fontSize: 12, lineHeight: 18 },
   lawRef: { color: colors.textMuted, fontSize: 11, lineHeight: 17 },
+
+  /* 원본 계약서 요약 */
+  contractTextCard: {
+    backgroundColor: colors.bgCard, borderRadius: 12, borderWidth: 1,
+    borderColor: colors.border, padding: 16, marginBottom: 20,
+  },
+  contractTypeBadge: {
+    alignSelf: 'flex-start', backgroundColor: 'rgba(37,99,235,0.1)',
+    borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4, marginBottom: 10,
+  },
+  contractTypeText: { color: colors.primary, fontSize: 12, fontWeight: '700' },
+  contractTextBody: {
+    color: colors.textSecondary, fontSize: 12, lineHeight: 20,
+  },
+  maskingNote: {
+    marginTop: 12, color: colors.safe, fontSize: 11, fontWeight: '600',
+  },
+
+  /* 위험 조항 없음 */
+  noClauseBox: {
+    backgroundColor: colors.bgCard, borderRadius: 14, borderWidth: 1,
+    borderColor: 'rgba(46,139,46,0.25)', padding: 28,
+    alignItems: 'center', gap: 8, marginBottom: 16,
+  },
+  noClauseIcon: { fontSize: 32, color: colors.safe },
+  noClauseTitle: { color: colors.safe, fontSize: 15, fontWeight: '700' },
+  noClauseSub: { color: colors.textMuted, fontSize: 12 },
 })

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { View, Text, StyleSheet, Animated } from 'react-native'
+import { View, Text, StyleSheet, Animated, Alert } from 'react-native'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import api from '../services/api'
 import { colors } from '../theme/colors'
@@ -86,7 +86,12 @@ export default function LoadingScreen() {
     }
     api.post(`/contracts/${contractId}/analyze`)
       .then(({ data }) => { resultRef.current = data })
-      .catch(() => {})
+      .catch((e: any) => {
+        const msg = e?.response?.data?.detail ?? '분석 중 오류가 발생했습니다.\n백엔드 서버가 실행 중인지 확인해 주세요.'
+        Alert.alert('분석 실패', msg, [
+          { text: '돌아가기', onPress: () => navigation.navigate('Main', { screen: 'Dashboard' } as any) },
+        ])
+      })
       .finally(() => { apiDone.current = true; tryNavigate() })
   }, [])
 
