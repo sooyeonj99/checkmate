@@ -106,6 +106,8 @@ function LoginForm({ onLogin }: { onLogin: (token: string, user: any) => Promise
 }
 
 function SignupForm({ onLogin }: { onLogin: (token: string, user: any) => Promise<void> }) {
+  const [step, setStep] = useState<'type' | 'info'>('type')
+  const [userType, setUserType] = useState<'personal' | 'enterprise'>('personal')
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -122,7 +124,7 @@ function SignupForm({ onLogin }: { onLogin: (token: string, user: any) => Promis
     }
     setLoading(true)
     try {
-      await api.post('/auth/register', { username, email, password })
+      await api.post('/auth/register', { username, email, password, user_type: userType })
       const { data } = await api.post('/auth/login', { email, password })
       await onLogin(data.access_token, data.user)
     } catch (e: any) {
@@ -133,8 +135,52 @@ function SignupForm({ onLogin }: { onLogin: (token: string, user: any) => Promis
     }
   }
 
+  if (step === 'type') {
+    return (
+      <View style={styles.form}>
+        <Text style={styles.typeTitle}>계정 유형을 선택하세요</Text>
+        <Text style={styles.typeSub}>서비스 이용 목적에 맞는 유형을 선택해주세요</Text>
+
+        <TouchableOpacity
+          style={[styles.typeCard, userType === 'personal' && styles.typeCardActive]}
+          onPress={() => setUserType('personal')}
+        >
+          <Text style={styles.typeCardIcon}>👤</Text>
+          <View style={styles.typeCardContent}>
+            <Text style={[styles.typeCardTitle, userType === 'personal' && styles.typeCardTitleActive]}>개인 사용자</Text>
+            <Text style={styles.typeCardDesc}>계약서 분석 · 저장 관리 · AI 챗봇</Text>
+          </View>
+          <View style={[styles.typeRadio, userType === 'personal' && styles.typeRadioActive]}>
+            {userType === 'personal' && <View style={styles.typeRadioDot} />}
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.typeCard, userType === 'enterprise' && styles.typeCardActive]}
+          onPress={() => setUserType('enterprise')}
+        >
+          <Text style={styles.typeCardIcon}>🏢</Text>
+          <View style={styles.typeCardContent}>
+            <Text style={[styles.typeCardTitle, userType === 'enterprise' && styles.typeCardTitleActive]}>기업/법인</Text>
+            <Text style={styles.typeCardDesc}>팀 관리 · 대량 분석 · 리포트 다운로드</Text>
+          </View>
+          <View style={[styles.typeRadio, userType === 'enterprise' && styles.typeRadioActive]}>
+            {userType === 'enterprise' && <View style={styles.typeRadioDot} />}
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.submitBtn} onPress={() => setStep('info')}>
+          <Text style={styles.submitText}>다음 →</Text>
+        </TouchableOpacity>
+      </View>
+    )
+  }
+
   return (
     <View style={styles.form}>
+      <TouchableOpacity onPress={() => setStep('type')} style={styles.backTypeBtn}>
+        <Text style={styles.backTypeText}>← 유형 변경</Text>
+      </TouchableOpacity>
       <Text style={styles.label}>사용자 이름</Text>
       <TextInput
         style={styles.input}
@@ -174,6 +220,29 @@ function SignupForm({ onLogin }: { onLogin: (token: string, user: any) => Promis
 }
 
 const styles = StyleSheet.create({
+  typeTitle: { color: colors.text, fontSize: 17, fontWeight: '700', marginBottom: 6, textAlign: 'center' },
+  typeSub: { color: colors.textMuted, fontSize: 13, textAlign: 'center', marginBottom: 20 },
+  typeCard: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: colors.bgCard, borderRadius: 14,
+    borderWidth: 1.5, borderColor: colors.border,
+    padding: 16, marginBottom: 10, gap: 12,
+  },
+  typeCardActive: { borderColor: colors.primary, backgroundColor: 'rgba(37,99,235,0.04)' },
+  typeCardIcon: { fontSize: 28 },
+  typeCardContent: { flex: 1 },
+  typeCardTitle: { color: colors.text, fontSize: 15, fontWeight: '700', marginBottom: 3 },
+  typeCardTitleActive: { color: colors.primary },
+  typeCardDesc: { color: colors.textMuted, fontSize: 12 },
+  typeRadio: {
+    width: 20, height: 20, borderRadius: 10,
+    borderWidth: 2, borderColor: colors.border,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  typeRadioActive: { borderColor: colors.primary },
+  typeRadioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary },
+  backTypeBtn: { marginBottom: 12 },
+  backTypeText: { color: colors.primary, fontSize: 13, fontWeight: '600' },
   root: { flex: 1, backgroundColor: colors.bg },
   inner: { flexGrow: 1, justifyContent: 'center', padding: 24 },
   logoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 8 },

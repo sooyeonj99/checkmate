@@ -118,7 +118,7 @@ export default function ResultScreen() {
             if (contractId) {
               api.delete(`/contracts/${contractId}`).catch(() => {})
             }
-            navigation.navigate('Dashboard')
+            navigation.navigate('Main', { screen: 'Dashboard' } as any)
           },
         },
       ]
@@ -129,11 +129,11 @@ export default function ResultScreen() {
     <View style={styles.root}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.navigate('Dashboard')} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => navigation.navigate('Main', { screen: 'Dashboard' } as any)} style={styles.backBtn}>
           <Text style={styles.backText}>대시보드</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>분석 결과</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('Upload')} style={styles.newBtn}>
+        <TouchableOpacity onPress={() => navigation.navigate('Main', { screen: 'Upload' } as any)} style={styles.newBtn}>
           <Text style={styles.newText}>새 분석</Text>
         </TouchableOpacity>
       </View>

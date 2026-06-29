@@ -23,8 +23,9 @@ interface SavedContract {
 }
 
 export default function DashboardScreen() {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const navigation = useNavigation<any>()
+  const isEnterprise = user?.user_type === 'enterprise'
 
   const [saved, setSaved] = useState<SavedContract[]>([])
   const [loading, setLoading] = useState(true)
@@ -88,10 +89,7 @@ export default function DashboardScreen() {
   }
 
   const handleLogout = () => {
-    Alert.alert('로그아웃', '로그아웃 하시겠습니까?', [
-      { text: '취소', style: 'cancel' },
-      { text: '로그아웃', style: 'destructive', onPress: logout },
-    ])
+    navigation.navigate('Profile' as any)
   }
 
   return (
@@ -102,7 +100,7 @@ export default function DashboardScreen() {
           <Text style={styles.logoText}>CHECKMATE</Text>
           <Text style={styles.greeting}>안녕하세요, {user?.username}님</Text>
         </View>
-        <TouchableOpacity style={styles.avatar} onPress={handleLogout}>
+        <TouchableOpacity style={styles.avatar} onPress={() => navigation.navigate('Profile' as any)}>
           <Text style={styles.avatarText}>
             {user?.username?.charAt(0).toUpperCase() ?? '?'}
           </Text>
@@ -210,12 +208,21 @@ export default function DashboardScreen() {
         )}
 
         {/* 서비스 특징 */}
-        <Text style={[styles.sectionTitle, { marginTop: 28 }]}>서비스 특징</Text>
-        {FEATURES.map((f) => (
-          <View key={f.title} style={styles.featureCard}>
+        <Text style={[styles.sectionTitle, { marginTop: 28 }]}>
+          {isEnterprise ? '기업 전용 기능' : '서비스 특징'}
+        </Text>
+        {(isEnterprise ? FEATURES_ENTERPRISE : FEATURES_PERSONAL).map((f) => (
+          <View key={f.title} style={[styles.featureCard, f.comingSoon && styles.featureCardDim]}>
             <Text style={styles.featureIcon}>{f.icon}</Text>
             <View style={styles.featureText}>
-              <Text style={styles.featureTitle}>{f.title}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={styles.featureTitle}>{f.title}</Text>
+                {f.comingSoon && (
+                  <View style={styles.comingSoonBadge}>
+                    <Text style={styles.comingSoonText}>준비중</Text>
+                  </View>
+                )}
+              </View>
               <Text style={styles.featureSub}>{f.sub}</Text>
             </View>
           </View>
@@ -227,11 +234,18 @@ export default function DashboardScreen() {
   )
 }
 
-const FEATURES = [
-  { icon: '🔍', title: 'AI 위험 조항 탐지', sub: 'Gemini AI가 불리한 조항을 자동으로 찾아드립니다' },
-  { icon: '🔒', title: '개인정보 마스킹', sub: '계약서 내 개인정보를 자동으로 보호합니다' },
-  { icon: '📋', title: '판례 기반 대안 제시', sub: '법적 근거를 바탕으로 수정 제안을 드립니다' },
-  { icon: '⚡', title: '빠른 분석', sub: '평균 30초 이내에 분석 결과를 받아보세요' },
+const FEATURES_PERSONAL = [
+  { icon: '🔍', title: 'AI 위험 조항 탐지', sub: 'Gemini AI가 불리한 조항을 자동으로 찾아드립니다', comingSoon: false },
+  { icon: '🔒', title: '개인정보 마스킹', sub: '계약서 내 개인정보를 자동으로 보호합니다', comingSoon: false },
+  { icon: '📋', title: '판례 기반 대안 제시', sub: '법적 근거를 바탕으로 수정 제안을 드립니다', comingSoon: false },
+  { icon: '⚡', title: '빠른 분석', sub: '평균 30초 이내에 분석 결과를 받아보세요', comingSoon: false },
+]
+
+const FEATURES_ENTERPRISE = [
+  { icon: '🔍', title: 'AI 위험 조항 탐지', sub: 'Gemini AI가 불리한 조항을 자동으로 찾아드립니다', comingSoon: false },
+  { icon: '👥', title: '팀 관리', sub: '멤버 초대 및 역할 기반 접근 권한 설정', comingSoon: true },
+  { icon: '📊', title: '대량 분석', sub: '여러 계약서를 동시에 일괄 분석', comingSoon: true },
+  { icon: '📑', title: '리포트 다운로드', sub: 'PDF 형식의 상세 분석 리포트 출력', comingSoon: true },
 ]
 
 const styles = StyleSheet.create({
@@ -313,8 +327,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row', backgroundColor: colors.bgCard, borderRadius: 12,
     padding: 16, marginBottom: 10, borderWidth: 1, borderColor: colors.border, alignItems: 'center',
   },
+  featureCardDim: { opacity: 0.55 },
   featureIcon: { fontSize: 24, marginRight: 14 },
   featureText: { flex: 1 },
   featureTitle: { color: colors.text, fontSize: 14, fontWeight: '600', marginBottom: 3 },
   featureSub: { color: colors.textMuted, fontSize: 12, lineHeight: 17 },
+  comingSoonBadge: {
+    backgroundColor: 'rgba(37,99,235,0.1)', borderRadius: 6,
+    paddingHorizontal: 6, paddingVertical: 2,
+  },
+  comingSoonText: { color: colors.primary, fontSize: 10, fontWeight: '700' },
 })

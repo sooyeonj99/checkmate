@@ -77,8 +77,8 @@ export default function UploadScreen() {
     <View style={styles.root}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backText}>← 뒤로</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Dashboard' as any)} style={styles.backBtn}>
+          <Text style={styles.backText}>← 홈</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>계약서 업로드</Text>
         <View style={{ width: 60 }} />

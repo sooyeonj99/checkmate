@@ -186,6 +186,7 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
 
 /* ── 회원가입 폼 ── */
 function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
+  const [userType, setUserType] = useState<'personal' | 'enterprise'>('personal')
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -217,7 +218,7 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
       const res = await fetch('/api/v1/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, username, password }),
+        body: JSON.stringify({ email, username, password, user_type: userType }),
       })
       const data = await safeJson(res)
       if (!res.ok) throw new Error(data.detail ?? '회원가입 실패')
@@ -285,6 +286,41 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
           {error.split('\n').map((line, i) => <div key={i}>{line}</div>)}
         </div>
       )}
+
+      {/* 계정 유형 선택 */}
+      <div className="auth-field">
+        <label className="auth-label">계정 유형</label>
+        <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+          <button
+            type="button"
+            onClick={() => setUserType('personal')}
+            style={{
+              flex: 1, padding: '12px 8px', borderRadius: 10,
+              border: `1.5px solid ${userType === 'personal' ? 'var(--accent)' : 'var(--border)'}`,
+              background: userType === 'personal' ? 'rgba(37,99,235,0.06)' : 'var(--bg-input)',
+              cursor: 'pointer', textAlign: 'center',
+            }}
+          >
+            <div style={{ fontSize: 22, marginBottom: 4 }}>👤</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: userType === 'personal' ? 'var(--accent)' : 'var(--text-primary)' }}>개인 사용자</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>계약서 분석 · AI 챗봇</div>
+          </button>
+          <button
+            type="button"
+            onClick={() => setUserType('enterprise')}
+            style={{
+              flex: 1, padding: '12px 8px', borderRadius: 10,
+              border: `1.5px solid ${userType === 'enterprise' ? 'var(--accent)' : 'var(--border)'}`,
+              background: userType === 'enterprise' ? 'rgba(37,99,235,0.06)' : 'var(--bg-input)',
+              cursor: 'pointer', textAlign: 'center',
+            }}
+          >
+            <div style={{ fontSize: 22, marginBottom: 4 }}>🏢</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: userType === 'enterprise' ? 'var(--accent)' : 'var(--text-primary)' }}>기업/법인</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>팀 관리 · 대량 분석</div>
+          </button>
+        </div>
+      </div>
 
       <div className="auth-field">
         <label className="auth-label">이름 (닉네임)</label>

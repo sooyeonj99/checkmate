@@ -6,6 +6,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     username: str
     password: str
+    user_type: str = 'personal'
 
 
 class UserResponse(BaseModel):
@@ -14,6 +15,7 @@ class UserResponse(BaseModel):
     username: str
     is_active: bool
     is_verified: bool
+    user_type: str = 'personal'
     created_at: datetime
 
     model_config = {"from_attributes": True}
