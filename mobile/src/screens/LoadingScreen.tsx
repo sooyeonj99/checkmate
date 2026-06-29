@@ -81,7 +81,7 @@ export default function LoadingScreen() {
 
   useEffect(() => {
     if (!contractId) {
-      navigation.replace('Dashboard')
+      navigation.getParent()?.navigate('대시보드')
       return
     }
     api.post(`/contracts/${contractId}/analyze`)
@@ -89,7 +89,7 @@ export default function LoadingScreen() {
       .catch((e: any) => {
         const msg = e?.response?.data?.detail ?? '분석 중 오류가 발생했습니다.\n백엔드 서버가 실행 중인지 확인해 주세요.'
         Alert.alert('분석 실패', msg, [
-          { text: '돌아가기', onPress: () => navigation.navigate('Main', { screen: 'Dashboard' } as any) },
+          { text: '돌아가기', onPress: () => navigation.getParent()?.navigate('대시보드') },
         ])
       })
       .finally(() => { apiDone.current = true; tryNavigate() })

@@ -8,6 +8,7 @@ import { View, ActivityIndicator } from 'react-native'
 
 import { AuthProvider, useAuth } from './src/context/AuthContext'
 import AuthScreen from './src/screens/AuthScreen'
+import HomeScreen from './src/screens/HomeScreen'
 import DashboardScreen from './src/screens/DashboardScreen'
 import UploadScreen from './src/screens/UploadScreen'
 import LoadingScreen from './src/screens/LoadingScreen'
@@ -15,21 +16,43 @@ import ResultScreen from './src/screens/ResultScreen'
 import ProfileScreen from './src/screens/ProfileScreen'
 import { colors } from './src/theme/colors'
 
+// ── 네비게이터 타입 ────────────────────────────────────────────────────────────
+
 export type RootStackParamList = {
   Auth: undefined
   Main: undefined
+}
+
+export type TabParamList = {
+  홈: undefined
+  대시보드: undefined
+  분석하기: undefined
+  마이페이지: undefined
+}
+
+export type AnalyzeStackParamList = {
+  Upload: undefined
   Loading: { contractId: string; filename: string }
   Result: { analysisResult?: any; contractId?: string; isSaved?: boolean }
 }
 
-export type TabParamList = {
-  Dashboard: undefined
-  Upload: undefined
-  Profile: undefined
+const RootStack = createNativeStackNavigator<RootStackParamList>()
+const Tab = createBottomTabNavigator<TabParamList>()
+const AnalyzeStack = createNativeStackNavigator<AnalyzeStackParamList>()
+
+// ── 분석하기 탭 내부 스택 (Upload → Loading → Result) ──────────────────────────
+
+function AnalyzeNavigator() {
+  return (
+    <AnalyzeStack.Navigator screenOptions={{ headerShown: false }}>
+      <AnalyzeStack.Screen name="Upload" component={UploadScreen} />
+      <AnalyzeStack.Screen name="Loading" component={LoadingScreen} />
+      <AnalyzeStack.Screen name="Result" component={ResultScreen} />
+    </AnalyzeStack.Navigator>
+  )
 }
 
-const Stack = createNativeStackNavigator<RootStackParamList>()
-const Tab = createBottomTabNavigator<TabParamList>()
+// ── 메인 탭 네비게이터 ──────────────────────────────────────────────────────────
 
 function MainTabs() {
   return (
@@ -50,30 +73,36 @@ function MainTabs() {
       }}
     >
       <Tab.Screen
-        name="Dashboard"
-        component={DashboardScreen}
+        name="홈"
+        component={HomeScreen}
         options={{
-          tabBarLabel: '홈',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'home' : 'home-outline'} size={23} color={color} />
           ),
         }}
       />
       <Tab.Screen
-        name="Upload"
-        component={UploadScreen}
+        name="대시보드"
+        component={DashboardScreen}
         options={{
-          tabBarLabel: '분석하기',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'grid' : 'grid-outline'} size={23} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="분석하기"
+        component={AnalyzeNavigator}
+        options={{
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'document-text' : 'document-text-outline'} size={23} color={color} />
           ),
         }}
       />
       <Tab.Screen
-        name="Profile"
+        name="마이페이지"
         component={ProfileScreen}
         options={{
-          tabBarLabel: '마이페이지',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'person' : 'person-outline'} size={23} color={color} />
           ),
@@ -82,6 +111,8 @@ function MainTabs() {
     </Tab.Navigator>
   )
 }
+
+// ── 루트 네비게이터 ─────────────────────────────────────────────────────────────
 
 function Navigation() {
   const { user, isLoading } = useAuth()
@@ -96,17 +127,13 @@ function Navigation() {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <RootStack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
-          <>
-            <Stack.Screen name="Main" component={MainTabs} />
-            <Stack.Screen name="Loading" component={LoadingScreen} />
-            <Stack.Screen name="Result" component={ResultScreen} />
-          </>
+          <RootStack.Screen name="Main" component={MainTabs} />
         ) : (
-          <Stack.Screen name="Auth" component={AuthScreen} />
+          <RootStack.Screen name="Auth" component={AuthScreen} />
         )}
-      </Stack.Navigator>
+      </RootStack.Navigator>
     </NavigationContainer>
   )
 }

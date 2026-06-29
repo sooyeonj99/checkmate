@@ -58,7 +58,7 @@ export default function UploadScreen() {
       const { data: uploadData } = await api.post('/contracts/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
-      navigation.navigate('Loading', { contractId: uploadData.contract_id, filename: uploadData.filename })
+      navigation.navigate('Loading', { contractId: uploadData.contract_id, filename: uploadData.filename } as any)
     } catch (e: any) {
       const msg = e?.response?.data?.detail ?? '업로드에 실패했습니다.'
       Alert.alert('업로드 실패', msg)
@@ -70,7 +70,7 @@ export default function UploadScreen() {
   return (
     <View style={styles.root}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.navigate('Dashboard' as any)} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => navigation.getParent()?.navigate('홈')} style={styles.backBtn}>
           <Text style={styles.backText}>← 홈</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>계약서 업로드</Text>
