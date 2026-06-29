@@ -5,10 +5,10 @@ import api from '../services/api'
 import { colors } from '../theme/colors'
 
 const STEPS = [
-  { label: '업로드 완료', sub: '파일을 수신했습니다', duration: 1500 },
-  { label: '텍스트 추출 중', sub: 'OCR 엔진이 계약서를 읽고 있습니다', duration: 2500 },
-  { label: '위험 조항 분석 중', sub: 'AI가 각 조항의 위험도를 판단 중입니다', duration: 3000 },
-  { label: '리포트 생성 중', sub: '분석 결과를 정리하고 있습니다', duration: 2000 },
+  { label: '업로드 완료', sub: '파일을 수신했습니다', duration: 2000 },
+  { label: '텍스트 추출 중', sub: 'OCR 엔진이 계약서를 읽고 있습니다', duration: 8000 },
+  { label: '위험 조항 분석 중', sub: 'AI가 각 조항의 위험도를 판단 중입니다 (최대 2분)', duration: 80000 },
+  { label: '리포트 생성 중', sub: '분석 결과를 정리하고 있습니다', duration: 5000 },
 ]
 
 export default function LoadingScreen() {
@@ -59,23 +59,24 @@ export default function LoadingScreen() {
     return () => clearInterval(id)
   }, [])
 
-  // API call
-  const apiDone = useRef(false)
-  const animDone = useRef(false)
+  // API call — navigate only on success
   const resultRef = useRef<any>(null)
+  const hasError = useRef(false)
+  const apiDone = useRef(false)
+  const minAnimDone = useRef(false)
 
   const tryNavigate = () => {
-    if (apiDone.current && animDone.current) {
+    if (apiDone.current && minAnimDone.current && !hasError.current) {
       navigation.replace('Result', { analysisResult: resultRef.current, contractId })
     }
   }
 
+  // 최소 2초 대기 후 바로 이동 가능
   useEffect(() => {
-    const totalDuration = STEPS.reduce((s, step) => s + step.duration, 0) + 800
     const timer = setTimeout(() => {
-      animDone.current = true
+      minAnimDone.current = true
       tryNavigate()
-    }, totalDuration)
+    }, 2000)
     return () => clearTimeout(timer)
   }, [])
 
@@ -84,10 +85,14 @@ export default function LoadingScreen() {
       navigation.getParent()?.navigate('대시보드')
       return
     }
-    api.post(`/contracts/${contractId}/analyze`)
+    api.post(`/contracts/${contractId}/analyze`, null, { timeout: 120000 })
       .then(({ data }) => { resultRef.current = data })
       .catch((e: any) => {
-        const msg = e?.response?.data?.detail ?? '분석 중 오류가 발생했습니다.\n백엔드 서버가 실행 중인지 확인해 주세요.'
+        hasError.current = true
+        const isTimeout = e?.code === 'ECONNABORTED' || e?.message?.includes('timeout')
+        const msg = isTimeout
+          ? 'AI 분석 시간이 초과되었습니다. (최대 2분)\n잠시 후 다시 시도해주세요.'
+          : (e?.response?.data?.detail ?? '분석 중 오류가 발생했습니다.\n백엔드 서버가 실행 중인지 확인해 주세요.')
         Alert.alert('분석 실패', msg, [
           { text: '돌아가기', onPress: () => navigation.getParent()?.navigate('대시보드') },
         ])
