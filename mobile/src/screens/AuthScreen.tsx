@@ -101,6 +101,7 @@ function LoginForm({ onLogin }: { onLogin: (token: string, user: any) => Promise
           : <Text style={styles.submitText}>로그인</Text>
         }
       </TouchableOpacity>
+      <SocialButtons />
     </View>
   )
 }
@@ -215,6 +216,59 @@ function SignupForm({ onLogin }: { onLogin: (token: string, user: any) => Promis
           : <Text style={styles.submitText}>회원가입</Text>
         }
       </TouchableOpacity>
+      <SocialButtons label="또는 소셜 계정으로 시작하기" />
+    </View>
+  )
+}
+
+/* ── 소셜 로그인 버튼 (준비중) ── */
+function SocialButtons({ label = '또는 소셜 계정으로 계속하기' }: { label?: string }) {
+  const handlePress = (service: string) => {
+    Alert.alert(
+      '준비중',
+      `${service} 로그인은 현재 준비중입니다.\n빠른 시일 내에 제공될 예정입니다.`,
+      [{ text: '확인', style: 'default' }]
+    )
+  }
+
+  return (
+    <View style={styles.socialWrap}>
+      <View style={styles.dividerRow}>
+        <View style={styles.dividerLine} />
+        <Text style={styles.dividerText}>{label}</Text>
+        <View style={styles.dividerLine} />
+      </View>
+
+      {/* 카카오 */}
+      <TouchableOpacity
+        style={styles.kakaoBtn}
+        onPress={() => handlePress('카카오')}
+        activeOpacity={0.85}
+      >
+        <View style={styles.socialBtnIcon}>
+          {/* 카카오 말풍선 아이콘 */}
+          <Text style={styles.kakaoBtnIcon}>💬</Text>
+        </View>
+        <Text style={styles.kakaoBtnText}>카카오로 계속하기</Text>
+        <View style={styles.comingSoonPill}>
+          <Text style={styles.comingSoonPillText}>준비중</Text>
+        </View>
+      </TouchableOpacity>
+
+      {/* 구글 */}
+      <TouchableOpacity
+        style={styles.googleBtn}
+        onPress={() => handlePress('Google')}
+        activeOpacity={0.85}
+      >
+        <View style={styles.socialBtnIcon}>
+          <Text style={styles.googleBtnIcon}>G</Text>
+        </View>
+        <Text style={styles.googleBtnText}>Google로 계속하기</Text>
+        <View style={[styles.comingSoonPill, styles.comingSoonPillGoogle]}>
+          <Text style={[styles.comingSoonPillText, styles.comingSoonPillTextGoogle]}>준비중</Text>
+        </View>
+      </TouchableOpacity>
     </View>
   )
 }
@@ -284,4 +338,38 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   submitText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+
+  /* 소셜 버튼 */
+  socialWrap: { marginTop: 24 },
+  dividerRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16, gap: 10 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
+  dividerText: { color: colors.textMuted, fontSize: 12, flexShrink: 0 },
+
+  kakaoBtn: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#FEE500',
+    borderRadius: 12, paddingVertical: 14, paddingHorizontal: 16,
+    marginBottom: 10, gap: 10,
+  },
+  socialBtnIcon: { width: 24, alignItems: 'center' },
+  kakaoBtnIcon: { fontSize: 16 },
+  kakaoBtnText: { flex: 1, color: '#3C1E1E', fontSize: 14, fontWeight: '700' },
+
+  googleBtn: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: colors.bgCard,
+    borderWidth: 1, borderColor: colors.border,
+    borderRadius: 12, paddingVertical: 14, paddingHorizontal: 16,
+    gap: 10,
+  },
+  googleBtnIcon: { fontSize: 15, fontWeight: '800', color: '#4285F4' },
+  googleBtnText: { flex: 1, color: colors.text, fontSize: 14, fontWeight: '600' },
+
+  comingSoonPill: {
+    backgroundColor: 'rgba(60,30,30,0.12)',
+    borderRadius: 8, paddingHorizontal: 7, paddingVertical: 2,
+  },
+  comingSoonPillText: { color: '#3C1E1E', fontSize: 10, fontWeight: '700' },
+  comingSoonPillGoogle: { backgroundColor: 'rgba(37,99,235,0.1)' },
+  comingSoonPillTextGoogle: { color: colors.primary },
 })
