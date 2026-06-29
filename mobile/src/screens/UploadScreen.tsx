@@ -19,54 +19,48 @@ const ALLOWED_EXTS = ['.pdf', '.docx', '.jpg', '.jpeg', '.png']
 
 export default function UploadScreen() {
   const navigation = useNavigation<any>()
-  const [file, setFile] = useState<DocumentPicker.DocumentPickerAsset | null>(null)
+  const [files, setFiles] = useState<DocumentPicker.DocumentPickerAsset[]>([])
   const [uploading, setUploading] = useState(false)
 
-  const pickFile = async () => {
+  const pickFiles = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: ALLOWED_TYPES,
         copyToCacheDirectory: true,
+        multiple: true,
       })
       if (!result.canceled && result.assets.length > 0) {
-        setFile(result.assets[0])
+        setFiles(prev => {
+          const existingNames = new Set(prev.map(f => f.name))
+          const newOnes = result.assets.filter(a => !existingNames.has(a.name))
+          return [...prev, ...newOnes]
+        })
       }
     } catch {
       Alert.alert('오류', '파일을 선택할 수 없습니다.')
     }
   }
 
+  const removeFile = (idx: number) => setFiles(prev => prev.filter((_, i) => i !== idx))
+
   const handleUpload = async () => {
-    if (!file) {
+    if (!files.length) {
       Alert.alert('파일 없음', '분석할 계약서 파일을 선택해주세요.')
       return
     }
-
-    const ext = file.name.split('.').pop()?.toLowerCase()
-    if (!ext || !ALLOWED_EXTS.includes(`.${ext}`)) {
-      Alert.alert('지원하지 않는 형식', 'PDF, DOCX, JPG, PNG 파일만 지원합니다.')
-      return
-    }
-
     setUploading(true)
     try {
       const formData = new FormData()
-      formData.append('file', {
-        uri: file.uri,
-        name: file.name,
-        type: file.mimeType ?? 'application/octet-stream',
-      } as any)
+      files.forEach(f => {
+        formData.append('files', { uri: f.uri, name: f.name, type: f.mimeType ?? 'application/octet-stream' } as any)
+      })
 
       const { data: uploadData } = await api.post('/contracts/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
-
-      navigation.navigate('Loading', {
-        contractId: uploadData.contract_id,
-        filename: file.name,
-      })
+      navigation.navigate('Loading', { contractId: uploadData.contract_id, filename: uploadData.filename })
     } catch (e: any) {
-      const msg = e?.response?.data?.detail ?? '업로드에 실패했습니다. 다시 시도해주세요.'
+      const msg = e?.response?.data?.detail ?? '업로드에 실패했습니다.'
       Alert.alert('업로드 실패', msg)
     } finally {
       setUploading(false)
@@ -75,7 +69,6 @@ export default function UploadScreen() {
 
   return (
     <View style={styles.root}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.navigate('Dashboard' as any)} style={styles.backBtn}>
           <Text style={styles.backText}>← 홈</Text>
@@ -85,36 +78,44 @@ export default function UploadScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Drop Zone */}
-        <TouchableOpacity
-          style={[styles.dropZone, file && styles.dropZoneSelected]}
-          onPress={pickFile}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.dropIcon}>{file ? '📄' : '📁'}</Text>
-          {file ? (
-            <>
-              <Text style={styles.fileName} numberOfLines={2}>{file.name}</Text>
-              <Text style={styles.fileSize}>
-                {file.size ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : ''}
-              </Text>
-              <Text style={styles.changeFile}>파일 변경하기</Text>
-            </>
-          ) : (
-            <>
-              <Text style={styles.dropTitle}>파일을 선택하세요</Text>
-              <Text style={styles.dropSub}>PDF · DOCX · JPG · PNG</Text>
-              <Text style={styles.dropSub}>최대 20MB</Text>
-            </>
-          )}
-        </TouchableOpacity>
+        {/* 파일 선택 영역 */}
+        {files.length === 0 ? (
+          <TouchableOpacity style={styles.dropZone} onPress={pickFiles} activeOpacity={0.8}>
+            <Text style={styles.dropIcon}>📁</Text>
+            <Text style={styles.dropTitle}>파일을 선택하세요</Text>
+            <Text style={styles.dropSub}>여러 장 동시 선택 가능</Text>
+            <Text style={styles.dropSub}>PDF · DOCX · JPG · PNG · 최대 20MB</Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.fileListCard}>
+            <View style={styles.fileListHeader}>
+              <Text style={styles.fileListTitle}>선택된 파일 <Text style={{ color: colors.primary }}>{files.length}장</Text></Text>
+              <TouchableOpacity onPress={pickFiles} style={styles.addMoreBtn}>
+                <Text style={styles.addMoreText}>+ 추가</Text>
+              </TouchableOpacity>
+            </View>
+            {files.map((f, idx) => (
+              <View key={idx} style={styles.fileRow}>
+                <Text style={styles.fileRowNum}>{idx + 1}</Text>
+                <Text style={styles.fileRowIcon}>
+                  {f.name.match(/\.(jpg|jpeg|png)$/i) ? '🖼️' : f.name.endsWith('.pdf') ? '📄' : '📝'}
+                </Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.fileRowName} numberOfLines={1}>{f.name}</Text>
+                  <Text style={styles.fileRowSize}>{f.size ? `${(f.size/1024/1024).toFixed(2)} MB` : ''}</Text>
+                </View>
+                <TouchableOpacity onPress={() => removeFile(idx)} style={styles.fileRowRemove}>
+                  <Text style={{ color: colors.danger, fontSize: 16 }}>×</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* 지원 형식 */}
         <View style={styles.formatRow}>
           {['PDF', 'DOCX', 'JPG', 'PNG'].map((f) => (
-            <View key={f} style={styles.formatChip}>
-              <Text style={styles.formatText}>{f}</Text>
-            </View>
+            <View key={f} style={styles.formatChip}><Text style={styles.formatText}>{f}</Text></View>
           ))}
         </View>
 
@@ -127,16 +128,15 @@ export default function UploadScreen() {
           </Text>
         </View>
 
-        {/* 분석 시작 버튼 */}
         <TouchableOpacity
-          style={[styles.analyzeBtn, (!file || uploading) && styles.analyzeBtnDisabled]}
+          style={[styles.analyzeBtn, (!files.length || uploading) && styles.analyzeBtnDisabled]}
           onPress={handleUpload}
-          disabled={!file || uploading}
+          disabled={!files.length || uploading}
           activeOpacity={0.85}
         >
           {uploading
             ? <ActivityIndicator color="#fff" />
-            : <Text style={styles.analyzeBtnText}>AI 분석 시작</Text>
+            : <Text style={styles.analyzeBtnText}>AI 분석 시작 {files.length > 1 ? `(${files.length}장)` : ''}</Text>
           }
         </TouchableOpacity>
       </ScrollView>
@@ -206,4 +206,19 @@ const styles = StyleSheet.create({
   },
   analyzeBtnDisabled: { opacity: 0.4 },
   analyzeBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+
+  fileListCard: {
+    backgroundColor: colors.bgCard, borderRadius: 16, borderWidth: 1,
+    borderColor: colors.border, padding: 16, marginBottom: 16,
+  },
+  fileListHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  fileListTitle: { color: colors.text, fontSize: 15, fontWeight: '700' },
+  addMoreBtn: { backgroundColor: 'rgba(37,99,235,0.1)', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 5 },
+  addMoreText: { color: colors.primary, fontSize: 13, fontWeight: '700' },
+  fileRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, borderTopWidth: 1, borderTopColor: colors.border },
+  fileRowNum: { color: colors.textMuted, fontSize: 12, width: 18, textAlign: 'center' },
+  fileRowIcon: { fontSize: 20 },
+  fileRowName: { color: colors.text, fontSize: 13, fontWeight: '600' },
+  fileRowSize: { color: colors.textMuted, fontSize: 11, marginTop: 1 },
+  fileRowRemove: { paddingHorizontal: 8, paddingVertical: 4 },
 })

@@ -157,96 +157,101 @@ def _parse_response(raw: str, contract_id: str, filename: str) -> tuple[Analysis
 
 async def analyze_with_gemini(
     contract_id: str,
-    file_path: str,
+    file_paths: str | list[str],
     filename: str,
 ) -> AnalysisResult:
     """
-    Gemini API로 계약서 파일 분석
+    Gemini API로 계약서 파일 분석 (단일 또는 다중 파일 지원)
 
     흐름:
-      1. 파일 형식에 따라 텍스트 또는 이미지로 추출
-      2. 텍스트 파일의 경우 Presidio로 개인정보 마스킹
-      3. 마스킹된 텍스트를 Gemini로 분석
-      4. 원본 텍스트 즉시 삭제 (del)
+      1. 각 파일에서 텍스트 또는 이미지 추출
+      2. 텍스트는 Presidio 마스킹 후 합산
+      3. Gemini로 전체 분석 (이미지+텍스트 혼합 가능)
     """
     from app.services.masking_service import mask_pii
 
-    ext = Path(file_path).suffix.lower()
+    # 단일 파일도 리스트로 통일
+    paths: list[str] = [file_paths] if isinstance(file_paths, str) else file_paths
+
     model = _init_model()
     start = time.time()
 
-    masked_text: str | None = None
-    masked_count: int = 0
+    combined_texts: list[str] = []
+    images: list[PIL.Image.Image] = []
+    total_masked_count = 0
 
-    # ── 이미지 파일: Gemini Vision으로 OCR+분석 동시 처리 ────────────────────
-    if ext in {".jpg", ".jpeg", ".png"}:
-        logger.info(f"🖼️  이미지 파일 분석 시작 (OCR 포함): {filename}")
-        image = PIL.Image.open(file_path)
-        response = model.generate_content([_PROMPT_IMAGE, image])
+    for fp in paths:
+        ext = Path(fp).suffix.lower()
 
-        # 응답에서 extracted_text 추출 후 마스킹
+        if ext in {".jpg", ".jpeg", ".png"}:
+            logger.info(f"🖼️  이미지 추가: {Path(fp).name}")
+            images.append(PIL.Image.open(fp))
+
+        elif ext == ".pdf":
+            logger.info(f"📄 PDF 텍스트 추출: {Path(fp).name}")
+            raw = _extract_pdf_text(fp)
+            if not raw:
+                raise ValueError(f"PDF({Path(fp).name})에서 텍스트를 추출할 수 없습니다. 스캔 PDF는 JPG/PNG로 변환해 주세요.")
+            masking_result = mask_pii(raw)
+            del raw
+            combined_texts.append(masking_result.masked_text)
+            total_masked_count += masking_result.masked_count
+            logger.info(f"✅ PDF 마스킹 완료 ({masking_result.masked_count}건)")
+
+        elif ext == ".docx":
+            logger.info(f"📝 DOCX 텍스트 추출: {Path(fp).name}")
+            raw = _extract_docx_text(fp)
+            if not raw:
+                raise ValueError(f"DOCX({Path(fp).name})에서 텍스트를 추출할 수 없습니다.")
+            masking_result = mask_pii(raw)
+            del raw
+            combined_texts.append(masking_result.masked_text)
+            total_masked_count += masking_result.masked_count
+            logger.info(f"✅ DOCX 마스킹 완료 ({masking_result.masked_count}건)")
+
+        else:
+            raise ValueError(f"지원하지 않는 형식: {ext.upper()}")
+
+    # ── Gemini 호출 ───────────────────────────────────────────────────────────
+    merged_text = "\n\n--- 다음 페이지 ---\n\n".join(combined_texts) if combined_texts else ""
+
+    if images and not merged_text:
+        # 이미지만: Vision API로 OCR+분석
+        logger.info(f"🖼️  이미지 {len(images)}장 Vision 분석 시작")
+        prompt_parts: list = [_PROMPT_IMAGE] + images
+        response = model.generate_content(prompt_parts)
+
         elapsed = round(time.time() - start, 1)
         result, extracted_text = _parse_response(response.text, contract_id, filename)
 
         if extracted_text:
-            logger.info("🔒 이미지 OCR 텍스트 개인정보 마스킹 처리 중...")
             masking_result = mask_pii(extracted_text)
-            masked_text = masking_result.masked_text
-            masked_count = masking_result.masked_count
-            logger.info(f"✅ 이미지 마스킹 완료 ({masked_count}건)")
+            result.contract_text = masking_result.masked_text
+            result.masked_count = masking_result.masked_count + total_masked_count
+            logger.info(f"✅ 이미지 OCR 마스킹 완료 ({masking_result.masked_count}건)")
         else:
-            logger.warning("⚠️  이미지에서 텍스트를 추출하지 못했습니다.")
+            result.contract_text = None
+            result.masked_count = total_masked_count
 
         result.analysis_time = f"{elapsed}초"
-        result.masked_count = masked_count
-        result.contract_text = masked_text
         return result
 
-    # ── PDF 파일 ─────────────────────────────────────────────────────────────
-    elif ext == ".pdf":
-        logger.info(f"📄 PDF 텍스트 추출 중: {filename}")
-        raw_text = _extract_pdf_text(file_path)
-
-        if not raw_text:
-            raise ValueError(
-                "PDF에서 텍스트를 추출할 수 없습니다. "
-                "스캔 이미지 PDF는 JPG/PNG로 변환 후 업로드해 주세요."
-            )
-
-        logger.info("🔒 PDF 개인정보 마스킹 처리 중...")
-        masking_result = mask_pii(raw_text)
-        masked_text = masking_result.masked_text
-        masked_count = masking_result.masked_count
-        del raw_text
-
-        logger.info(f"✅ 마스킹 완료 ({masked_count}건) → Gemini 분석 전송")
-        response = model.generate_content(_PROMPT.format(text=masked_text[:10000]))
-
-    # ── DOCX 파일 ────────────────────────────────────────────────────────────
-    elif ext == ".docx":
-        logger.info(f"📝 DOCX 텍스트 추출 중: {filename}")
-        raw_text = _extract_docx_text(file_path)
-
-        if not raw_text:
-            raise ValueError("DOCX에서 텍스트를 추출할 수 없습니다.")
-
-        logger.info("🔒 DOCX 개인정보 마스킹 처리 중...")
-        masking_result = mask_pii(raw_text)
-        masked_text = masking_result.masked_text
-        masked_count = masking_result.masked_count
-        del raw_text
-
-        logger.info(f"✅ 마스킹 완료 ({masked_count}건) → Gemini 분석 전송")
-        response = model.generate_content(_PROMPT.format(text=masked_text[:10000]))
+    elif images and merged_text:
+        # 이미지 + 텍스트 혼합
+        logger.info(f"📋 혼합 분석: 텍스트 {len(combined_texts)}개 + 이미지 {len(images)}장")
+        mixed_prompt = _PROMPT.format(text=merged_text[:8000]) + "\n\n이미지로 제공된 페이지도 함께 분석하세요."
+        prompt_parts = [mixed_prompt] + images
+        response = model.generate_content(prompt_parts)
 
     else:
-        raise ValueError(f"AI 분석을 지원하지 않는 형식입니다: {ext.upper()}")
+        # 텍스트만
+        logger.info(f"📝 텍스트 분석 시작 ({len(merged_text)}자)")
+        response = model.generate_content(_PROMPT.format(text=merged_text[:10000]))
 
-    # ── 응답 파싱 (PDF / DOCX 공통) ──────────────────────────────────────────
     elapsed = round(time.time() - start, 1)
     result, _ = _parse_response(response.text, contract_id, filename)
     result.analysis_time = f"{elapsed}초"
-    result.masked_count = masked_count
-    result.contract_text = masked_text
+    result.masked_count = total_masked_count
+    result.contract_text = merged_text or None
 
     return result

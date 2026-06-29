@@ -191,6 +191,27 @@ function SummaryCard({
   )
 }
 
+/* ── 구독 타입 ── */
+interface SubItem {
+  id: number; service_name: string; emoji: string; category: string
+  monthly_fee: number; billing_cycle: string; billing_date: number
+  start_date: string | null; end_date: string | null
+  cancellation_penalty: number; notes: string | null
+  used_months: number; total_paid: number
+}
+
+const CATEGORY_OPTIONS = ['동영상', '음악', '배달', '쇼핑', '게임', '클라우드', '렌탈/약정', '기타']
+const POPULAR_SERVICES = [
+  { name: 'Netflix', emoji: '🎬', category: '동영상' },
+  { name: 'YouTube Premium', emoji: '▶️', category: '동영상' },
+  { name: '쿠팡플레이', emoji: '🛒', category: '동영상' },
+  { name: '배달의민족', emoji: '🍔', category: '배달' },
+  { name: '쿠팡', emoji: '📦', category: '쇼핑' },
+  { name: 'Spotify', emoji: '🎵', category: '음악' },
+  { name: 'iCloud', emoji: '☁️', category: '클라우드' },
+  { name: 'Google One', emoji: '🔵', category: '클라우드' },
+]
+
 /* ── Main Page ──────────────────────────────────────── */
 export default function DashboardPage() {
   const navigate = useNavigate()
@@ -205,6 +226,67 @@ export default function DashboardPage() {
   const [savedLoading, setSavedLoading] = useState(true)
   const [deletingId, setDeletingId] = useState<number | null>(null)
 
+  /* 구독 관리 */
+  const [subs, setSubs] = useState<SubItem[]>([])
+  const [showSubModal, setShowSubModal] = useState(false)
+  const [editingSub, setEditingSub] = useState<SubItem | null>(null)
+  const [subForm, setSubForm] = useState({
+    service_name: '', emoji: '📱', category: '기타',
+    monthly_fee: '', billing_date: '1', billing_cycle: 'monthly',
+    start_date: '', end_date: '', cancellation_penalty: '', notes: '',
+  })
+
+  const authHeader = () => ({ Authorization: `Bearer ${localStorage.getItem('cm_token')}` })
+
+  const fetchSubs = useCallback(async () => {
+    const token = localStorage.getItem('cm_token')
+    if (!token) return
+    try {
+      const res = await fetch('/api/v1/subscriptions', { headers: { Authorization: `Bearer ${token}` } })
+      if (res.ok) setSubs(await res.json())
+    } catch {}
+  }, [])
+
+  const openAddSub = () => {
+    setEditingSub(null)
+    setSubForm({ service_name: '', emoji: '📱', category: '기타', monthly_fee: '', billing_date: '1', billing_cycle: 'monthly', start_date: '', end_date: '', cancellation_penalty: '', notes: '' })
+    setShowSubModal(true)
+  }
+  const openEditSub = (s: SubItem) => {
+    setEditingSub(s)
+    setSubForm({
+      service_name: s.service_name, emoji: s.emoji, category: s.category,
+      monthly_fee: String(s.monthly_fee), billing_date: String(s.billing_date),
+      billing_cycle: s.billing_cycle, start_date: s.start_date ?? '',
+      end_date: s.end_date ?? '', cancellation_penalty: String(s.cancellation_penalty),
+      notes: s.notes ?? '',
+    })
+    setShowSubModal(true)
+  }
+  const saveSub = async () => {
+    const token = localStorage.getItem('cm_token')
+    const body = {
+      service_name: subForm.service_name, emoji: subForm.emoji, category: subForm.category,
+      monthly_fee: Number(subForm.monthly_fee) || 0, billing_date: Number(subForm.billing_date) || 1,
+      billing_cycle: subForm.billing_cycle,
+      start_date: subForm.start_date || null, end_date: subForm.end_date || null,
+      cancellation_penalty: Number(subForm.cancellation_penalty) || 0,
+      notes: subForm.notes || null,
+    }
+    if (editingSub) {
+      await fetch(`/api/v1/subscriptions/${editingSub.id}`, { method: 'PUT', headers: { ...authHeader(), 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    } else {
+      await fetch('/api/v1/subscriptions', { method: 'POST', headers: { ...authHeader(), 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    }
+    setShowSubModal(false)
+    fetchSubs()
+  }
+  const deleteSub = async (id: number) => {
+    if (!confirm('구독 항목을 삭제할까요?')) return
+    await fetch(`/api/v1/subscriptions/${id}`, { method: 'DELETE', headers: authHeader() })
+    fetchSubs()
+  }
+
   const fetchSaved = useCallback(async () => {
     const token = localStorage.getItem('cm_token')
     if (!token) { setSavedLoading(false); return }
@@ -218,7 +300,7 @@ export default function DashboardPage() {
     }
   }, [])
 
-  useEffect(() => { fetchSaved() }, [fetchSaved])
+  useEffect(() => { fetchSaved(); fetchSubs() }, [fetchSaved, fetchSubs])
 
   const handleDeleteSaved = useCallback(async (id: number) => {
     if (!confirm('이 분석 결과를 삭제할까요?')) return
@@ -440,20 +522,124 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {/* ── Subscription/Rental section ── */}
+          {/* ── 구독·렌탈 관리 섹션 ── */}
           <div className="sub-detail-section">
             <div className="sub-detail-section-header">
               <div>
-                <h2 className="dash-title" style={{ fontSize: 18, marginBottom: 4 }}>구독·렌탈 현황</h2>
-                <p className="dash-subtitle" style={{ fontSize: 13 }}>장기 약정 계약의 이용 현황과 위약금을 한눈에 파악하세요</p>
+                <h2 className="dash-title" style={{ fontSize: 18, marginBottom: 4 }}>구독·렌탈 관리</h2>
+                <p className="dash-subtitle" style={{ fontSize: 13 }}>이용 중인 구독/렌탈 서비스를 추가하고 지출 현황을 파악하세요</p>
+              </div>
+              <button className="btn-primary" style={{ fontSize: 13, padding: '8px 16px' }} onClick={openAddSub}>
+                + 구독 추가
+              </button>
+            </div>
+
+            {subs.length === 0 ? (
+              <div className="saved-empty" style={{ padding: '32px 0' }}>
+                <span style={{ fontSize: 32 }}>📋</span>
+                <p>등록된 구독/렌탈 서비스가 없습니다.</p>
+                <p style={{ fontSize: 13 }}>넷플릭스, 쿠팡, 렌탈 계약 등을 추가하면 지출 현황을 한눈에 파악할 수 있습니다.</p>
+              </div>
+            ) : (
+              <div className="sub-detail-grid">
+                {subs.map((s) => (
+                  <div key={s.id} className="sub-detail-card">
+                    <div className="sub-detail-header">
+                      <span style={{ fontSize: 24 }}>{s.emoji}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div className="sub-detail-name">{s.service_name}</div>
+                        <div className="sub-detail-type">{s.category}</div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button onClick={() => openEditSub(s)} style={{ fontSize: 12, padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-card)', cursor: 'pointer', color: 'var(--text)' }}>수정</button>
+                        <button onClick={() => deleteSub(s.id)} style={{ fontSize: 12, padding: '4px 8px', borderRadius: 6, border: '1px solid rgba(217,64,64,0.3)', background: 'transparent', cursor: 'pointer', color: 'var(--risk-high)' }}>삭제</button>
+                      </div>
+                    </div>
+                    <div className="sub-detail-metrics" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
+                      {[
+                        { label: '월 이용료', value: `${s.monthly_fee.toLocaleString('ko-KR')}원` },
+                        { label: '결제일', value: `매월 ${s.billing_date}일` },
+                        { label: '이용 기간', value: s.used_months ? `${s.used_months}개월` : s.start_date ?? '-' },
+                        { label: '총 지출', value: s.total_paid ? `${s.total_paid.toLocaleString('ko-KR')}원` : '-', accent: true },
+                        ...(s.cancellation_penalty ? [{ label: '해지 위약금', value: `${s.cancellation_penalty.toLocaleString('ko-KR')}원`, danger: true }] : []),
+                      ].map((m: any) => (
+                        <div key={m.label} style={{ background: 'var(--bg)', borderRadius: 8, padding: '8px 10px' }}>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 3 }}>{m.label}</div>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: m.danger ? 'var(--risk-high)' : m.accent ? 'var(--accent)' : 'var(--text)' }}>{m.value}</div>
+                        </div>
+                      ))}
+                    </div>
+                    {s.notes && <div style={{ marginTop: 10, fontSize: 12, color: 'var(--text-muted)', borderTop: '1px solid var(--border)', paddingTop: 8 }}>{s.notes}</div>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* ── 구독 추가/수정 모달 ── */}
+          {showSubModal && (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+              <div style={{ background: 'var(--bg-card)', borderRadius: 20, padding: 28, width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto' }}>
+                <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20, color: 'var(--text)' }}>{editingSub ? '구독 수정' : '구독 추가'}</h2>
+
+                {/* 빠른 선택 */}
+                {!editingSub && (
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>자주 쓰는 서비스</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      {POPULAR_SERVICES.map(p => (
+                        <button key={p.name} onClick={() => setSubForm(f => ({ ...f, service_name: p.name, emoji: p.emoji, category: p.category }))}
+                          style={{ fontSize: 12, padding: '4px 10px', borderRadius: 20, border: '1px solid var(--border)', background: subForm.service_name === p.name ? 'var(--accent)' : 'var(--bg)', color: subForm.service_name === p.name ? '#fff' : 'var(--text)', cursor: 'pointer' }}>
+                          {p.emoji} {p.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {[
+                  { label: '서비스 이름 *', key: 'service_name', placeholder: '예: Netflix' },
+                  { label: '이모지', key: 'emoji', placeholder: '📱' },
+                  { label: '월 이용료 (원)', key: 'monthly_fee', placeholder: '13500', type: 'number' },
+                  { label: '결제일 (매월 N일)', key: 'billing_date', placeholder: '1', type: 'number' },
+                  { label: '시작일 (YYYY-MM-DD)', key: 'start_date', placeholder: '2024-01-01' },
+                  { label: '종료일 (없으면 비워두기)', key: 'end_date', placeholder: '무기한' },
+                  { label: '해지 위약금 (원)', key: 'cancellation_penalty', placeholder: '0', type: 'number' },
+                  { label: '메모', key: 'notes', placeholder: '특이사항 입력' },
+                ].map(({ label, key, placeholder, type }) => (
+                  <div key={key} style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>{label}</div>
+                    <input
+                      type={type ?? 'text'}
+                      value={(subForm as any)[key]}
+                      onChange={e => setSubForm(f => ({ ...f, [key]: e.target.value }))}
+                      placeholder={placeholder}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)', fontSize: 14, boxSizing: 'border-box' }}
+                    />
+                  </div>
+                ))}
+
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>카테고리</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {CATEGORY_OPTIONS.map(c => (
+                      <button key={c} onClick={() => setSubForm(f => ({ ...f, category: c }))}
+                        style={{ fontSize: 12, padding: '4px 10px', borderRadius: 20, border: '1px solid var(--border)', background: subForm.category === c ? 'var(--accent)' : 'var(--bg)', color: subForm.category === c ? '#fff' : 'var(--text)', cursor: 'pointer' }}>
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button onClick={() => setShowSubModal(false)} style={{ flex: 1, padding: '12px', borderRadius: 12, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', fontSize: 14, cursor: 'pointer' }}>취소</button>
+                  <button onClick={saveSub} disabled={!subForm.service_name} style={{ flex: 2, padding: '12px', borderRadius: 12, background: subForm.service_name ? 'var(--accent)' : 'var(--border)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', border: 'none' }}>
+                    {editingSub ? '수정 완료' : '추가 완료'}
+                  </button>
+                </div>
               </div>
             </div>
-            <div className="sub-detail-grid">
-              {SUBSCRIPTION_DETAILS.map((s) => (
-                <SubscriptionCard key={s.id} data={s} />
-              ))}
-            </div>
-          </div>
+          )}
 
           {/* ── Expiry alert banner ── */}
           <div style={{ height: 24 }} />

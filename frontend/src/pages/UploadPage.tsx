@@ -87,20 +87,21 @@ function ProgressSteps({ hasFile, hasType }: { hasFile: boolean; hasType: boolea
   )
 }
 
-function DropZone({ onFile }: { onFile: (f: File) => void }) {
+function DropZone({ onFiles }: { onFiles: (files: File[]) => void }) {
   const [drag, setDrag] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     setDrag(false)
-    const file = e.dataTransfer.files[0]
-    if (file) onFile(file)
-  }, [onFile])
+    const files = Array.from(e.dataTransfer.files)
+    if (files.length) onFiles(files)
+  }, [onFiles])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) onFile(file)
+    const files = Array.from(e.target.files ?? [])
+    if (files.length) onFiles(files)
+    e.target.value = ''
   }
 
   return (
@@ -112,40 +113,72 @@ function DropZone({ onFile }: { onFile: (f: File) => void }) {
       onDragLeave={() => setDrag(false)}
       onDrop={handleDrop}
     >
-      <input
-        ref={inputRef}
-        type="file"
-        accept={ACCEPT_TYPES}
-        style={{ display: 'none' }}
-        onChange={handleChange}
-      />
-
-      <div className="drop-zone-icon">
-        {drag ? '📂' : '📁'}
-      </div>
-
-      <h2>
-        {drag
-          ? '파일을 놓아주세요'
-          : '계약서를 드래그&드롭 하거나'}
-      </h2>
-      {!drag && <p className="drop-zone-sub">클릭하여 파일을 선택하세요</p>}
-
-      <div className="drop-zone-divider">
-        <span>지원 형식</span>
-      </div>
-
+      <input ref={inputRef} type="file" accept={ACCEPT_TYPES} multiple style={{ display: 'none' }} onChange={handleChange} />
+      <div className="drop-zone-icon">{drag ? '📂' : '📁'}</div>
+      <h2>{drag ? '파일을 놓아주세요' : '계약서를 드래그&드롭 하거나'}</h2>
+      {!drag && <p className="drop-zone-sub">클릭하여 파일을 선택하세요 · <strong>여러 장</strong> 동시 선택 가능</p>}
+      <div className="drop-zone-divider"><span>지원 형식</span></div>
       <div className="format-list">
         {['PDF', 'JPG', 'PNG', 'HWP', 'DOCX'].map((fmt) => (
           <span key={fmt} className="format-chip">
-            {fmt === 'PDF' && '🔴'}
-            {(fmt === 'JPG' || fmt === 'PNG') && '🔵'}
-            {fmt === 'HWP' && '🟢'}
-            {fmt === 'DOCX' && '🟣'}
+            {fmt === 'PDF' && '🔴'}{(fmt === 'JPG' || fmt === 'PNG') && '🔵'}{fmt === 'HWP' && '🟢'}{fmt === 'DOCX' && '🟣'}
             {fmt}
           </span>
         ))}
-        <span className="format-chip" style={{ color: 'var(--text-muted)' }}>최대 20MB</span>
+        <span className="format-chip" style={{ color: 'var(--text-muted)' }}>최대 20MB/개</span>
+      </div>
+    </div>
+  )
+}
+
+function FileListPreview({ files, onRemove, onAddMore }: {
+  files: FileInfo[]
+  onRemove: (idx: number) => void
+  onAddMore: (newFiles: File[]) => void
+}) {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const added = Array.from(e.target.files ?? [])
+    if (added.length) onAddMore(added)
+    e.target.value = ''
+  }
+  return (
+    <div className="file-preview-card">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <span style={{ fontWeight: 700, color: 'var(--text)', fontSize: 14 }}>
+          📋 선택된 파일 <span style={{ color: 'var(--accent)' }}>{files.length}장</span>
+        </span>
+        <button
+          onClick={() => inputRef.current?.click()}
+          style={{ fontSize: 12, color: 'var(--accent)', fontWeight: 600, background: 'rgba(37,99,235,0.08)', border: '1px solid rgba(37,99,235,0.2)', borderRadius: 8, padding: '4px 10px', cursor: 'pointer' }}
+        >+ 파일 추가</button>
+        <input ref={inputRef} type="file" accept={ACCEPT_TYPES} multiple style={{ display: 'none' }} onChange={handleChange} />
+      </div>
+      {files.map((info, idx) => {
+        const { emoji, bg } = getFileIconStyle(info.ext)
+        return (
+          <div key={idx} className="file-preview-top" style={{ marginBottom: 8, background: 'var(--bg)', borderRadius: 10, padding: '10px 12px' }}>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginRight: 4, minWidth: 18 }}>{idx + 1}</div>
+            <div className="file-type-icon" style={{ background: bg, width: 32, height: 32, fontSize: 16 }}>{emoji}</div>
+            <div className="file-meta">
+              <div className="file-name" title={info.name}>{truncateFilename(info.name, 28)}</div>
+              <div className="file-size">{info.ext} · {info.sizeLabel}</div>
+            </div>
+            <button className="file-remove-btn" onClick={() => onRemove(idx)} title="제거">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+        )
+      })}
+      <div className="file-change-zone" onClick={() => inputRef.current?.click()} style={{ marginTop: 8 }}>
+        <p>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }}>
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+          </svg>
+          파일 추가하기
+        </p>
       </div>
     </div>
   )
@@ -273,55 +306,44 @@ function SubmitButton({ enabled, loading, onClick }: { enabled: boolean; loading
 /* ── Page ──────────────────────────────────────────── */
 export default function UploadPage() {
   const navigate = useNavigate()
-  const [fileInfo, setFileInfo] = useState<FileInfo | null>(null)
+  const [fileList, setFileList] = useState<FileInfo[]>([])
   const [contractType, setContractType] = useState<ContractType | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
 
-  const handleFile = useCallback((file: File) => {
+  const toFileInfo = (f: File): FileInfo => ({
+    file: f, name: f.name, sizeLabel: formatSize(f.size), ext: getExt(f.name),
+  })
+
+  const handleFiles = useCallback((files: File[]) => {
     setUploadError(null)
-    setFileInfo({
-      file,
-      name: file.name,
-      sizeLabel: formatSize(file.size),
-      ext: getExt(file.name),
+    setFileList(prev => {
+      const existingNames = new Set(prev.map(f => f.name))
+      const newOnes = files.filter(f => !existingNames.has(f.name)).map(toFileInfo)
+      return [...prev, ...newOnes]
     })
   }, [])
 
-  const handleRemove = () => { setFileInfo(null); setUploadError(null) }
+  const handleRemove = (idx: number) => setFileList(prev => prev.filter((_, i) => i !== idx))
 
   const handleAnalyze = async () => {
-    if (!fileInfo || !contractType) return
+    if (!fileList.length || !contractType) return
     setAnalyzing(true)
     setUploadError(null)
 
     try {
       const formData = new FormData()
-      formData.append('file', fileInfo.file)
+      fileList.forEach(fi => formData.append('files', fi.file))
       formData.append('contract_type', contractType)
 
       const { data } = await api.post('/contracts/upload', formData)
-
-      navigate('/loading', {
-        state: {
-          contractId: data.contract_id,
-          filename: data.filename,
-          contractType: data.contract_type,
-        },
-      })
+      navigate('/loading', { state: { contractId: data.contract_id, filename: data.filename, contractType: data.contract_type } })
     } catch {
-      // 백엔드 없을 때 mock 데이터로 진행
-      navigate('/loading', {
-        state: {
-          useMock: true,
-          filename: fileInfo.name,
-          contractType,
-        },
-      })
+      navigate('/loading', { state: { useMock: true, filename: fileList[0]?.name ?? '계약서', contractType } })
     }
   }
 
-  const canSubmit = !!fileInfo && !!contractType
+  const canSubmit = fileList.length > 0 && !!contractType
 
   return (
     <>
@@ -345,23 +367,21 @@ export default function UploadPage() {
 
           {/* Header */}
           <div className="upload-page-header">
-            <h1>
-              계약서를 <span className="gradient-text">업로드</span>하세요
-            </h1>
-            <p>PDF, 이미지, HWP, DOCX 파일을 업로드하면 AI가 30초 안에 위험 조항을 찾아드립니다.</p>
+            <h1>계약서를 <span className="gradient-text">업로드</span>하세요</h1>
+            <p>PDF, 이미지, HWP, DOCX 파일을 업로드하면 AI가 30초 안에 위험 조항을 찾아드립니다. <strong>여러 장 동시 업로드</strong> 가능합니다.</p>
           </div>
 
           {/* Progress */}
-          <ProgressSteps hasFile={!!fileInfo} hasType={!!contractType} />
+          <ProgressSteps hasFile={fileList.length > 0} hasType={!!contractType} />
 
           {/* Main Layout */}
           <div className="upload-layout">
 
-            {/* Left: Drop Zone or File Preview */}
+            {/* Left: Drop Zone or File List */}
             <div>
-              {fileInfo
-                ? <FilePreview info={fileInfo} onRemove={handleRemove} onReplace={handleFile} />
-                : <DropZone onFile={handleFile} />
+              {fileList.length > 0
+                ? <FileListPreview files={fileList} onRemove={handleRemove} onAddMore={handleFiles} />
+                : <DropZone onFiles={handleFiles} />
               }
             </div>
 

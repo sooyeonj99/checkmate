@@ -53,41 +53,49 @@ def _validate_file(file: UploadFile) -> str:
     "/upload",
     response_model=ContractUploadResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="계약서 업로드",
+    summary="계약서 업로드 (다중 파일 지원)",
 )
 async def upload_contract(
-    file: UploadFile = File(..., description="계약서 파일"),
+    files: list[UploadFile] = File(..., description="계약서 파일 (여러 장 가능)"),
     contract_type: Optional[str] = Form(None, description="계약 유형"),
 ):
-    ext = _validate_file(file)
-    contents = await file.read()
-    file_size = len(contents)
-
-    if file_size == 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="빈 파일입니다. 내용이 있는 파일을 업로드해 주세요.",
-        )
-    if file_size > MAX_FILE_SIZE:
-        raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail=f"파일 크기가 너무 큽니다. ({file_size / 1024 / 1024:.1f}MB)\n최대: {settings.MAX_FILE_SIZE_MB}MB",
-        )
+    if not files:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="파일을 선택해 주세요.")
 
     type_label = CONTRACT_TYPE_LABELS.get(contract_type or "other", "기타 계약서")
     contract_id = str(uuid.uuid4())
     save_dir = os.path.join(settings.UPLOAD_DIR, contract_id)
     os.makedirs(save_dir, exist_ok=True)
 
-    safe_filename = f"{contract_id}{ext}"
-    save_path = os.path.join(save_dir, safe_filename)
+    saved_filenames = []
+    total_size = 0
 
-    async with aiofiles.open(save_path, "wb") as f:
-        await f.write(contents)
+    for idx, file in enumerate(files, start=1):
+        ext = _validate_file(file)
+        contents = await file.read()
+        file_size = len(contents)
 
-    # 원본 파일명·계약유형 메타데이터 저장 (분석 시 참조)
+        if file_size == 0:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"'{file.filename}' 파일이 비어 있습니다.")
+        if file_size > MAX_FILE_SIZE:
+            raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail=f"'{file.filename}' 파일이 너무 큽니다. ({file_size/1024/1024:.1f}MB / 최대 {settings.MAX_FILE_SIZE_MB}MB)")
+
+        safe_name = f"file_{idx:02d}{ext}"
+        async with aiofiles.open(os.path.join(save_dir, safe_name), "wb") as f:
+            await f.write(contents)
+
+        saved_filenames.append({"saved": safe_name, "original": file.filename or safe_name})
+        total_size += file_size
+
+    # 메타데이터 저장
+    first_name = files[0].filename or "계약서"
+    display_name = first_name if len(files) == 1 else f"{first_name} 외 {len(files)-1}장"
     meta = {
-        "original_filename": file.filename,
+        "original_filename": display_name,
+        "file_list": saved_filenames,
+        "file_count": len(files),
         "contract_type": type_label,
         "uploaded_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     }
@@ -96,12 +104,12 @@ async def upload_contract(
 
     return ContractUploadResponse(
         contract_id=contract_id,
-        filename=file.filename or safe_filename,
+        filename=display_name,
         contract_type=type_label,
-        file_size=file_size,
-        file_ext=ext.lstrip(".").upper(),
+        file_size=total_size,
+        file_ext=f"{len(files)}개 파일" if len(files) > 1 else saved_filenames[0]["saved"].split(".")[-1].upper(),
         status="업로드 완료",
-        message="파일이 성공적으로 업로드되었습니다. 분석을 시작할 수 있습니다.",
+        message=f"{len(files)}개 파일이 업로드되었습니다. 분석을 시작할 수 있습니다.",
     )
 
 
@@ -125,22 +133,19 @@ async def analyze_contract(contract_id: str):
         with open(meta_path, encoding="utf-8") as f:
             meta = json.load(f)
 
-    # 업로드된 파일 찾기 (meta.json 제외)
-    files = [f for f in os.listdir(contract_dir) if f != "meta.json"]
-    if not files:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="업로드된 파일을 찾을 수 없습니다.",
-        )
-    file_path = os.path.join(contract_dir, files[0])
-    original_filename = meta.get("original_filename", files[0])
+    # 업로드된 파일 목록 수집 (meta.json 제외, 번호순 정렬)
+    all_files = sorted([f for f in os.listdir(contract_dir) if f != "meta.json"])
+    if not all_files:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="업로드된 파일을 찾을 수 없습니다.")
+
+    file_paths = [os.path.join(contract_dir, f) for f in all_files]
+    original_filename = meta.get("original_filename", all_files[0])
 
     # Gemini API 연동
     if settings.GEMINI_API_KEY:
         try:
             from app.services.gemini_service import analyze_with_gemini
-            result = await analyze_with_gemini(contract_id, file_path, original_filename)
-            # 업로드 시 감지된 계약 유형 우선 적용
+            result = await analyze_with_gemini(contract_id, file_paths, original_filename)
             if meta.get("contract_type"):
                 result.contract_type = meta["contract_type"]
             return result
