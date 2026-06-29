@@ -82,14 +82,17 @@ export default function DashboardScreen() {
   const handleView = async (item: SavedContract) => {
     try {
       const { data } = await api.get(`/contracts/saved/${item.id}`)
-      navigation.navigate('Result', { analysisResult: data, isSaved: true })
+      navigation.navigate('분석하기', {
+        screen: 'Result',
+        params: { analysisResult: data, isSaved: true },
+      })
     } catch {
       Alert.alert('오류', '결과를 불러올 수 없습니다.')
     }
   }
 
   const handleLogout = () => {
-    navigation.navigate('Profile' as any)
+    navigation.navigate('마이페이지')
   }
 
   return (
@@ -100,7 +103,7 @@ export default function DashboardScreen() {
           <Text style={styles.logoText}>CHECKMATE</Text>
           <Text style={styles.greeting}>안녕하세요, {user?.username}님</Text>
         </View>
-        <TouchableOpacity style={styles.avatar} onPress={() => navigation.navigate('Profile' as any)}>
+        <TouchableOpacity style={styles.avatar} onPress={() => navigation.navigate('마이페이지')}>
           <Text style={styles.avatarText}>
             {user?.username?.charAt(0).toUpperCase() ?? '?'}
           </Text>

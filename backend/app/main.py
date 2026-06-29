@@ -22,10 +22,10 @@ async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
     # 업로드 디렉토리 생성
     os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-    print(f"✅ 서버 시작 | 업로드 폴더: {settings.UPLOAD_DIR}")
-    print(f"📋 CORS 허용 출처: {settings.CORS_ORIGINS}")
+    print(f"[OK] 서버 시작 | 업로드 폴더: {settings.UPLOAD_DIR}")
+    print(f"[OK] CORS 허용 출처: {settings.CORS_ORIGINS}")
     yield
-    print("🛑 서버 종료")
+    print("[--] 서버 종료")
 
 
 app = FastAPI(

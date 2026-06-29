@@ -122,7 +122,7 @@ export default function ResultScreen() {
             if (contractId) {
               api.delete(`/contracts/${contractId}`).catch(() => {})
             }
-            navigation.navigate('Main', { screen: 'Dashboard' } as any)
+            navigation.getParent()?.navigate('대시보드')
           },
         },
       ]
