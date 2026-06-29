@@ -184,56 +184,6 @@ function FileListPreview({ files, onRemove, onAddMore }: {
   )
 }
 
-function FilePreview({ info, onRemove, onReplace }: { info: FileInfo; onRemove: () => void; onReplace: (f: File) => void }) {
-  const inputRef = useRef<HTMLInputElement>(null)
-  const { emoji, bg } = getFileIconStyle(info.ext)
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) onReplace(file)
-  }
-
-  return (
-    <div className="file-preview-card">
-      <div className="file-preview-top">
-        <div className="file-type-icon" style={{ background: bg }}>{emoji}</div>
-        <div className="file-meta">
-          <div className="file-name" title={info.name}>{truncateFilename(info.name)}</div>
-          <div className="file-size">{info.ext} · {info.sizeLabel}</div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div className="file-status">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            준비 완료
-          </div>
-          <button className="file-remove-btn" onClick={onRemove} title="파일 제거">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      <input
-        ref={inputRef}
-        type="file"
-        accept={ACCEPT_TYPES}
-        style={{ display: 'none' }}
-        onChange={handleChange}
-      />
-      <div className="file-change-zone" onClick={() => inputRef.current?.click()}>
-        <p>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }}>
-            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-          </svg>
-          다른 파일로 교체하기
-        </p>
-      </div>
-    </div>
-  )
-}
 
 function ContractTypeSelector({ selected, onSelect }: { selected: ContractType | null; onSelect: (t: ContractType) => void }) {
   return (

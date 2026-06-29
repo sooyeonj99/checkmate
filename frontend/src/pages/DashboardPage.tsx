@@ -35,26 +35,6 @@ interface Contract {
   analyzedAt: string
 }
 
-interface SubscriptionDetail {
-  id: string
-  name: string
-  typeEmoji: string
-  type: string
-  billingType: 'monthly' | 'annual'
-  startDate: string
-  endDate: string
-  usedMonths: number
-  remainingMonths: number
-  totalPaid: number
-  status: ContractStatus
-  // 월 결제 전용
-  monthlyFee?: number
-  nextBillingDate?: string
-  // 년 결제 전용
-  annualFee?: number
-  monthlyUsage?: number
-  terminationPenalty?: number
-}
 
 /* ── Mock data ──────────────────────────────────────── */
 const MOCK_CONTRACTS: Contract[] = [
@@ -108,41 +88,6 @@ const MOCK_CONTRACTS: Contract[] = [
   },
 ]
 
-/* ── Subscription mock data ─────────────────────────── */
-const SUBSCRIPTION_DETAILS: SubscriptionDetail[] = [
-  {
-    id: '4',
-    name: '정수기 렌탈 서비스',
-    typeEmoji: '🔒',
-    type: '렌탈·약정계약',
-    billingType: 'monthly',
-    startDate: '2019-06-20',
-    endDate: '2029-06-20',
-    usedMonths: 84,
-    remainingMonths: 36,
-    totalPaid: 2940000,
-    terminationPenalty: 1260000,
-    status: 'danger',
-    monthlyFee: 35000,
-    nextBillingDate: '매월 20일',
-  },
-  {
-    id: '5',
-    name: 'Adobe Creative Cloud',
-    typeEmoji: '📋',
-    type: '구독·이용약관',
-    billingType: 'annual',
-    startDate: '2026-01-05',
-    endDate: '2027-01-05',
-    usedMonths: 5,
-    remainingMonths: 7,
-    totalPaid: 325000,
-    status: 'safe',
-    annualFee: 780000,
-    nextBillingDate: '2027-01-05',
-    terminationPenalty: 227500,
-  },
-]
 
 /* ── Risk helpers ───────────────────────────────────── */
 function scoreColor(score: number) {
@@ -264,7 +209,6 @@ export default function DashboardPage() {
     setShowSubModal(true)
   }
   const saveSub = async () => {
-    const token = localStorage.getItem('cm_token')
     const body = {
       service_name: subForm.service_name, emoji: subForm.emoji, category: subForm.category,
       monthly_fee: Number(subForm.monthly_fee) || 0, billing_date: Number(subForm.billing_date) || 1,
@@ -786,72 +730,6 @@ const ENTERPRISE_FEATURES = [
   { icon: '🔐', title: '계약서 보안 저장', sub: '암호화된 계약서 클라우드 저장소', comingSoon: true },
   { icon: '📈', title: '분석 리포트', sub: '월간/분기별 계약 위험 분석 리포트', comingSoon: true },
 ]
-
-/* ── Subscription card ──────────────────────────────── */
-function SubscriptionCard({ data: s }: { data: SubscriptionDetail }) {
-  const fmt = (n: number) => n.toLocaleString('ko-KR') + '원'
-  const statusLabel = s.status === 'danger' ? '⚠ 위험' : s.status === 'warn' ? '△ 주의' : '✓ 안전'
-  const isMonthly = s.billingType === 'monthly'
-
-  const metrics = isMonthly
-    ? [
-        { label: '1개월 요금', value: fmt(s.monthlyFee ?? 0) },
-        { label: '사용한 개월수', value: `${s.usedMonths}개월` },
-        { label: '현재까지 낸 요금', value: fmt(s.totalPaid), cls: 'accent' },
-        { label: '해지 위약금', value: s.terminationPenalty ? fmt(s.terminationPenalty) : '-', cls: s.terminationPenalty ? 'danger' : undefined },
-      ]
-    : [
-        { label: '년 이용료', value: fmt(s.annualFee ?? 0) },
-        { label: '결제 예정일', value: s.nextBillingDate ?? '-' },
-        { label: '총 납부 금액', value: fmt(s.totalPaid), cls: 'accent' },
-        { label: '해지 위약금', value: fmt(s.terminationPenalty ?? 0), cls: 'danger' },
-      ]
-
-  return (
-    <div className="sub-detail-card">
-      <div className="sub-detail-header">
-        <span style={{ fontSize: 22 }}>{s.typeEmoji}</span>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="sub-detail-name">{s.name}</div>
-          <div className="sub-detail-type">{s.type}</div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-          <span className={`sub-billing-badge ${isMonthly ? 'monthly' : 'annual'}`}>
-            {isMonthly ? '월 결제' : '년 결제'}
-          </span>
-          <span className={`dash-status-badge ${s.status}`}>{statusLabel}</span>
-        </div>
-      </div>
-
-      <div className="sub-detail-period">
-        <div className="sub-detail-period-dates">
-          <span>{s.startDate}</span>
-          <span>{s.endDate}</span>
-        </div>
-        <span className="sub-detail-period-bar">
-          <span
-            className="sub-detail-period-fill"
-            style={{ width: `${(s.usedMonths / (s.usedMonths + s.remainingMonths)) * 100}%` }}
-          />
-        </span>
-        <div className="sub-detail-period-info">
-          <span>이용 <strong>{s.usedMonths}개월</strong></span>
-          <span className="sub-detail-period-divider" />
-          <span>잔여 <strong>{s.remainingMonths}개월</strong></span>
-        </div>
-      </div>
-
-      <div className="sub-detail-metrics">
-        {metrics.map((m) => (
-          <div key={m.label} className="sub-detail-metric">
-            <div className="sub-detail-metric-label">{m.label}</div>
-            <div className={`sub-detail-metric-value${m.cls ? ` ${m.cls}` : ''}`}>{m.value}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
 
 /* ── Contract row ───────────────────────────────────── */
 function ContractRow({ contract: c }: { contract: Contract }) {
