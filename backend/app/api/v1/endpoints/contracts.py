@@ -150,7 +150,7 @@ async def analyze_contract(contract_id: str):
                 result.contract_type = meta["contract_type"]
             return result
         except Exception as e:
-            print(f"⚠️  Gemini 분석 오류 (목업으로 대체): {e}")
+            print(f"[WARN] Gemini 분석 오류 (목업으로 대체): {e}")
 
     return _mock_analysis(contract_id, original_filename, meta.get("contract_type", "기타 계약서"))
 
