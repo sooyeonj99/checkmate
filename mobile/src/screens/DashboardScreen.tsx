@@ -32,6 +32,11 @@ export default function DashboardScreen() {
   const [refreshing, setRefreshing] = useState(false)
   const [deletingId, setDeletingId] = useState<number | null>(null)
 
+  const empContracts = saved.filter(c => c.contract_type === '근로계약서')
+  const leaseContracts = saved.filter(c => c.contract_type === '임대차계약서')
+  const rentalContracts = saved.filter(c => c.contract_type === '렌탈·약정계약')
+  const enterpriseDanger = saved.filter(c => c.grade === '위험').length
+
   const fetchSaved = useCallback(async () => {
     try {
       const { data } = await api.get('/contracts/saved')
@@ -115,6 +120,23 @@ export default function DashboardScreen() {
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />}
       >
+        {/* 기업 통계 카드 */}
+        {isEnterprise && (
+          <View style={styles.enterpriseStatsRow}>
+            {[
+              { label: '총 계약', value: saved.length, color: colors.primary },
+              { label: '근로계약', value: empContracts.length, color: colors.safe },
+              { label: '임대차', value: leaseContracts.length, color: '#8b5cf6' },
+              { label: '위험', value: enterpriseDanger, color: colors.danger },
+            ].map(({ label, value, color }) => (
+              <View key={label} style={styles.enterpriseStatCard}>
+                <Text style={[styles.enterpriseStatValue, { color }]}>{value}</Text>
+                <Text style={styles.enterpriseStatLabel}>{label}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
         {/* 분석 시작 카드 */}
         <TouchableOpacity
           style={styles.analyzeCard}
@@ -208,6 +230,92 @@ export default function DashboardScreen() {
               </View>
             )
           })
+        )}
+
+        {/* 기업 전용: 계약 유형별 섹션 */}
+        {isEnterprise && (
+          <>
+            {[
+              { label: '근무인원 계약', type: '근로계약서', icon: '👷', contracts: empContracts },
+              { label: '임대차 계약', type: '임대차계약서', icon: '🏠', contracts: leaseContracts },
+              { label: '렌탈·약정', type: '렌탈·약정계약', icon: '🔒', contracts: rentalContracts },
+            ].map(({ label, icon, contracts }) => (
+              <View key={label}>
+                <View style={[styles.sectionHeader, { marginTop: 20 }]}>
+                  <Text style={styles.sectionTitle}>{icon} {label.toUpperCase()}</Text>
+                  <Text style={styles.sectionCount}>{contracts.length}건</Text>
+                </View>
+                {contracts.length === 0 ? (
+                  <View style={[styles.emptyBox, { paddingVertical: 16 }]}>
+                    <Text style={styles.emptySub}>저장된 {label}이 없습니다</Text>
+                  </View>
+                ) : (
+                  contracts.map(item => {
+                    const gradeColor =
+                      item.grade === '위험' ? colors.danger :
+                      item.grade === '주의' ? colors.warn : colors.safe
+                    const date = new Date(item.saved_at).toLocaleDateString('ko-KR', {
+                      year: 'numeric', month: 'long', day: 'numeric',
+                    })
+                    return (
+                      <View key={item.id} style={styles.savedCard}>
+                        <View style={styles.savedCardTop}>
+                          <View style={styles.savedTypeBadge}>
+                            <Text style={styles.savedTypeText}>{item.contract_type}</Text>
+                          </View>
+                          <Text style={[styles.savedGrade, { color: gradeColor }]}>{item.grade}</Text>
+                        </View>
+                        <Text style={styles.savedFilename} numberOfLines={2}>{item.filename}</Text>
+                        <View style={styles.savedScoreRow}>
+                          <Text style={styles.savedScoreLabel}>위험도 </Text>
+                          <Text style={[styles.savedScoreNum, { color: gradeColor }]}>{item.score}점</Text>
+                        </View>
+                        <View style={styles.savedCounts}>
+                          <View style={[styles.countBadge, { backgroundColor: 'rgba(239,68,68,0.1)' }]}>
+                            <Text style={[styles.countText, { color: colors.danger }]}>{item.danger_count} 위험</Text>
+                          </View>
+                          <View style={[styles.countBadge, { backgroundColor: 'rgba(245,158,11,0.1)' }]}>
+                            <Text style={[styles.countText, { color: colors.warn }]}>{item.warn_count} 주의</Text>
+                          </View>
+                          <View style={[styles.countBadge, { backgroundColor: 'rgba(34,197,94,0.1)' }]}>
+                            <Text style={[styles.countText, { color: colors.safe }]}>{item.safe_count} 안전</Text>
+                          </View>
+                        </View>
+                        <Text style={styles.savedDate}>{date} 저장</Text>
+                        <View style={styles.savedActions}>
+                          <TouchableOpacity style={styles.viewBtn} onPress={() => handleView(item)}>
+                            <Text style={styles.viewBtnText}>결과 보기</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={styles.deleteBtn}
+                            onPress={() => handleDelete(item)}
+                            disabled={deletingId === item.id}
+                          >
+                            {deletingId === item.id
+                              ? <ActivityIndicator size="small" color={colors.danger} />
+                              : <Text style={styles.deleteBtnText}>삭제</Text>
+                            }
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    )
+                  })
+                )}
+              </View>
+            ))}
+
+            {/* 종료된 계약 관리 - 준비중 */}
+            <View style={styles.comingSoonCard}>
+              <Text style={{ fontSize: 28, marginBottom: 8 }}>📅</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                <Text style={styles.comingSoonCardTitle}>종료된 계약 관리</Text>
+                <View style={styles.comingSoonBadge}>
+                  <Text style={styles.comingSoonText}>준비중</Text>
+                </View>
+              </View>
+              <Text style={styles.comingSoonCardSub}>계약 만료일 추적 및 갱신 알림 기능</Text>
+            </View>
+          </>
         )}
 
         {/* 서비스 특징 */}
@@ -340,4 +448,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6, paddingVertical: 2,
   },
   comingSoonText: { color: colors.primary, fontSize: 10, fontWeight: '700' },
+  enterpriseStatsRow: {
+    flexDirection: 'row', gap: 8, marginBottom: 20,
+  },
+  enterpriseStatCard: {
+    flex: 1, backgroundColor: colors.bgCard, borderRadius: 12, padding: 12,
+    alignItems: 'center', borderWidth: 1, borderColor: colors.border,
+  },
+  enterpriseStatValue: { fontSize: 22, fontWeight: '800', marginBottom: 3 },
+  enterpriseStatLabel: { fontSize: 11, color: colors.textSecondary, fontWeight: '600' },
+  comingSoonCard: {
+    backgroundColor: colors.bgCard, borderRadius: 14, padding: 20,
+    alignItems: 'center', marginTop: 20, marginBottom: 8,
+    borderWidth: 1, borderColor: colors.border, opacity: 0.75,
+  },
+  comingSoonCardTitle: { color: colors.text, fontWeight: '700', fontSize: 15 },
+  comingSoonCardSub: { color: colors.textSecondary, fontSize: 12, marginTop: 4 },
 })

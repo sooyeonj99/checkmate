@@ -300,6 +300,14 @@ export default function DashboardPage() {
     c.analyzedAt.startsWith('2026-06')
   ).length
 
+  const empContracts = savedContracts.filter(c => c.contract_type === '근로계약서')
+  const leaseContracts = savedContracts.filter(c => c.contract_type === '임대차계약서')
+  const rentalContracts = savedContracts.filter(c => c.contract_type === '렌탈·약정계약')
+  const otherEnterpriseContracts = savedContracts.filter(c =>
+    !['근로계약서', '임대차계약서', '렌탈·약정계약'].includes(c.contract_type)
+  )
+  const enterpriseDangerCount = savedContracts.filter(c => c.grade === '위험').length
+
   return (
     <div className="dash-page">
       {/* ── Topbar ── */}
@@ -396,10 +404,17 @@ export default function DashboardPage() {
 
           {/* ── Summary cards ── */}
           <div className="dash-summary-grid">
-            <SummaryCard icon="📁" label="전체 계약" value={totalCount} sub="누적 분석 건수" accent="blue" />
-            <SummaryCard icon="⚠️" label="위험 계약" value={dangerCount} sub="즉시 검토 필요" accent="danger" />
-            <SummaryCard icon="📊" label="이번 달 분석" value={thisMonthCount} sub="2026년 6월 기준" accent="safe" />
-            <SummaryCard icon="⏰" label="만료 임박" value={expiringContracts.length} sub="30일 이내 만료" accent="warn" />
+            {user?.user_type === 'enterprise' ? (<>
+              <SummaryCard icon="📁" label="총 계약서" value={savedContracts.length} sub="저장된 분석 건수" accent="blue" />
+              <SummaryCard icon="👷" label="근무인원 계약" value={empContracts.length} sub="근로계약서" accent="safe" />
+              <SummaryCard icon="🏠" label="임대차 계약" value={leaseContracts.length} sub="임대차계약서" accent="warn" />
+              <SummaryCard icon="⚠️" label="위험 계약" value={enterpriseDangerCount} sub="즉시 검토 필요" accent="danger" />
+            </>) : (<>
+              <SummaryCard icon="📁" label="전체 계약" value={totalCount} sub="누적 분석 건수" accent="blue" />
+              <SummaryCard icon="⚠️" label="위험 계약" value={dangerCount} sub="즉시 검토 필요" accent="danger" />
+              <SummaryCard icon="📊" label="이번 달 분석" value={thisMonthCount} sub="2026년 6월 기준" accent="safe" />
+              <SummaryCard icon="⏰" label="만료 임박" value={expiringContracts.length} sub="30일 이내 만료" accent="warn" />
+            </>)}
           </div>
 
           {/* ── 저장된 AI 분석 결과 ── */}
@@ -466,7 +481,92 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {/* ── 구독·렌탈 관리 섹션 ── */}
+          {/* ── 기업 전용: 계약 유형별 현황 ── */}
+          {user?.user_type === 'enterprise' && (
+            <div style={{ marginTop: 8 }}>
+              {[
+                { label: '근무인원 계약 관리', icon: '👷', contracts: empContracts, color: '#3b82f6', desc: '근로계약서, 고용계약서' },
+                { label: '임대차 계약 관리', icon: '🏠', contracts: leaseContracts, color: '#8b5cf6', desc: '사무실, 창고, 매장 임대 계약' },
+                { label: '렌탈·약정 관리', icon: '🔒', contracts: rentalContracts, color: '#f59e0b', desc: '장비, 차량, 설비 렌탈 계약' },
+                { label: '기타 계약', icon: '📝', contracts: otherEnterpriseContracts, color: '#64748b', desc: '용역계약, 구매계약 외 기타' },
+              ].map(({ label, icon, contracts, color, desc }) => (
+                <div key={label} className="saved-contracts-section" style={{ marginTop: 24 }}>
+                  <div className="saved-contracts-header">
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                        <h2 className="dash-title" style={{ fontSize: 18, marginBottom: 0, color }}>{icon} {label}</h2>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', background: 'var(--bg)', padding: '2px 8px', borderRadius: 10, border: '1px solid var(--border)' }}>{contracts.length}건</span>
+                      </div>
+                      <p className="dash-subtitle" style={{ fontSize: 13 }}>{desc}</p>
+                    </div>
+                    <button className="btn-primary" style={{ fontSize: 13, padding: '8px 16px' }} onClick={() => navigate('/upload')}>
+                      + 새 분석
+                    </button>
+                  </div>
+                  {contracts.length === 0 ? (
+                    <div className="saved-empty">
+                      <span style={{ fontSize: 32 }}>{icon}</span>
+                      <p>저장된 {label}이 없습니다.</p>
+                      <p style={{ fontSize: 13 }}>계약서를 분석한 후 결과 저장을 선택하면 여기에 표시됩니다.</p>
+                    </div>
+                  ) : (
+                    <div className="saved-grid">
+                      {contracts.map((item) => {
+                        const gradeColor =
+                          item.grade === '위험' ? 'var(--risk-high)' :
+                          item.grade === '주의' ? 'var(--risk-mid)' : 'var(--risk-safe)'
+                        return (
+                          <div key={item.id} className="saved-card">
+                            <div className="saved-card-top">
+                              <div className="saved-card-type">{item.contract_type}</div>
+                              <span className="saved-card-grade" style={{ color: gradeColor }}>{item.grade}</span>
+                            </div>
+                            <div className="saved-card-name">{item.filename}</div>
+                            <div className="saved-card-score" style={{ color: gradeColor }}>위험도 <strong>{item.score}</strong>점</div>
+                            <div className="saved-card-counts">
+                              <span className="saved-count danger">{item.danger_count} 위험</span>
+                              <span className="saved-count warn">{item.warn_count} 주의</span>
+                              <span className="saved-count safe">{item.safe_count} 안전</span>
+                            </div>
+                            <div className="saved-card-date">
+                              {new Date(item.saved_at).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })} 저장
+                            </div>
+                            <div className="saved-card-actions">
+                              <button className="saved-view-btn" onClick={() => handleViewSaved(item)}>결과 보기</button>
+                              <button className="saved-delete-btn" onClick={() => handleDeleteSaved(item.id)} disabled={deletingId === item.id}>
+                                {deletingId === item.id ? '삭제 중...' : '삭제'}
+                              </button>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {/* 종료된 계약 관리 - 준비중 */}
+              <div className="saved-contracts-section" style={{ marginTop: 24, opacity: 0.65 }}>
+                <div className="saved-contracts-header">
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      <h2 className="dash-title" style={{ fontSize: 18, marginBottom: 0 }}>📅 종료된 계약 관리</h2>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: 'rgba(37,99,235,0.1)', color: 'var(--accent)' }}>준비중</span>
+                    </div>
+                    <p className="dash-subtitle" style={{ fontSize: 13 }}>계약 종료일 추적, 갱신 알림, 아카이브 관리</p>
+                  </div>
+                </div>
+                <div className="saved-empty" style={{ padding: '32px 0' }}>
+                  <span style={{ fontSize: 32 }}>🔜</span>
+                  <p>종료된 계약 관리 기능은 곧 출시됩니다.</p>
+                  <p style={{ fontSize: 13 }}>계약 만료일 추적 및 자동 갱신 알림 기능이 추가될 예정입니다.</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── 구독·렌탈 관리 섹션 (개인 사용자만) ── */}
+          {user?.user_type !== 'enterprise' && (<>
           <div className="sub-detail-section">
             <div className="sub-detail-section-header">
               <div>
@@ -671,6 +771,8 @@ export default function DashboardPage() {
               )}
             </div>
           </div>
+
+          </>)}
 
           {/* ── 사용자 유형별 기능 섹션 ── */}
           <div style={{ marginTop: 32 }}>
