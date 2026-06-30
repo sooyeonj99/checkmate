@@ -3,12 +3,15 @@
 지원 형식: PDF, JPG, JPEG, PNG, HWP, DOCX (최대 20MB)
 """
 import json
+import logging
 import os
 import shutil
 import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 import aiofiles
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
@@ -144,26 +147,55 @@ def _load_contract_dir(contract_id: str):
 )
 async def preview_contract(contract_id: str):
     """
-    업로드된 파일에서 텍스트를 추출하고 개인정보 엔티티를 감지해 반환.
-    이미지 파일만 있으면 image_only=true 반환 (OCR은 Gemini가 수행).
+    파일에서 텍스트 추출 후 PII 감지 결과 반환.
+    이미지 파일은 Gemini OCR로 텍스트 추출 → 마스킹 검토 가능.
+    API 키 없거나 OCR 실패 시에만 image_only=true 반환.
     """
-    _, _, file_paths = _load_contract_dir(contract_id)
+    contract_dir, _, file_paths = _load_contract_dir(contract_id)
 
-    from app.services.gemini_service import extract_texts_from_files
+    from app.services.gemini_service import extract_texts_from_files, extract_text_from_image_with_gemini
     from app.services.masking_service import detect_pii
 
-    texts, images = extract_texts_from_files(file_paths)
+    # PDF / DOCX 텍스트 추출
+    texts, _ = extract_texts_from_files(file_paths)
+
+    # 이미지 파일 목록
+    image_paths = [fp for fp in file_paths if Path(fp).suffix.lower() in {".jpg", ".jpeg", ".png"}]
+
+    # 이미지 OCR (Gemini)
+    ocr_cache: dict[str, str] = {}
+    from_ocr = False
+
+    if image_paths and settings.GEMINI_API_KEY:
+        for img_fp in image_paths:
+            try:
+                logger.info(f"이미지 OCR 시작: {Path(img_fp).name}")
+                ocr_text = extract_text_from_image_with_gemini(img_fp)
+                if ocr_text:
+                    ocr_cache[Path(img_fp).name] = ocr_text
+                    texts.append(ocr_text)
+                    from_ocr = True
+                    logger.info(f"OCR 완료: {Path(img_fp).name} ({len(ocr_text)}자)")
+            except Exception as e:
+                logger.warning(f"이미지 OCR 실패 ({Path(img_fp).name}): {e}")
+
+        # OCR 결과 캐시 저장 (analyze 단계에서 재사용)
+        if ocr_cache:
+            cache_path = os.path.join(contract_dir, "ocr_cache.json")
+            with open(cache_path, "w", encoding="utf-8") as f:
+                json.dump(ocr_cache, f, ensure_ascii=False)
 
     if not texts:
-        # 이미지만 → 마스킹 미리보기 불가
-        return {"image_only": True, "text": None, "entities": []}
+        # OCR 불가 또는 API 키 없음 → 기존 방식으로 폴백
+        return {"image_only": True, "text": None, "entities": [], "from_ocr": False}
 
     combined = "\n\n--- 다음 파일 ---\n\n".join(texts)
     entities = detect_pii(combined)
 
     return {
         "image_only": False,
-        "text": combined[:5000],  # 미리보기용 최대 5000자
+        "from_ocr": from_ocr,
+        "text": combined[:5000],
         "entities": [
             {
                 "id": e.id,

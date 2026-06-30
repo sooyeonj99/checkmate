@@ -7,6 +7,7 @@ Gemini AI 계약서 분석 서비스
 """
 import json
 import logging
+import os
 import re
 import time
 from datetime import datetime
@@ -61,7 +62,12 @@ _PROMPT = """당신은 한국 법률 계약서 분석 전문가입니다.
 - 주요 조항 4개 이상 반드시 분석
 - 모든 응답은 한국어로 작성"""
 
-# ── Gemini 프롬프트 (이미지용) ────────────────────────────────────────────────
+# ── Gemini 프롬프트 (이미지 OCR 전용) ───────────────────────────────────────
+_PROMPT_OCR = """이 계약서 이미지에서 텍스트를 추출해주세요.
+마크다운, 코드블록, 설명 없이 원문 텍스트만 그대로 출력하세요.
+표의 내용, 모든 조항 번호와 내용, 서명란, 날짜 등 이미지에 있는 모든 텍스트를 최대한 원문 그대로 추출하세요."""
+
+# ── Gemini 프롬프트 (이미지 분석용 — OCR 캐시 없을 때 폴백) ───────────────
 _PROMPT_IMAGE = """당신은 한국 법률 계약서 분석 전문가입니다.
 이미지로 제공된 계약서를 분석하고, 반드시 JSON만 반환하세요. 마크다운, 설명 없이 순수 JSON만 출력하세요.
 
@@ -161,6 +167,14 @@ def _parse_response(raw: str, contract_id: str, filename: str) -> tuple[Analysis
     return result, extracted_text
 
 
+def extract_text_from_image_with_gemini(file_path: str) -> str:
+    """이미지에서 텍스트만 추출 (OCR 전용 — 분석 없음)"""
+    model = _init_model()
+    img = PIL.Image.open(file_path)
+    response = model.generate_content([_PROMPT_OCR, img])
+    return response.text.strip()
+
+
 def extract_texts_from_files(file_paths: list[str]) -> tuple[list[str], list]:
     """
     파일 목록에서 텍스트와 이미지를 추출 (마스킹 없이 원본 반환).
@@ -199,12 +213,21 @@ async def analyze_with_gemini(
       3. Gemini로 전체 분석 (이미지+텍스트 혼합 가능)
     """
     from app.services.masking_service import mask_pii, detect_pii, mask_pii_selective
+    from app.core.config import settings as _settings
 
     # 단일 파일도 리스트로 통일
     paths: list[str] = [file_paths] if isinstance(file_paths, str) else file_paths
 
     model = _init_model()
     start = time.time()
+
+    # preview 단계에서 이미지 OCR이 완료된 경우 캐시 로드
+    ocr_cache: dict[str, str] = {}
+    cache_path = os.path.join(_settings.UPLOAD_DIR, contract_id, "ocr_cache.json")
+    if os.path.exists(cache_path):
+        with open(cache_path, encoding="utf-8") as _f:
+            ocr_cache = json.load(_f)
+        logger.info(f"OCR 캐시 로드: {len(ocr_cache)}개 이미지")
 
     combined_texts: list[str] = []
     images: list[PIL.Image.Image] = []
@@ -214,8 +237,22 @@ async def analyze_with_gemini(
         ext = Path(fp).suffix.lower()
 
         if ext in {".jpg", ".jpeg", ".png"}:
-            logger.info(f"이미지 추가: {Path(fp).name}")
-            images.append(PIL.Image.open(fp))
+            cached_text = ocr_cache.get(Path(fp).name)
+            if cached_text:
+                # OCR 캐시 사용 → 텍스트처럼 마스킹 처리
+                logger.info(f"OCR 캐시 사용: {Path(fp).name}")
+                if selected_ids is not None:
+                    _entities = detect_pii(cached_text)
+                    masking_result = mask_pii_selective(cached_text, _entities, selected_ids)
+                else:
+                    masking_result = mask_pii(cached_text)
+                combined_texts.append(masking_result.masked_text)
+                total_masked_count += masking_result.masked_count
+                logger.info(f"이미지 OCR 마스킹 완료 ({masking_result.masked_count}건)")
+            else:
+                # 캐시 없음 → Gemini Vision 폴백
+                logger.info(f"이미지 Vision 분석: {Path(fp).name}")
+                images.append(PIL.Image.open(fp))
 
         elif ext == ".pdf":
             logger.info(f"PDF 텍스트 추출: {Path(fp).name}")

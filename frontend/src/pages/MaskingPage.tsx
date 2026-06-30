@@ -203,7 +203,10 @@ export default function MaskingPage() {
   const [entities, setEntities] = useState<PiiEntity[]>([])
   const [checkedIds, setCheckedIds] = useState<Set<number>>(new Set())
   const [imageOnly, setImageOnly] = useState(false)
+  const [fromOcr, setFromOcr] = useState(false)
   const [error, setError] = useState('')
+
+  const isImageFile = /\.(jpg|jpeg|png)$/i.test(filename || '')
 
   useEffect(() => {
     if (!contractId) { navigate('/upload'); return }
@@ -211,9 +214,9 @@ export default function MaskingPage() {
     api.get(`/contracts/${contractId}/preview`)
       .then(({ data }) => {
         setImageOnly(data.image_only)
+        setFromOcr(data.from_ocr ?? false)
         setText(data.text ?? '')
         setEntities(data.entities ?? [])
-        // 기본값: 전체 선택
         setCheckedIds(new Set((data.entities ?? []).map((e: PiiEntity) => e.id)))
       })
       .catch(() => setError('미리보기를 불러오지 못했습니다. 바로 분석을 진행합니다.'))
@@ -323,7 +326,14 @@ export default function MaskingPage() {
               borderTopColor: 'var(--accent)', borderRadius: '50%',
               animation: 'spin 0.8s linear infinite', margin: '0 auto 16px',
             }} />
-            <p style={{ color: 'var(--text-muted)' }}>개인정보 감지 중...</p>
+            <p style={{ color: 'var(--text-muted)', fontWeight: 600 }}>
+              {isImageFile ? 'AI가 이미지에서 텍스트 추출 중...' : '개인정보 감지 중...'}
+            </p>
+            {isImageFile && (
+              <p style={{ color: 'var(--text-muted)', fontSize: 12, marginTop: 6 }}>
+                이미지 OCR은 10~20초 소요될 수 있습니다
+              </p>
+            )}
           </div>
         ) : error ? (
           <div style={{
@@ -340,10 +350,15 @@ export default function MaskingPage() {
             border: '1px solid var(--border)',
           }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>🖼️</div>
-            <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>이미지 파일은 AI가 직접 분석합니다</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24 }}>
-              이미지는 텍스트 추출 전이므로 마스킹 미리보기를 지원하지 않습니다.<br/>
-              AI가 분석하면서 개인정보를 함께 처리합니다.
+            <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
+              이미지 텍스트 추출 불가
+            </h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 8 }}>
+              Gemini API 키가 없거나 OCR에 실패했습니다.<br/>
+              AI가 이미지를 직접 보면서 분석 및 개인정보 처리를 함께 진행합니다.
+            </p>
+            <p style={{ color: 'var(--text-muted)', fontSize: 12, marginBottom: 24 }}>
+              💡 PDF나 DOCX 파일로 변환하면 마스킹 검토 기능을 사용할 수 있습니다
             </p>
             <button onClick={handleStart} style={{
               background: 'var(--accent)', color: '#fff', border: 'none',
@@ -354,6 +369,26 @@ export default function MaskingPage() {
             </button>
           </div>
         ) : (
+          <>
+          {fromOcr && (
+            <div style={{
+              padding: '12px 18px', marginBottom: 16,
+              background: 'rgba(6,195,255,0.07)',
+              border: '1px solid rgba(6,195,255,0.25)',
+              borderRadius: 12, fontSize: 13,
+              color: '#06c3ff',
+              display: 'flex', alignItems: 'flex-start', gap: 10,
+            }}>
+              <span style={{ fontSize: 18, flexShrink: 0 }}>📸</span>
+              <div>
+                <strong>이미지에서 AI OCR로 텍스트를 추출했습니다.</strong><br/>
+                <span style={{ opacity: 0.85 }}>
+                  자동 인식이므로 일부 오류가 있을 수 있습니다. 내용을 확인 후 마스킹을 선택해 분석을 진행하세요.
+                </span>
+              </div>
+            </div>
+          )}
+
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 24, alignItems: 'start' }}>
             {/* 텍스트 미리보기 */}
             <div style={{
@@ -364,7 +399,9 @@ export default function MaskingPage() {
                 padding: '14px 20px', borderBottom: '1px solid var(--border)',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               }}>
-                <span style={{ fontWeight: 700, fontSize: 14 }}>계약서 미리보기</span>
+                <span style={{ fontWeight: 700, fontSize: 14 }}>
+                  {fromOcr ? '📸 OCR 추출 텍스트' : '계약서 미리보기'}
+                </span>
                 <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                   강조된 텍스트를 클릭해 마스킹 선택/해제
                 </span>
@@ -444,6 +481,7 @@ export default function MaskingPage() {
               </button>
             </div>
           </div>
+          </>
         )}
       </main>
 

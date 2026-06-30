@@ -61,7 +61,10 @@ export default function MaskingReviewScreen() {
   const [entities, setEntities] = useState<PiiEntity[]>([])
   const [checkedIds, setCheckedIds] = useState<Set<number>>(new Set())
   const [imageOnly, setImageOnly] = useState(false)
+  const [fromOcr, setFromOcr] = useState(false)
   const [tab, setTab] = useState<'text' | 'list'>('list')
+
+  const isImageFile = /\.(jpg|jpeg|png)$/i.test(filename || '')
 
   useEffect(() => {
     if (!contractId) { navigation.goBack(); return }
@@ -69,6 +72,7 @@ export default function MaskingReviewScreen() {
     api.get(`/contracts/${contractId}/preview`)
       .then(({ data }) => {
         setImageOnly(data.image_only)
+        setFromOcr(data.from_ocr ?? false)
         setText(data.text ?? '')
         const ents: PiiEntity[] = data.entities ?? []
         setEntities(ents)
@@ -101,7 +105,14 @@ export default function MaskingReviewScreen() {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>개인정보 감지 중...</Text>
+        <Text style={styles.loadingText}>
+          {isImageFile ? 'AI가 이미지에서 텍스트 추출 중...' : '개인정보 감지 중...'}
+        </Text>
+        {isImageFile && (
+          <Text style={[styles.loadingText, { fontSize: 12, marginTop: 4, opacity: 0.6 }]}>
+            이미지 OCR은 10~20초 소요됩니다
+          </Text>
+        )}
       </View>
     )
   }
@@ -135,13 +146,13 @@ export default function MaskingReviewScreen() {
       </View>
 
       {imageOnly ? (
-        /* 이미지 전용 안내 */
+        /* 이미지 OCR 불가 안내 */
         <View style={styles.imageOnlyBox}>
           <Text style={{ fontSize: 48, marginBottom: 16 }}>🖼️</Text>
-          <Text style={styles.imageOnlyTitle}>이미지 파일입니다</Text>
+          <Text style={styles.imageOnlyTitle}>이미지 텍스트 추출 불가</Text>
           <Text style={styles.imageOnlyDesc}>
-            이미지는 AI가 직접 분석하면서 처리합니다.{'\n'}
-            별도 마스킹 검토 없이 진행됩니다.
+            Gemini API 키가 없거나 OCR에 실패했습니다.{'\n'}
+            AI가 이미지를 직접 보면서 분석합니다.
           </Text>
           <TouchableOpacity style={styles.bigStartBtn} onPress={handleStart}>
             <Text style={styles.bigStartBtnText}>AI 분석 시작하기 →</Text>
@@ -149,6 +160,25 @@ export default function MaskingReviewScreen() {
         </View>
       ) : (
         <>
+          {/* OCR 안내 배너 */}
+          {fromOcr && (
+            <View style={{
+              marginHorizontal: 16, marginTop: 12, padding: 12,
+              backgroundColor: 'rgba(6,195,255,0.08)',
+              borderRadius: 10, borderLeftWidth: 3, borderLeftColor: '#06c3ff',
+              flexDirection: 'row', alignItems: 'flex-start', gap: 8,
+            }}>
+              <Text style={{ fontSize: 18 }}>📸</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: '#06c3ff', fontWeight: '700', fontSize: 13 }}>
+                  이미지 AI OCR 완료
+                </Text>
+                <Text style={{ color: '#06c3ff', fontSize: 12, marginTop: 2, opacity: 0.85 }}>
+                  자동 인식이므로 일부 오류가 있을 수 있습니다. 내용 확인 후 마스킹을 선택하세요.
+                </Text>
+              </View>
+            </View>
+          )}
           {/* 탭 */}
           <View style={styles.tabRow}>
             <TouchableOpacity
