@@ -618,7 +618,6 @@ function ExpertCard({ grade, contractType }: { grade: RiskLevel; contractType?: 
     }}>
       {/* 헤더 */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-        <span style={{ fontSize: 22 }}>🏢</span>
         <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: 'var(--text)' }}>
           무료 법률 지원 기관
         </h3>
@@ -643,7 +642,6 @@ function ExpertCard({ grade, contractType }: { grade: RiskLevel; contractType?: 
               gap: 8,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 20 }}>{ag.icon}</span>
                 <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>{ag.name}</span>
                 {isRelevant && ag.always === false && (
                   <span style={{

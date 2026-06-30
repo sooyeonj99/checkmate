@@ -334,7 +334,6 @@ function AgencySection({ grade, contractType }: { grade: string; contractType?: 
   return (
     <View style={agencyStyles.wrap}>
       <View style={agencyStyles.header}>
-        <Text style={agencyStyles.headerIcon}>🏢</Text>
         <Text style={agencyStyles.headerTitle}>무료 법률 지원 기관</Text>
       </View>
       <Text style={agencyStyles.headerDesc}>
@@ -346,7 +345,6 @@ function AgencySection({ grade, contractType }: { grade: string; contractType?: 
         return (
           <View key={ag.id} style={[agencyStyles.card, isRelevant && agencyStyles.cardHighlight]}>
             <View style={agencyStyles.cardTop}>
-              <Text style={agencyStyles.cardIcon}>{ag.icon}</Text>
               <Text style={agencyStyles.cardName}>{ag.name}</Text>
               {isRelevant && !ag.always && (
                 <View style={agencyStyles.relevantBadge}>

@@ -2951,20 +2951,19 @@ img, svg {
 /* ── 결과 저장 배너 ── */
 .result-save-banner {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  background: linear-gradient(135deg, rgba(79,142,247,0.12) 0%, rgba(79,142,247,0.06) 100%);
-  border: 1px solid rgba(79,142,247,0.3);
+  flex-direction: column;
+  gap: 0;
+  background: rgba(79,142,247,0.08);
+  border: 1px solid rgba(79,142,247,0.25);
   border-radius: 14px;
-  padding: 20px 24px;
+  padding: 20px 20px 16px;
   margin: 32px 0 16px;
-  flex-wrap: wrap;
 }
 .result-save-banner-text {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  margin-bottom: 16px;
 }
 .result-save-banner-title {
   font-size: 15px;
@@ -2978,14 +2977,14 @@ img, svg {
 .result-save-banner-actions {
   display: flex;
   gap: 10px;
-  flex-shrink: 0;
 }
 .result-save-btn {
+  flex: 1;
   background: var(--primary);
   color: #fff;
   border: none;
-  border-radius: 9px;
-  padding: 10px 22px;
+  border-radius: 10px;
+  padding: 12px 0;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
@@ -2994,11 +2993,12 @@ img, svg {
 .result-save-btn:hover:not(:disabled) { opacity: .85; }
 .result-save-btn:disabled { opacity: .5; cursor: not-allowed; }
 .result-discard-btn {
+  flex: 1;
   background: transparent;
   color: var(--text-muted);
   border: 1px solid var(--border);
-  border-radius: 9px;
-  padding: 10px 22px;
+  border-radius: 10px;
+  padding: 12px 0;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
