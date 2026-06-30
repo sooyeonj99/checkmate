@@ -16,6 +16,7 @@ interface Clause {
   article: string
   desc: string
   original: string
+  simpleExplanation?: string
   problem?: string
   suggestion: string
   lawRef: string
@@ -35,6 +36,7 @@ interface AnalysisResult {
   problemTags: ProblemTag[]
   clauses: Clause[]
   contractHtml?: string
+  summary?: string
 }
 
 /* ── 계약서 원문 텍스트 → 하이라이트 HTML 변환 ────────── */
@@ -92,6 +94,7 @@ function transformApiResult(data: any): AnalysisResult {
     article: c.article ?? '',
     desc: c.description ?? '',
     original: c.original ?? '',
+    simpleExplanation: c.simple_explanation ?? undefined,
     suggestion: c.suggestion ?? '',
     lawRef: c.law_ref ?? '',
   }))
@@ -117,6 +120,7 @@ function transformApiResult(data: any): AnalysisResult {
     problemTags,
     clauses,
     contractHtml: buildContractHtml(data.contract_text ?? '', data.clauses ?? []),
+    summary: data.summary ?? undefined,
   }
 }
 
@@ -408,10 +412,38 @@ function ClauseItem({ clause, isOpen, onToggle }: ClauseItemProps) {
         <div className="result-clause-body-inner" ref={innerRef}>
           <p className="result-clause-desc">{clause.desc}</p>
 
-          {/* Original */}
-          <div className="result-quote-block original">
-            <div className="result-quote-label orig">계약서 원문</div>
-            <div className="result-quote-text">"{clause.original}"</div>
+          {/* 원문 vs 쉬운 설명 비교 */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: clause.simpleExplanation ? '1fr 1fr' : '1fr',
+            gap: 10,
+            marginBottom: 12,
+          }}>
+            {/* Original */}
+            <div className="result-quote-block original">
+              <div className="result-quote-label orig">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }}>
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                </svg>
+                계약서 원문
+              </div>
+              <div className="result-quote-text">"{clause.original}"</div>
+            </div>
+
+            {/* 쉬운 설명 */}
+            {clause.simpleExplanation && (
+              <div className="result-quote-block" style={{ borderLeftColor: 'var(--accent)' }}>
+                <div className="result-quote-label" style={{ color: 'var(--accent)' }}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }}>
+                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                  </svg>
+                  쉽게 풀어보면
+                </div>
+                <div className="result-quote-text" style={{ color: 'var(--text)' }}>
+                  {clause.simpleExplanation}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Problem */}
@@ -436,6 +468,42 @@ function ClauseItem({ clause, isOpen, onToggle }: ClauseItemProps) {
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+/* ── SummaryCard ───────────────────────────────────── */
+function SummaryCard({ summary }: { summary?: string }) {
+  if (!summary) return null
+  return (
+    <div style={{
+      background: 'linear-gradient(135deg, rgba(79,142,247,0.07) 0%, rgba(6,195,255,0.04) 100%)',
+      border: '1px solid rgba(79,142,247,0.22)',
+      borderRadius: 14,
+      padding: '18px 22px',
+      marginBottom: 28,
+    }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 7,
+        marginBottom: 12,
+        fontSize: 11, fontWeight: 700,
+        color: 'var(--accent)',
+        textTransform: 'uppercase', letterSpacing: 1.2,
+      }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 16v-4M12 8h.01"/>
+        </svg>
+        AI 계약서 요약
+      </div>
+      <p style={{
+        color: 'var(--text)',
+        fontSize: 14,
+        lineHeight: 1.8,
+        margin: 0,
+      }}>
+        {summary}
+      </p>
     </div>
   )
 }
@@ -651,7 +719,9 @@ export default function ResultPage() {
           <>
             <ScoreSection result={result} />
 
-            <div className="section-eyebrow" style={{ marginTop: 32 }}>위험 조항 상세 분석</div>
+            <SummaryCard summary={result.summary} />
+
+            <div className="section-eyebrow" style={{ marginTop: result.summary ? 0 : 32 }}>위험 조항 상세 분석</div>
             <ClauseList clauses={result.clauses} />
 
             <div className="section-eyebrow">관련 기관 정보</div>

@@ -35,6 +35,7 @@ _PROMPT = """당신은 한국 법률 계약서 분석 전문가입니다.
 출력 형식:
 {{
   "contract_type": "계약서 유형 (예: 근로계약서, 임대차계약서, 프리랜서 계약서, 기타 계약서)",
+  "summary": "이 계약서 전체를 법률 지식이 없는 일반인도 이해할 수 있도록 3~4문장으로 쉽게 요약. 어떤 종류의 계약인지, 핵심 조건은 무엇인지, 특히 주의해야 할 점이 무엇인지 포함. 딱딱한 법률 용어 대신 일상적인 말로 설명.",
   "score": 위험도 점수 숫자 (0~100, 높을수록 위험),
   "grade": "위험 또는 주의 또는 안전",
   "clauses": [
@@ -44,6 +45,7 @@ _PROMPT = """당신은 한국 법률 계약서 분석 전문가입니다.
       "risk": "danger 또는 warn 또는 safe",
       "description": "이 조항이 위험/주의/안전한 이유를 구체적으로",
       "original": "계약서 원문 발췌 (없으면 유사 표현)",
+      "simple_explanation": "이 조항이 실제로 무엇을 의미하는지 법 용어 없이 쉽게 설명. '쉽게 말하면, ...' 형식으로 시작. 일반인이 바로 이해할 수 있는 표현 사용.",
       "suggestion": "수정 제안 (safe이면 현행 조항이 적절합니다.)",
       "law_ref": "관련 법령 (없으면 null)"
     }}
@@ -66,6 +68,7 @@ _PROMPT_IMAGE = """당신은 한국 법률 계약서 분석 전문가입니다.
 출력 형식:
 {
   "contract_type": "계약서 유형",
+  "summary": "이 계약서 전체를 일반인도 이해할 수 있도록 3~4문장으로 쉽게 요약",
   "score": 위험도 점수 (0~100),
   "grade": "위험 또는 주의 또는 안전",
   "extracted_text": "이미지에서 추출한 계약서 전문 텍스트 (OCR). 최대한 원문 그대로 추출하세요.",
@@ -76,6 +79,7 @@ _PROMPT_IMAGE = """당신은 한국 법률 계약서 분석 전문가입니다.
       "risk": "danger 또는 warn 또는 safe",
       "description": "설명",
       "original": "원문 발췌",
+      "simple_explanation": "이 조항이 실제로 무엇을 의미하는지 쉽게 설명. '쉽게 말하면, ...' 형식으로 시작",
       "suggestion": "수정 제안",
       "law_ref": "관련 법령 또는 null"
     }
@@ -126,6 +130,7 @@ def _parse_response(raw: str, contract_id: str, filename: str) -> tuple[Analysis
             risk=c.get("risk", "safe"),
             description=c.get("description", ""),
             original=c.get("original", ""),
+            simple_explanation=c.get("simple_explanation") or None,
             suggestion=c.get("suggestion", ""),
             law_ref=c.get("law_ref"),
         )
@@ -150,6 +155,7 @@ def _parse_response(raw: str, contract_id: str, filename: str) -> tuple[Analysis
         analysis_time="AI 분석 완료",
         clauses=clauses,
         analyzed_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        summary=data.get("summary") or None,
     )
     extracted_text = data.get("extracted_text") or None
     return result, extracted_text

@@ -19,6 +19,7 @@ interface Clause {
   article: string
   desc: string
   original: string
+  simpleExplanation?: string
   problem?: string
   suggestion: string
   lawRef: string
@@ -34,6 +35,7 @@ interface AnalysisResult {
   analysisTime: string
   contractType: string
   contractText: string
+  summary?: string
   clauses: Clause[]
 }
 
@@ -48,6 +50,7 @@ function transformApiResult(data: any): AnalysisResult {
     article: c.article ?? '',
     desc: c.description ?? '',
     original: c.original ?? '',
+    simpleExplanation: c.simple_explanation ?? undefined,
     suggestion: c.suggestion ?? '',
     lawRef: c.law_ref ?? '',
   }))
@@ -62,6 +65,7 @@ function transformApiResult(data: any): AnalysisResult {
     analysisTime: data.analysis_time ?? '',
     contractType: data.contract_type ?? '',
     contractText: data.contract_text ?? '',
+    summary: data.summary ?? undefined,
     clauses,
   }
 }
@@ -206,6 +210,17 @@ export default function ResultScreen() {
           </View>
         )}
 
+        {/* AI 계약서 요약 */}
+        {result.summary ? (
+          <View style={styles.summaryCard}>
+            <View style={styles.summaryHeader}>
+              <Text style={styles.summaryHeaderIcon}>ℹ</Text>
+              <Text style={styles.summaryHeaderText}>AI 계약서 요약</Text>
+            </View>
+            <Text style={styles.summaryBody}>{result.summary}</Text>
+          </View>
+        ) : null}
+
         {/* 원본 계약서 요약 */}
         {result.contractText ? (
           <>
@@ -271,10 +286,21 @@ function ClauseItem({
       {isOpen && (
         <View style={styles.clauseBody}>
           <Text style={styles.clauseDesc}>{clause.desc}</Text>
+
+          {/* 원문 */}
           <View style={[styles.quoteBlock, { borderLeftColor: levelColor }]}>
-            <Text style={styles.quoteLabel}>계약서 원문</Text>
+            <Text style={styles.quoteLabel}>📄 계약서 원문</Text>
             <Text style={styles.quoteText}>"{clause.original}"</Text>
           </View>
+
+          {/* 쉬운 설명 */}
+          {clause.simpleExplanation ? (
+            <View style={[styles.quoteBlock, { borderLeftColor: colors.primary, backgroundColor: 'rgba(79,142,247,0.05)' }]}>
+              <Text style={[styles.quoteLabel, { color: colors.primary }]}>💬 쉽게 풀어보면</Text>
+              <Text style={[styles.quoteText, { color: colors.text }]}>{clause.simpleExplanation}</Text>
+            </View>
+          ) : null}
+
           {clause.problem && (
             <View style={styles.problemRow}>
               <Text style={styles.problemText}>⚠ 문제점: {clause.problem}</Text>
@@ -395,6 +421,27 @@ const styles = StyleSheet.create({
   },
   maskingNote: {
     marginTop: 12, color: colors.safe, fontSize: 11, fontWeight: '600',
+  },
+
+  /* AI 요약 */
+  summaryCard: {
+    backgroundColor: 'rgba(79,142,247,0.07)',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(79,142,247,0.22)',
+    padding: 16,
+    marginBottom: 16,
+  },
+  summaryHeader: {
+    flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10,
+  },
+  summaryHeaderIcon: { color: colors.primary, fontSize: 14, fontWeight: '700' },
+  summaryHeaderText: {
+    color: colors.primary, fontSize: 11, fontWeight: '700',
+    textTransform: 'uppercase', letterSpacing: 1,
+  },
+  summaryBody: {
+    color: colors.text, fontSize: 13, lineHeight: 21,
   },
 
   /* 위험 조항 없음 */

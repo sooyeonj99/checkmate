@@ -7,6 +7,7 @@ import os
 import shutil
 import uuid
 from datetime import datetime
+from pathlib import Path
 from typing import Optional
 
 import aiofiles
@@ -255,6 +256,23 @@ async def save_contract(
     db.commit()
     db.refresh(saved)
 
+    # 마스킹된 텍스트 계정별 저장 (AI 학습용)
+    if result.contract_text:
+        try:
+            masked_dir = Path(settings.UPLOAD_DIR).parent / "masked_data" / "users" / str(current_user.id)
+            masked_dir.mkdir(parents=True, exist_ok=True)
+            masked_file = masked_dir / f"{contract_id}.txt"
+            masked_file.write_text(result.contract_text, encoding="utf-8")
+            meta_file = masked_dir / f"{contract_id}.json"
+            meta_file.write_text(json.dumps({
+                "filename": result.filename,
+                "contract_type": result.contract_type,
+                "saved_at": saved.saved_at.isoformat(),
+                "masked_count": result.masked_count,
+            }, ensure_ascii=False), encoding="utf-8")
+        except Exception as e:
+            print(f"[WARN] 마스킹 파일 저장 실패: {e}")
+
     # 업로드 파일 정리 (저장했으므로 더 이상 필요 없음)
     contract_dir = os.path.join(settings.UPLOAD_DIR, contract_id)
     if os.path.isdir(contract_dir):
@@ -343,6 +361,7 @@ def _mock_analysis(contract_id: str, filename: str = "계약서.pdf", contract_t
             risk="danger",
             description="결과물 저작권이 발주사에 무상 귀속되며 2차 창작물 이용권까지 포함되어 있습니다.",
             original="본 계약에 따라 생성된 모든 결과물의 저작권 일체는 납품 즉시 발주사에 무상으로 귀속되며, 수급인은 어떠한 권리도 주장할 수 없다.",
+            simple_explanation="쉽게 말하면, 당신이 만든 모든 결과물은 납품하는 순간 회사 것이 됩니다. 포트폴리오에 올릴 수도 없고, 어떠한 권리도 주장할 수 없습니다.",
             suggestion="완성된 최종 결과물에 한하여 발주사 이용을 허락하며, 저작인격권은 수급인이 보유한다.",
             law_ref="저작권법 제9조, 제45조",
         ),
@@ -352,6 +371,7 @@ def _mock_analysis(contract_id: str, filename: str = "계약서.pdf", contract_t
             risk="danger",
             description="지급 시기가 발주사 내부 결재 완료 후로 명시되어 지연 위험이 있습니다.",
             original="용역 대금은 발주사의 내부 결재 완료 시점으로부터 60일 이내에 지급한다.",
+            simple_explanation="쉽게 말하면, 돈을 언제 받을지가 회사 내부 사정에 달려 있습니다. 결재가 늦어지면 납품 후 2개월 이상 기다려야 할 수 있어요.",
             suggestion="납품 확인일로부터 30일 이내 지급. 지연 시 연 12% 지연이자 가산.",
             law_ref="하도급법 제13조, 민법 제54조",
         ),
@@ -361,6 +381,7 @@ def _mock_analysis(contract_id: str, filename: str = "계약서.pdf", contract_t
             risk="warn",
             description="비밀유지 대상이 포괄적이고 기간이 영구적으로 설정되어 있습니다.",
             original="수급인은 본 계약과 관련한 모든 정보를 영구적으로 제3자에게 공개할 수 없다.",
+            simple_explanation="쉽게 말하면, 이 계약과 관련된 모든 것을 평생 비밀로 지켜야 합니다. 심지어 '이 회사와 일했다'는 사실조차 말하기 어려울 수 있어요.",
             suggestion="영업비밀로 지정된 정보에 한하여 계약 종료 후 2년간 적용. 포트폴리오 활용은 사전 동의 시 허용.",
             law_ref="부정경쟁방지법 제2조 제2호",
         ),
@@ -370,6 +391,7 @@ def _mock_analysis(contract_id: str, filename: str = "계약서.pdf", contract_t
             risk="safe",
             description="수정 횟수와 기간이 명확하게 정의되어 있어 분쟁 소지가 낮습니다.",
             original="수정 요청은 납품일로부터 14일 이내, 최대 2회로 한정한다.",
+            simple_explanation="쉽게 말하면, 납품 후 2주 안에 최대 2번까지만 수정 요청을 받습니다. 횟수와 기간이 명확해서 양쪽 모두 이해하기 쉬운 조항이에요.",
             suggestion="현행 조항이 적절합니다.",
             law_ref=None,
         ),
@@ -430,5 +452,6 @@ def _mock_analysis(contract_id: str, filename: str = "계약서.pdf", contract_t
         analysis_time="목업 데이터",
         clauses=clauses,
         analyzed_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        summary="이 계약서는 프리랜서(수급인)와 발주사 간의 용역 계약서입니다. 핵심 문제는 두 가지로, 당신이 만든 결과물의 저작권이 납품 즉시 모두 회사로 넘어가고, 대금 지급도 회사 내부 결재 완료 후 최대 60일이라 상당히 늦을 수 있습니다. 또한 비밀유지 의무가 영구적으로 적용되어 포트폴리오 활용도 어렵습니다. 계약 전 저작권 귀속과 대금 지급 조건을 반드시 협의하시기 바랍니다.",
         contract_text=mock_text,
     )

@@ -20,6 +20,7 @@ class ClauseResult(BaseModel):
     risk: str             # danger / warn / safe
     description: str      # 위험 설명
     original: str         # 원문
+    simple_explanation: Optional[str] = None  # 쉬운 설명 (비전문가용)
     suggestion: str       # 수정 제안
     law_ref: Optional[str] = None  # 관련 법령
 
@@ -37,5 +38,6 @@ class AnalysisResult(BaseModel):
     analysis_time: str    # 분석 소요 시간
     clauses: list[ClauseResult]
     analyzed_at: str
-    contract_text: Optional[str] = None   # 마스킹된 계약서 전문 텍스트
-    masked_count: int = 0                 # Presidio가 마스킹한 개인정보 항목 수
+    summary: Optional[str] = None           # AI 계약서 전체 요약 (쉬운 설명)
+    contract_text: Optional[str] = None     # 마스킹된 계약서 전문 텍스트
+    masked_count: int = 0                   # 마스킹한 개인정보 항목 수
