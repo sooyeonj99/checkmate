@@ -1,5 +1,5 @@
-import React from 'react'
-import { NavigationContainer } from '@react-navigation/native'
+import React, { useEffect, useRef } from 'react'
+import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -7,6 +7,8 @@ import { StatusBar } from 'expo-status-bar'
 import { View, ActivityIndicator } from 'react-native'
 
 import { AuthProvider, useAuth } from './src/context/AuthContext'
+
+const navigationRef = createNavigationContainerRef()
 import AuthScreen from './src/screens/AuthScreen'
 import HomeScreen from './src/screens/HomeScreen'
 import DashboardScreen from './src/screens/DashboardScreen'
@@ -118,7 +120,31 @@ function MainTabs() {
 // ── 루트 네비게이터 ─────────────────────────────────────────────────────────────
 
 function Navigation() {
-  const { user, isLoading } = useAuth()
+  const { user, isLoading, pendingResult, setPendingResult } = useAuth()
+  const prevUserRef = useRef<typeof user>(null)
+
+  // 재로그인 후 Result 화면으로 자동 복귀
+  useEffect(() => {
+    const wasLoggedOut = prevUserRef.current === null
+    prevUserRef.current = user
+
+    if (user && wasLoggedOut && pendingResult && navigationRef.isReady()) {
+      const timer = setTimeout(() => {
+        if (navigationRef.isReady()) {
+          // @ts-ignore — 중첩 탭+스택 네비게이션 타입 한계로 cast 필요
+          navigationRef.navigate('분석하기', {
+            screen: 'Result',
+            params: {
+              analysisResult: pendingResult.analysisResult,
+              contractId: pendingResult.contractId,
+            },
+          })
+        }
+        setPendingResult(null)
+      }, 300)
+      return () => clearTimeout(timer)
+    }
+  }, [user, pendingResult])
 
   if (isLoading) {
     return (
@@ -129,7 +155,7 @@ function Navigation() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <RootStack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
           <RootStack.Screen name="Main" component={MainTabs} />

@@ -8,10 +8,17 @@ interface User {
   user_type: 'personal' | 'enterprise'
 }
 
+export interface PendingResult {
+  analysisResult: any
+  contractId: string
+}
+
 interface AuthContextType {
   user: User | null
   token: string | null
   isLoading: boolean
+  pendingResult: PendingResult | null
+  setPendingResult: (r: PendingResult | null) => void
   login: (token: string, user: User) => Promise<void>
   logout: () => Promise<void>
 }
@@ -22,6 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [token, setToken] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [pendingResult, setPendingResult] = useState<PendingResult | null>(null)
 
   useEffect(() => {
     const restore = async () => {
@@ -59,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, token, isLoading, pendingResult, setPendingResult, login, logout }}>
       {children}
     </AuthContext.Provider>
   )

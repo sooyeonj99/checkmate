@@ -7,6 +7,7 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native'
 import api from '../services/api'
 import { colors } from '../theme/colors'
+import { useAuth } from '../context/AuthContext'
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true)
@@ -73,6 +74,7 @@ function transformApiResult(data: any): AnalysisResult {
 export default function ResultScreen() {
   const navigation = useNavigation<any>()
   const route = useRoute<any>()
+  const { logout, setPendingResult } = useAuth()
   const rawResult = route.params?.analysisResult
   const contractId = route.params?.contractId as string | undefined
   const isSavedParam = route.params?.isSaved === true
@@ -106,7 +108,23 @@ export default function ResultScreen() {
       if (status === 409) {
         setSaveState('saved')
       } else if (status === 401) {
-        Alert.alert('로그인 만료', '로그인이 만료되었습니다.\n다시 로그인 후 저장해주세요.')
+        Alert.alert(
+          '로그인 만료',
+          '로그인이 만료되었습니다.\n로그인 후 자동으로 이 화면으로 돌아옵니다.',
+          [
+            {
+              text: '로그인하기',
+              onPress: () => {
+                // 현재 결과 보존 후 로그아웃 → Auth 화면으로 이동
+                if (rawResult && contractId) {
+                  setPendingResult({ analysisResult: rawResult, contractId })
+                }
+                logout()
+              },
+            },
+          ],
+          { cancelable: false }
+        )
       } else {
         setSaveState('saved')
         Alert.alert('알림', `저장 중 오류가 발생했습니다. (${status ?? '네트워크 오류'})`)
