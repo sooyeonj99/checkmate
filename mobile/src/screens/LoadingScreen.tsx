@@ -14,7 +14,7 @@ const STEPS = [
 export default function LoadingScreen() {
   const navigation = useNavigation<any>()
   const route = useRoute<any>()
-  const { contractId, selectedIds } = route.params ?? {}
+  const { contractId, selectedIds, userType } = route.params ?? {}
 
   const [stepIndex, setStepIndex] = useState(0)
   const [elapsed, setElapsed] = useState(0)
@@ -87,7 +87,10 @@ export default function LoadingScreen() {
     }
     api.post(
       `/contracts/${contractId}/analyze`,
-      selectedIds != null ? { selected_ids: selectedIds } : null,
+      {
+        ...(selectedIds != null ? { selected_ids: selectedIds } : {}),
+        ...(userType ? { user_type: userType } : {}),
+      },
       { timeout: 120000 }
     )
       .then(({ data }) => { resultRef.current = data })

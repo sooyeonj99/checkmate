@@ -36,7 +36,7 @@ export type TabParamList = {
 export type AnalyzeStackParamList = {
   Upload: undefined
   MaskingReview: { contractId: string; filename: string; contractType?: string }
-  Loading: { contractId: string; filename: string; selectedIds?: number[] | null }
+  Loading: { contractId: string; filename: string; selectedIds?: number[] | null; userType?: string }
   Result: { analysisResult?: any; contractId?: string; isSaved?: boolean }
 }
 

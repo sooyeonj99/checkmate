@@ -23,44 +23,156 @@ logger = logging.getLogger(__name__)
 
 GEMINI_MODEL = "gemini-2.5-flash"
 
-# ── Gemini 프롬프트 (텍스트용) ────────────────────────────────────────────────
-_PROMPT = """당신은 한국 법률 계약서 분석 전문가입니다.
-아래 계약서를 분석하고, 반드시 JSON만 반환하세요. 마크다운, 설명, 코드블록 없이 순수 JSON만 출력하세요.
-
-※ 계약서 내 일부 개인정보는 보안을 위해 <이름>, <이메일> 등으로 마스킹 처리되었습니다.
-   마스킹된 레이블은 실제 내용으로 취급하여 조항의 법적 의미를 분석해 주세요.
-
-계약서 내용:
-{text}
-
-출력 형식:
+# ── 공통 출력 형식 ──────────────────────────────────────────────────────────
+_OUTPUT_FORMAT = """
+출력 형식 (반드시 순수 JSON만, 마크다운/코드블록 금지):
 {{
-  "contract_type": "계약서 유형 (예: 근로계약서, 임대차계약서, 프리랜서 계약서, 기타 계약서)",
-  "summary": "이 계약서 전체를 법률 지식이 없는 일반인도 이해할 수 있도록 3~4문장으로 쉽게 요약. 어떤 종류의 계약인지, 핵심 조건은 무엇인지, 특히 주의해야 할 점이 무엇인지 포함. 딱딱한 법률 용어 대신 일상적인 말로 설명.",
+  "contract_type": "계약서 유형",
+  "summary": "법률 지식 없는 일반인도 이해할 수 있도록 3~4문장 쉬운 요약. 어떤 계약인지, 핵심 조건, 특히 주의할 점 포함.",
   "score": 위험도 점수 숫자 (0~100, 높을수록 위험),
   "grade": "위험 또는 주의 또는 안전",
   "clauses": [
     {{
-      "article": "제N조",
+      "article": "제N조 또는 조항번호",
       "title": "조항 제목",
       "risk": "danger 또는 warn 또는 safe",
-      "description": "이 조항이 위험/주의/안전한 이유를 구체적으로",
-      "original": "계약서 원문 발췌 (없으면 유사 표현)",
-      "simple_explanation": "이 조항이 실제로 무엇을 의미하는지 법 용어 없이 쉽게 설명. '쉽게 말하면, ...' 형식으로 시작. 일반인이 바로 이해할 수 있는 표현 사용.",
-      "suggestion": "수정 제안 (safe이면 현행 조항이 적절합니다.)",
-      "law_ref": "관련 법령 (없으면 null)"
+      "description": "이 조항이 위험/주의/안전한 이유 구체적으로",
+      "original": "계약서 원문 발췌",
+      "simple_explanation": "'쉽게 말하면, ...' 형식으로 시작. 법 용어 없이 일상적 표현으로.",
+      "suggestion": "수정 제안 (safe이면 '현행 조항이 적절합니다.')",
+      "law_ref": "관련 법령 또는 null"
     }}
   ]
 }}
 
-분석 기준:
+공통 분석 기준:
 - danger: 일방에게 현저히 불리하거나 위법 소지 있는 조항
 - warn: 불명확하거나 주의가 필요한 조항
 - safe: 균형 잡히고 적절한 조항
-- score = min(100, danger 수 × 20 + warn 수 × 8)
-- grade: score 60 이상→위험, 30 이상→주의, 30 미만→안전
+- score = min(100, danger수×20 + warn수×8)
+- grade: score 60↑→위험, 30↑→주의, 30↓→안전
 - 주요 조항 4개 이상 반드시 분석
-- 모든 응답은 한국어로 작성"""
+- 모든 응답은 한국어로 작성
+※ 계약서 내 <이름>, <이메일> 등은 개인정보 마스킹 처리. 실제 내용으로 취급하여 분석."""
+
+# ── 기본 프롬프트 (계약서 유형 미지정) ──────────────────────────────────────
+_PROMPT = """당신은 한국 법률 계약서 분석 전문가입니다.
+아래 계약서를 분석하고, 반드시 JSON만 반환하세요. 마크다운, 설명, 코드블록 없이 순수 JSON만 출력하세요.
+
+계약서 내용:
+{text}
+""" + _OUTPUT_FORMAT
+
+# ── 유형별 전문 프롬프트 ─────────────────────────────────────────────────────
+
+# 1. 프리랜서 — 용역·외주 계약
+_PROMPT_FREELANCER = """당신은 프리랜서·용역 계약 전문 법률 분석가입니다.
+아래는 프리랜서 또는 외주 용역 계약서입니다. 반드시 JSON만 반환하세요.
+
+[프리랜서 핵심 체크포인트]
+1. 대금 지급 — 지급 시기 불명확, 조건부 지급(검수 통과 시), 지연이자 없음
+2. 지식재산권(IP) 귀속 — 작업물 저작권이 발주사에 자동 귀속되는지
+3. 일방적 계약 해지 — 발주사만 해지 가능, 기완료 작업 미지급
+4. 납품 기준 불명확 — '만족할 때까지' 수정 요구 가능한 조항
+5. 추가 업무 강요 — 범위 외 작업을 무상으로 요구할 수 있는 조항
+6. 과도한 손해배상 — 지체상금·위약금이 과도하게 설정된 조항
+7. 경업금지 — 퇴사 후 동종 업무 금지 기간·범위가 지나치게 넓은 조항
+8. 비밀유지 — 과도한 범위의 비밀유지 의무
+
+계약서 내용:
+{text}
+""" + _OUTPUT_FORMAT
+
+# 2. 직장인 — 근로계약서
+_PROMPT_EMPLOYEE = """당신은 한국 노동법 전문 계약서 분석가입니다.
+아래는 근로계약서입니다. 반드시 JSON만 반환하세요.
+
+[근로계약 핵심 체크포인트]
+1. 포괄임금제 — 연장·야간·휴일근로수당이 기본급에 포함된 불법적 포괄임금 조항
+2. 최저임금 — 월급/시급 환산 시 2024년 최저임금(9,860원/시간) 이상인지
+3. 수습기간 임금 삭감 — 수습 기간 중 10% 이상 감액 여부
+4. 경업금지 조항 — 퇴직 후 동종 업계 취업 제한 기간·범위 (2년·동일지역 초과 시 위험)
+5. 일방적 해고 사유 — 사용자에게 과도하게 넓은 해고 재량 부여
+6. 퇴직금 — 지급 시기, 분할 지급 강요 조항
+7. 근로시간 — 주 52시간 초과 가능성, 탄력근무제 적용 여부
+8. 비밀유지·연대보증 — 과도한 의무나 연대보증 요구
+
+계약서 내용:
+{text}
+""" + _OUTPUT_FORMAT
+
+# 3. 소상공인 — 가맹·입점·공급 계약
+_PROMPT_SMALL_BIZ = """당신은 가맹·유통·공급 계약 전문 법률 분석가입니다.
+아래는 가맹, 입점, 또는 공급 계약서입니다. 반드시 JSON만 반환하세요.
+
+[소상공인 핵심 체크포인트]
+1. 일방적 조항 변경권 — 본사·플랫폼이 계약 조건을 일방적으로 변경할 수 있는 조항
+2. 과도한 위약금 — 계약 해지 시 과도한 위약금, 위약벌 조항
+3. 독점 공급 의무 — 특정 업체에서만 물품 구매 강제, 가격 경쟁 차단
+4. 수수료·로열티 — 매출 대비 과도한 수수료, 숨은 비용
+5. 반품·환불 불리 조항 — 상품 반품 불가, 불량품 책임 전가
+6. 지식재산권 침해 — 업체 브랜드·디자인 사용 제한, 이후 귀속 문제
+7. 계약 해지 불균형 — 본사는 쉽게 해지, 가맹점은 해지 어려운 구조
+8. 하도급법·공정거래법 위반 소지 — 대금 감액, 부당 반품, 경영 간섭
+
+계약서 내용:
+{text}
+""" + _OUTPUT_FORMAT
+
+# 4. 구독 이용자 — 구독·렌탈 서비스 계약
+_PROMPT_SUBSCRIPTION = """당신은 소비자 계약 전문 법률 분석가입니다.
+아래는 구독·렌탈 서비스 계약서입니다. 반드시 JSON만 반환하세요.
+
+[구독·렌탈 핵심 체크포인트]
+1. 자동 갱신 — 해지 통보 없으면 자동 연장, 통보 기간 불명확
+2. 중도 해지 위약금 — 남은 기간 전액·과도한 위약금, 위약금 상한 없음
+3. 요금 인상 — 사업자 임의 요금 인상 가능 조항, 사전 고지 의무 없음
+4. 해지 절차 복잡 — 전화·방문 해지만 가능, 온라인 해지 불가
+5. 숨은 추가 비용 — 설치비, 회수비, 파손 책임, 부품 교체 비용 소비자 부담
+6. 서비스 변경·중단 — 사업자 임의로 서비스 내용 변경·중단 가능
+7. 개인정보 과도한 수집·활용 — 제3자 제공, 마케팅 활용 동의 강제
+8. 제품 하자 책임 — 렌탈 제품 하자 발생 시 소비자 책임 전가
+
+계약서 내용:
+{text}
+""" + _OUTPUT_FORMAT
+
+# 5. 사회초년생 — 처음 계약서를 접하는 일반인
+_PROMPT_NEWCOMER = """당신은 법률 지식이 없는 사회초년생을 위한 계약서 해설 전문가입니다.
+아래 계약서를 분석하되, 모든 설명을 법률 용어 없이 쉽고 친절하게 작성해주세요.
+반드시 JSON만 반환하세요.
+
+[사회초년생 분석 원칙]
+- 모든 조항을 마치 친한 선배가 설명하듯 쉽게 풀이
+- 법률 용어가 나오면 반드시 괄호 안에 쉬운 말로 설명 추가
+- 위험한 조항은 구체적으로 "이렇게 수정해달라고 요청하세요" 문구 포함
+- 계약 전 반드시 확인해야 할 핵심 3가지를 summary에 포함
+- 일반적으로 정상적인 계약서에 있어야 할 조항이 빠져 있으면 경고
+- 서명 전 주의사항을 simple_explanation에 반드시 포함
+
+[전체 계약서 유형별 주요 확인 사항]
+- 근로계약: 임금, 근무시간, 수습기간, 해고 조건
+- 임대차: 보증금 반환, 계약갱신, 수리 책임
+- 서비스·구독: 위약금, 자동갱신, 해지 방법
+- 용역·프리랜서: 대금 지급일, 저작권, 계약 해지
+- 기타: 핵심 의무, 위약금, 분쟁 해결 방법
+
+계약서 내용:
+{text}
+""" + _OUTPUT_FORMAT
+
+# ── user_type → 프롬프트 매핑 ─────────────────────────────────────────────
+_PROMPT_MAP: dict[str, str] = {
+    "freelancer": _PROMPT_FREELANCER,
+    "employee":   _PROMPT_EMPLOYEE,
+    "small_biz":  _PROMPT_SMALL_BIZ,
+    "subscription": _PROMPT_SUBSCRIPTION,
+    "newcomer":   _PROMPT_NEWCOMER,
+}
+
+def _select_prompt(user_type: str | None) -> str:
+    """user_type에 맞는 프롬프트 반환. 없으면 기본 프롬프트."""
+    return _PROMPT_MAP.get(user_type or "", _PROMPT)
 
 # ── Gemini 프롬프트 (이미지 OCR 전용) ───────────────────────────────────────
 _PROMPT_OCR = """이 계약서 이미지에서 텍스트를 추출해주세요.
@@ -203,6 +315,7 @@ async def analyze_with_gemini(
     file_paths: str | list[str],
     filename: str,
     selected_ids: list[int] | None = None,
+    user_type: str | None = None,
 ) -> AnalysisResult:
     """
     Gemini API로 계약서 파일 분석 (단일 또는 다중 파일 지원)
@@ -289,10 +402,12 @@ async def analyze_with_gemini(
 
     # ── Gemini 호출 ───────────────────────────────────────────────────────────
     merged_text = "\n\n--- 다음 페이지 ---\n\n".join(combined_texts) if combined_texts else ""
+    selected_prompt = _select_prompt(user_type)
+    logger.info(f"프롬프트 유형: {user_type or 'default'}")
 
     if images and not merged_text:
         # 이미지만: Vision API로 OCR+분석
-        logger.info(f"🖼️  이미지 {len(images)}장 Vision 분석 시작")
+        logger.info(f"이미지 {len(images)}장 Vision 분석 시작")
         prompt_parts: list = [_PROMPT_IMAGE] + images
         response = model.generate_content(prompt_parts)
 
@@ -303,7 +418,7 @@ async def analyze_with_gemini(
             masking_result = mask_pii(extracted_text)
             result.contract_text = masking_result.masked_text
             result.masked_count = masking_result.masked_count + total_masked_count
-            logger.info(f"✅ 이미지 OCR 마스킹 완료 ({masking_result.masked_count}건)")
+            logger.info(f"이미지 OCR 마스킹 완료 ({masking_result.masked_count}건)")
         else:
             result.contract_text = None
             result.masked_count = total_masked_count
@@ -313,15 +428,15 @@ async def analyze_with_gemini(
 
     elif images and merged_text:
         # 이미지 + 텍스트 혼합
-        logger.info(f"📋 혼합 분석: 텍스트 {len(combined_texts)}개 + 이미지 {len(images)}장")
-        mixed_prompt = _PROMPT.format(text=merged_text[:8000]) + "\n\n이미지로 제공된 페이지도 함께 분석하세요."
+        logger.info(f"혼합 분석: 텍스트 {len(combined_texts)}개 + 이미지 {len(images)}장")
+        mixed_prompt = selected_prompt.format(text=merged_text[:8000]) + "\n\n이미지로 제공된 페이지도 함께 분석하세요."
         prompt_parts = [mixed_prompt] + images
         response = model.generate_content(prompt_parts)
 
     else:
         # 텍스트만
-        logger.info(f"📝 텍스트 분석 시작 ({len(merged_text)}자)")
-        response = model.generate_content(_PROMPT.format(text=merged_text[:10000]))
+        logger.info(f"텍스트 분석 시작 ({len(merged_text)}자) / 유형: {user_type or 'default'}")
+        response = model.generate_content(selected_prompt.format(text=merged_text[:10000]))
 
     elapsed = round(time.time() - start, 1)
     result, _ = _parse_response(response.text, contract_id, filename)

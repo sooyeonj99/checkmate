@@ -301,7 +301,7 @@ function MsgArea({ step, stepIndex, msgKey }: MsgAreaProps) {
 export default function LoadingPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { contractId, useMock, selectedIds } = (location.state as any) || {}
+  const { contractId, useMock, selectedIds, userType } = (location.state as any) || {}
 
   const [stepIndex, setStepIndex] = useState(0)
   const [msgKey, setMsgKey] = useState(0)
@@ -340,7 +340,10 @@ export default function LoadingPage() {
     }
 
     api.post(`/contracts/${contractId}/analyze`,
-      selectedIds != null ? { selected_ids: selectedIds } : null,
+      {
+        ...(selectedIds != null ? { selected_ids: selectedIds } : {}),
+        ...(userType ? { user_type: userType } : {}),
+      },
       { timeout: 120000 }
     )
       .then(({ data }) => { apiResultRef.current = data })

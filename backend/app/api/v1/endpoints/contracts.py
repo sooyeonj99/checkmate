@@ -120,6 +120,7 @@ async def upload_contract(
 
 class AnalyzeRequest(BaseModel):
     selected_ids: list[int] | None = None
+    user_type: str | None = None  # freelancer | employee | small_biz | subscription | newcomer
 
 
 def _load_contract_dir(contract_id: str):
@@ -219,13 +220,15 @@ async def analyze_contract(contract_id: str, body: AnalyzeRequest | None = None)
     _, meta, file_paths = _load_contract_dir(contract_id)
     original_filename = meta.get("original_filename", os.path.basename(file_paths[0]))
     selected_ids = body.selected_ids if body else None
+    user_type = body.user_type if body else None
 
     # Gemini API 연동
     if settings.GEMINI_API_KEY:
         try:
             from app.services.gemini_service import analyze_with_gemini
             result = await analyze_with_gemini(
-                contract_id, file_paths, original_filename, selected_ids=selected_ids
+                contract_id, file_paths, original_filename,
+                selected_ids=selected_ids, user_type=user_type
             )
             if meta.get("contract_type"):
                 result.contract_type = meta["contract_type"]
