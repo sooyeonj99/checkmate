@@ -58,7 +58,11 @@ export default function UploadScreen() {
       const { data: uploadData } = await api.post('/contracts/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
-      navigation.navigate('Loading', { contractId: uploadData.contract_id, filename: uploadData.filename } as any)
+      navigation.navigate('MaskingReview', {
+        contractId: uploadData.contract_id,
+        filename: uploadData.filename,
+        contractType: uploadData.contract_type,
+      } as any)
     } catch (e: any) {
       const msg = e?.response?.data?.detail ?? '업로드에 실패했습니다.'
       Alert.alert('업로드 실패', msg)

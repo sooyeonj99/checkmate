@@ -14,7 +14,7 @@ const STEPS = [
 export default function LoadingScreen() {
   const navigation = useNavigation<any>()
   const route = useRoute<any>()
-  const { contractId } = route.params ?? {}
+  const { contractId, selectedIds } = route.params ?? {}
 
   const [stepIndex, setStepIndex] = useState(0)
   const [elapsed, setElapsed] = useState(0)
@@ -85,7 +85,11 @@ export default function LoadingScreen() {
       navigation.getParent()?.navigate('대시보드')
       return
     }
-    api.post(`/contracts/${contractId}/analyze`, null, { timeout: 120000 })
+    api.post(
+      `/contracts/${contractId}/analyze`,
+      selectedIds != null ? { selected_ids: selectedIds } : null,
+      { timeout: 120000 }
+    )
       .then(({ data }) => { resultRef.current = data })
       .catch((e: any) => {
         hasError.current = true

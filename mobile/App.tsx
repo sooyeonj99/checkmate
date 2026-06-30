@@ -11,6 +11,7 @@ import AuthScreen from './src/screens/AuthScreen'
 import HomeScreen from './src/screens/HomeScreen'
 import DashboardScreen from './src/screens/DashboardScreen'
 import UploadScreen from './src/screens/UploadScreen'
+import MaskingReviewScreen from './src/screens/MaskingReviewScreen'
 import LoadingScreen from './src/screens/LoadingScreen'
 import ResultScreen from './src/screens/ResultScreen'
 import ProfileScreen from './src/screens/ProfileScreen'
@@ -32,7 +33,8 @@ export type TabParamList = {
 
 export type AnalyzeStackParamList = {
   Upload: undefined
-  Loading: { contractId: string; filename: string }
+  MaskingReview: { contractId: string; filename: string; contractType?: string }
+  Loading: { contractId: string; filename: string; selectedIds?: number[] | null }
   Result: { analysisResult?: any; contractId?: string; isSaved?: boolean }
 }
 
@@ -46,6 +48,7 @@ function AnalyzeNavigator() {
   return (
     <AnalyzeStack.Navigator screenOptions={{ headerShown: false }}>
       <AnalyzeStack.Screen name="Upload" component={UploadScreen} />
+      <AnalyzeStack.Screen name="MaskingReview" component={MaskingReviewScreen} />
       <AnalyzeStack.Screen name="Loading" component={LoadingScreen} />
       <AnalyzeStack.Screen name="Result" component={ResultScreen} />
     </AnalyzeStack.Navigator>

@@ -11,6 +11,7 @@ from typing import Optional
 
 import aiofiles
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -113,39 +114,86 @@ async def upload_contract(
     )
 
 
-@router.post(
-    "/{contract_id}/analyze",
-    response_model=AnalysisResult,
-    summary="계약서 AI 분석",
-)
-async def analyze_contract(contract_id: str):
+class AnalyzeRequest(BaseModel):
+    selected_ids: list[int] | None = None
+
+
+def _load_contract_dir(contract_id: str):
+    """업로드 디렉토리, 메타, 파일목록 반환 (공통 헬퍼)"""
     contract_dir = os.path.join(settings.UPLOAD_DIR, contract_id)
     if not os.path.isdir(contract_dir):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="계약서를 찾을 수 없습니다. 먼저 파일을 업로드해 주세요.",
-        )
-
-    # 메타데이터 읽기
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+            detail="계약서를 찾을 수 없습니다. 먼저 파일을 업로드해 주세요.")
     meta_path = os.path.join(contract_dir, "meta.json")
     meta = {}
     if os.path.exists(meta_path):
         with open(meta_path, encoding="utf-8") as f:
             meta = json.load(f)
-
-    # 업로드된 파일 목록 수집 (meta.json 제외, 번호순 정렬)
     all_files = sorted([f for f in os.listdir(contract_dir) if f != "meta.json"])
     if not all_files:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="업로드된 파일을 찾을 수 없습니다.")
-
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+            detail="업로드된 파일을 찾을 수 없습니다.")
     file_paths = [os.path.join(contract_dir, f) for f in all_files]
-    original_filename = meta.get("original_filename", all_files[0])
+    return contract_dir, meta, file_paths
+
+
+@router.get(
+    "/{contract_id}/preview",
+    summary="계약서 PII 감지 미리보기 (마스킹 전 검토용)",
+)
+async def preview_contract(contract_id: str):
+    """
+    업로드된 파일에서 텍스트를 추출하고 개인정보 엔티티를 감지해 반환.
+    이미지 파일만 있으면 image_only=true 반환 (OCR은 Gemini가 수행).
+    """
+    _, _, file_paths = _load_contract_dir(contract_id)
+
+    from app.services.gemini_service import extract_texts_from_files
+    from app.services.masking_service import detect_pii
+
+    texts, images = extract_texts_from_files(file_paths)
+
+    if not texts:
+        # 이미지만 → 마스킹 미리보기 불가
+        return {"image_only": True, "text": None, "entities": []}
+
+    combined = "\n\n--- 다음 파일 ---\n\n".join(texts)
+    entities = detect_pii(combined)
+
+    return {
+        "image_only": False,
+        "text": combined[:5000],  # 미리보기용 최대 5000자
+        "entities": [
+            {
+                "id": e.id,
+                "type": e.type,
+                "label": e.label,
+                "start": e.start,
+                "end": e.end,
+                "original": e.original,
+            }
+            for e in entities
+        ],
+    }
+
+
+@router.post(
+    "/{contract_id}/analyze",
+    response_model=AnalysisResult,
+    summary="계약서 AI 분석",
+)
+async def analyze_contract(contract_id: str, body: AnalyzeRequest | None = None):
+    _, meta, file_paths = _load_contract_dir(contract_id)
+    original_filename = meta.get("original_filename", os.path.basename(file_paths[0]))
+    selected_ids = body.selected_ids if body else None
 
     # Gemini API 연동
     if settings.GEMINI_API_KEY:
         try:
             from app.services.gemini_service import analyze_with_gemini
-            result = await analyze_with_gemini(contract_id, file_paths, original_filename)
+            result = await analyze_with_gemini(
+                contract_id, file_paths, original_filename, selected_ids=selected_ids
+            )
             if meta.get("contract_type"):
                 result.contract_type = meta["contract_type"]
             return result

@@ -287,7 +287,7 @@ export default function UploadPage() {
       formData.append('contract_type', contractType)
 
       const { data } = await api.post('/contracts/upload', formData)
-      navigate('/loading', { state: { contractId: data.contract_id, filename: data.filename, contractType: data.contract_type } })
+      navigate('/masking', { state: { contractId: data.contract_id, filename: data.filename, contractType: data.contract_type } })
     } catch {
       navigate('/loading', { state: { useMock: true, filename: fileList[0]?.name ?? '계약서', contractType } })
     }

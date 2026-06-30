@@ -116,6 +116,17 @@ _PATTERNS: list[tuple[str, str, str]] = [
 
 
 @dataclass
+class PiiEntity:
+    """감지된 개인정보 엔티티 (위치 포함)"""
+    id: int
+    type: str
+    label: str
+    start: int
+    end: int
+    original: str
+
+
+@dataclass
 class MaskingResult:
     """마스킹 처리 결과"""
     masked_text: str
@@ -274,6 +285,94 @@ def _regex_mask(text: str, patterns: list[tuple[str, str, str]]) -> tuple[str, d
 
 
 # ── 공개 API ─────────────────────────────────────────────────────────────────
+
+def detect_pii(text: str) -> list[PiiEntity]:
+    """
+    PII 탐지만 수행 - 마스킹 없이 감지된 엔티티(위치+원문) 목록 반환.
+    사용자가 직접 선택 후 mask_pii_selective()로 마스킹할 때 사용.
+    """
+    if not text or not text.strip():
+        return []
+
+    _init_presidio()
+    entities: list[PiiEntity] = []
+
+    def overlaps(s: int, e: int) -> bool:
+        return any(x.start < e and s < x.end for x in entities)
+
+    # 1단계: 정규식 패턴 (원본 텍스트에서 위치 수집)
+    for entity_type, pattern_str, _ in _PATTERNS:
+        try:
+            for m in re.finditer(pattern_str, text, re.IGNORECASE):
+                if not overlaps(m.start(), m.end()):
+                    entities.append(PiiEntity(
+                        id=0,
+                        type=entity_type,
+                        label=LABEL.get(entity_type, f"<{entity_type}>"),
+                        start=m.start(),
+                        end=m.end(),
+                        original=m.group(),
+                    ))
+        except re.error:
+            pass
+
+    # 2단계: spaCy NER (이름·기관명·장소)
+    try:
+        import spacy
+        ko_label_map = {"PS": "PERSON", "OG": "ORGANIZATION", "LC": "LOCATION"}
+        en_label_map = {"PERSON": "PERSON", "ORG": "ORGANIZATION", "GPE": "LOCATION", "LOC": "LOCATION"}
+        try:
+            nlp = spacy.load("ko_core_news_sm")
+            label_map = ko_label_map
+        except OSError:
+            nlp = spacy.load("en_core_web_sm")
+            label_map = en_label_map
+
+        doc = nlp(text)
+        for ent in doc.ents:
+            if ent.label_ in label_map and not overlaps(ent.start_char, ent.end_char):
+                mapped = label_map[ent.label_]
+                entities.append(PiiEntity(
+                    id=0,
+                    type=mapped,
+                    label=LABEL.get(mapped, f"<{mapped}>"),
+                    start=ent.start_char,
+                    end=ent.end_char,
+                    original=text[ent.start_char:ent.end_char],
+                ))
+    except Exception:
+        pass
+
+    # 위치순 정렬 후 ID 부여
+    entities.sort(key=lambda e: e.start)
+    for i, e in enumerate(entities):
+        e.id = i
+
+    return entities
+
+
+def mask_pii_selective(text: str, entities: list[PiiEntity], selected_ids: list[int]) -> MaskingResult:
+    """
+    사용자가 선택한 엔티티 ID만 마스킹.
+    역순(오른쪽→왼쪽) 처리로 offset 유지.
+    """
+    to_mask = sorted(
+        [e for e in entities if e.id in selected_ids],
+        key=lambda e: e.start,
+        reverse=True,
+    )
+    result = text
+    counts: dict[str, int] = {}
+    for e in to_mask:
+        result = result[:e.start] + e.label + result[e.end:]
+        counts[e.type] = counts.get(e.type, 0) + 1
+
+    return MaskingResult(
+        masked_text=result,
+        masked_count=sum(counts.values()),
+        masked_items=counts,
+    )
+
 
 def mask_pii(text: str) -> MaskingResult:
     """

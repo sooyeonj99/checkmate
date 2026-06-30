@@ -155,10 +155,34 @@ def _parse_response(raw: str, contract_id: str, filename: str) -> tuple[Analysis
     return result, extracted_text
 
 
+def extract_texts_from_files(file_paths: list[str]) -> tuple[list[str], list]:
+    """
+    파일 목록에서 텍스트와 이미지를 추출 (마스킹 없이 원본 반환).
+    returns: (texts, images)
+    """
+    import PIL.Image as _PIL
+    texts: list[str] = []
+    images = []
+    for fp in file_paths:
+        ext = Path(fp).suffix.lower()
+        if ext in {".jpg", ".jpeg", ".png"}:
+            images.append(_PIL.open(fp))
+        elif ext == ".pdf":
+            raw = _extract_pdf_text(fp)
+            if raw:
+                texts.append(raw)
+        elif ext == ".docx":
+            raw = _extract_docx_text(fp)
+            if raw:
+                texts.append(raw)
+    return texts, images
+
+
 async def analyze_with_gemini(
     contract_id: str,
     file_paths: str | list[str],
     filename: str,
+    selected_ids: list[int] | None = None,
 ) -> AnalysisResult:
     """
     Gemini API로 계약서 파일 분석 (단일 또는 다중 파일 지원)
@@ -168,7 +192,7 @@ async def analyze_with_gemini(
       2. 텍스트는 Presidio 마스킹 후 합산
       3. Gemini로 전체 분석 (이미지+텍스트 혼합 가능)
     """
-    from app.services.masking_service import mask_pii
+    from app.services.masking_service import mask_pii, detect_pii, mask_pii_selective
 
     # 단일 파일도 리스트로 통일
     paths: list[str] = [file_paths] if isinstance(file_paths, str) else file_paths
@@ -184,30 +208,38 @@ async def analyze_with_gemini(
         ext = Path(fp).suffix.lower()
 
         if ext in {".jpg", ".jpeg", ".png"}:
-            logger.info(f"🖼️  이미지 추가: {Path(fp).name}")
+            logger.info(f"이미지 추가: {Path(fp).name}")
             images.append(PIL.Image.open(fp))
 
         elif ext == ".pdf":
-            logger.info(f"📄 PDF 텍스트 추출: {Path(fp).name}")
+            logger.info(f"PDF 텍스트 추출: {Path(fp).name}")
             raw = _extract_pdf_text(fp)
             if not raw:
                 raise ValueError(f"PDF({Path(fp).name})에서 텍스트를 추출할 수 없습니다. 스캔 PDF는 JPG/PNG로 변환해 주세요.")
-            masking_result = mask_pii(raw)
+            if selected_ids is not None:
+                entities = detect_pii(raw)
+                masking_result = mask_pii_selective(raw, entities, selected_ids)
+            else:
+                masking_result = mask_pii(raw)
             del raw
             combined_texts.append(masking_result.masked_text)
             total_masked_count += masking_result.masked_count
-            logger.info(f"✅ PDF 마스킹 완료 ({masking_result.masked_count}건)")
+            logger.info(f"마스킹 완료 ({masking_result.masked_count}건)")
 
         elif ext == ".docx":
-            logger.info(f"📝 DOCX 텍스트 추출: {Path(fp).name}")
+            logger.info(f"DOCX 텍스트 추출: {Path(fp).name}")
             raw = _extract_docx_text(fp)
             if not raw:
                 raise ValueError(f"DOCX({Path(fp).name})에서 텍스트를 추출할 수 없습니다.")
-            masking_result = mask_pii(raw)
+            if selected_ids is not None:
+                entities = detect_pii(raw)
+                masking_result = mask_pii_selective(raw, entities, selected_ids)
+            else:
+                masking_result = mask_pii(raw)
             del raw
             combined_texts.append(masking_result.masked_text)
             total_masked_count += masking_result.masked_count
-            logger.info(f"✅ DOCX 마스킹 완료 ({masking_result.masked_count}건)")
+            logger.info(f"마스킹 완료 ({masking_result.masked_count}건)")
 
         else:
             raise ValueError(f"지원하지 않는 형식: {ext.upper()}")

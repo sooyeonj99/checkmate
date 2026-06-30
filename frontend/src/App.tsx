@@ -6,6 +6,7 @@ import LoadingPage from './pages/LoadingPage'
 import ResultPage from './pages/ResultPage'
 import AuthPage from './pages/AuthPage'
 import DashboardPage from './pages/DashboardPage'
+import MaskingPage from './pages/MaskingPage'
 import TermsPage from './pages/TermsPage'
 import PrivacyPage from './pages/PrivacyPage'
 import ComingSoonPage from './pages/ComingSoonPage'
@@ -23,6 +24,7 @@ function AppRoutes() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/upload" element={<ProtectedRoute><UploadPage /></ProtectedRoute>} />
+        <Route path="/masking" element={<ProtectedRoute><MaskingPage /></ProtectedRoute>} />
         <Route path="/loading" element={<ProtectedRoute><LoadingPage /></ProtectedRoute>} />
         <Route path="/result" element={<ProtectedRoute><ResultPage /></ProtectedRoute>} />
         <Route path="/auth" element={<AuthPage />} />

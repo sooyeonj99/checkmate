@@ -301,7 +301,7 @@ function MsgArea({ step, stepIndex, msgKey }: MsgAreaProps) {
 export default function LoadingPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { contractId, useMock } = (location.state as any) || {}
+  const { contractId, useMock, selectedIds } = (location.state as any) || {}
 
   const [stepIndex, setStepIndex] = useState(0)
   const [msgKey, setMsgKey] = useState(0)
@@ -339,7 +339,10 @@ export default function LoadingPage() {
       return
     }
 
-    api.post(`/contracts/${contractId}/analyze`)
+    api.post(`/contracts/${contractId}/analyze`,
+      selectedIds != null ? { selected_ids: selectedIds } : null,
+      { timeout: 120000 }
+    )
       .then(({ data }) => { apiResultRef.current = data })
       .catch(() => { /* mock으로 폴백 */ })
       .finally(() => { apiDoneRef.current = true; tryNavigate() })
