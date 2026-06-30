@@ -386,10 +386,10 @@ function AgencySection({ grade, contractType }: { grade: string; contractType?: 
 
 const agencyStyles = StyleSheet.create({
   wrap: {
-    backgroundColor: '#1e2330',
+    backgroundColor: colors.bgCard,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#2d3348',
+    borderColor: colors.border,
     padding: 20,
     marginBottom: 16,
   },
@@ -401,13 +401,13 @@ const agencyStyles = StyleSheet.create({
     backgroundColor: colors.bg,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: '#2d3348',
+    borderColor: colors.border,
     padding: 14,
     marginBottom: 10,
   },
   cardHighlight: {
-    borderColor: 'rgba(79,142,247,0.3)',
-    backgroundColor: 'rgba(79,142,247,0.04)',
+    borderColor: colors.borderAccent,
+    backgroundColor: 'rgba(37,99,235,0.04)',
   },
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
   cardIcon: { fontSize: 18 },
