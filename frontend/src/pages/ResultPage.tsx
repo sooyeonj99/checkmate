@@ -530,34 +530,175 @@ function ClauseList({ clauses }: { clauses: Clause[] }) {
 }
 
 /* ── ExpertCard ────────────────────────────────────── */
-function ExpertCard({ grade }: { grade: RiskLevel }) {
-  const isHigh = grade === 'danger'
-  const links = [
-    { icon: '🏛', label: '대한법률구조공단', href: 'https://www.klac.or.kr' },
-    { icon: '📞', label: '법률상담 132', href: 'tel:132' },
-    { icon: '📋', label: '공정거래위원회 약관심사', href: 'https://www.ftc.go.kr' },
-  ]
+/* ── 대응 기관 데이터 ──────────────────────────────────── */
+const AGENCIES = [
+  {
+    id: 'klac',
+    icon: '🏛',
+    name: '대한법률구조공단',
+    desc: '무료 법률 상담 · 소송 지원 · 계약 분쟁 대리',
+    phone: '132',
+    url: 'https://www.klac.or.kr',
+    tags: [] as string[],
+    always: true,
+  },
+  {
+    id: 'moel',
+    icon: '👷',
+    name: '고용노동부',
+    desc: '임금체불 · 부당해고 · 근로계약 위반 신고',
+    phone: '1350',
+    url: 'https://minwon.moel.go.kr',
+    tags: ['근로', '임금', '채용', '프리랜서', '알바', '용역'],
+    always: false,
+  },
+  {
+    id: 'ftc',
+    icon: '⚖️',
+    name: '공정거래위원회',
+    desc: '불공정 약관 · 가맹점 분쟁 · 하도급 피해 신고',
+    phone: '1372',
+    url: 'https://www.ftc.go.kr',
+    tags: ['가맹', '하도급', '대리점', '약관', '소비자', '유통'],
+    always: false,
+  },
+  {
+    id: 'kca',
+    icon: '🛡️',
+    name: '한국소비자원',
+    desc: '소비자 계약 피해 · 환급 거부 · 위약금 분쟁',
+    phone: '1372',
+    url: 'https://www.kca.go.kr',
+    tags: ['소비자', '렌탈', '구독', '방문판매', '학원', '헬스', '피트니스'],
+    always: false,
+  },
+  {
+    id: 'molit',
+    icon: '🏠',
+    name: '국토교통부 임대차 분쟁',
+    desc: '전월세 분쟁 · 임대차 3법 위반 · 보증금 반환',
+    phone: '1599-0001',
+    url: 'https://www.molit.go.kr',
+    tags: ['임대차', '전세', '월세', '주택', '상가', '임대'],
+    always: false,
+  },
+  {
+    id: 'police',
+    icon: '🚨',
+    name: '경찰청 사이버범죄신고',
+    desc: '계약 사기 · 허위 계약 · 온라인 거래 피해 신고',
+    phone: '182',
+    url: 'https://ecrm.police.go.kr',
+    tags: ['사기'],
+    always: false,
+  },
+]
+
+function ExpertCard({ grade, contractType }: { grade: RiskLevel; contractType?: string }) {
+  const ct = (contractType ?? '').toLowerCase()
+
+  // 계약 유형 키워드로 관련 기관 우선 표시
+  const sorted = [...AGENCIES].sort((a, b) => {
+    if (a.always) return -1
+    if (b.always) return 1
+    const aMatch = a.tags.some(t => ct.includes(t))
+    const bMatch = b.tags.some(t => ct.includes(t))
+    if (aMatch && !bMatch) return -1
+    if (!aMatch && bMatch) return 1
+    return 0
+  })
 
   return (
-    <div className="expert-section">
-      <div className="expert-title">
-        {isHigh ? '⚠ 이 계약서는 위험도가 높습니다' : '이 계약서는 주의가 필요합니다'}
+    <div style={{
+      background: 'var(--bg-card)',
+      borderRadius: 18,
+      border: '1px solid var(--border)',
+      padding: '24px 28px',
+      marginBottom: 24,
+    }}>
+      {/* 헤더 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+        <span style={{ fontSize: 22 }}>🏢</span>
+        <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: 'var(--text)' }}>
+          무료 법률 지원 기관
+        </h3>
       </div>
-      <p className="expert-desc">
-        계약서 관련 도움을 받을 수 있는 공공 기관 정보입니다.
+      <p style={{ margin: '0 0 20px', fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+        계약 피해 예방 및 분쟁 발생 시 아래 기관을 통해 <strong style={{ color: 'var(--text)' }}>무료로</strong> 도움받을 수 있습니다.
+        {contractType && <> 계약 유형 (<strong style={{ color: 'var(--accent)' }}>{contractType}</strong>)에 맞는 기관이 상단에 표시됩니다.</>}
       </p>
-      <div className="expert-chips">
-        {links.map(({ icon, label, href }) => (
-          <a key={label} className="expert-chip" href={href} target={href.startsWith('http') ? '_blank' : undefined} rel="noreferrer">
-            <span>{icon}</span>
-            {label}
-            {href.startsWith('http') && (
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ opacity: 0.5 }}>
-                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/>
-              </svg>
-            )}
-          </a>
-        ))}
+
+      {/* 기관 카드 그리드 */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
+        {sorted.map(ag => {
+          const isRelevant = ag.always || ag.tags.some(t => ct.includes(t))
+          return (
+            <div key={ag.id} style={{
+              background: isRelevant ? 'rgba(37,99,235,0.04)' : 'var(--bg)',
+              border: `1.5px solid ${isRelevant ? 'rgba(37,99,235,0.2)' : 'var(--border)'}`,
+              borderRadius: 12,
+              padding: '14px 16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 20 }}>{ag.icon}</span>
+                <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>{ag.name}</span>
+                {isRelevant && ag.always === false && (
+                  <span style={{
+                    marginLeft: 'auto', fontSize: 10, fontWeight: 700,
+                    background: 'rgba(37,99,235,0.12)', color: 'var(--accent)',
+                    borderRadius: 6, padding: '2px 7px',
+                  }}>관련</span>
+                )}
+              </div>
+              <p style={{ margin: 0, fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                {ag.desc}
+              </p>
+              <div style={{ display: 'flex', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
+                <a
+                  href={ag.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                    fontSize: 12, fontWeight: 600, color: 'var(--accent)',
+                    textDecoration: 'none', padding: '5px 12px',
+                    background: 'rgba(37,99,235,0.07)', borderRadius: 8,
+                    border: '1px solid rgba(37,99,235,0.15)',
+                  }}
+                >
+                  홈페이지 →
+                </a>
+                <a
+                  href={`tel:${ag.phone}`}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                    fontSize: 12, fontWeight: 600, color: '#059669',
+                    textDecoration: 'none', padding: '5px 12px',
+                    background: 'rgba(5,150,105,0.07)', borderRadius: 8,
+                    border: '1px solid rgba(5,150,105,0.2)',
+                  }}
+                >
+                  📞 {ag.phone}
+                </a>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* 안내 문구 */}
+      <div style={{
+        marginTop: 18, padding: '12px 16px',
+        background: grade === 'danger' ? 'rgba(239,68,68,0.06)' : 'rgba(245,158,11,0.06)',
+        borderRadius: 10, border: `1px solid ${grade === 'danger' ? 'rgba(239,68,68,0.2)' : 'rgba(245,158,11,0.2)'}`,
+        fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6,
+      }}>
+        {grade === 'danger'
+          ? '⚠️ 이 계약서는 위험도가 높습니다. 서명 전 반드시 전문가 검토를 권장합니다. 대한법률구조공단(132)에서 무료 상담을 받을 수 있습니다.'
+          : '💡 체크메이트는 정보 제공 서비스로, 법률 자문을 대체하지 않습니다. 중요한 계약은 전문가 상담을 권장합니다.'}
       </div>
     </div>
   )
@@ -724,8 +865,8 @@ export default function ResultPage() {
             <div className="section-eyebrow" style={{ marginTop: result.summary ? 0 : 32 }}>위험 조항 상세 분석</div>
             <ClauseList clauses={result.clauses} />
 
-            <div className="section-eyebrow">관련 기관 정보</div>
-            <ExpertCard grade={result.grade} />
+            <div className="section-eyebrow">무료 법률 지원 기관</div>
+            <ExpertCard grade={result.grade} contractType={result.contractMeta} />
           </>
         ) : (
           <ContractTextView

@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react'
 import {
   View, Text, StyleSheet, ScrollView,
   TouchableOpacity, LayoutAnimation, UIManager, Platform, Alert,
-  ActivityIndicator,
+  ActivityIndicator, Linking,
 } from 'react-native'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import api from '../services/api'
@@ -276,11 +276,177 @@ export default function ResultScreen() {
           />
         ))}
 
+        {/* 무료 법률 지원 기관 */}
+        <AgencySection grade={result.grade} contractType={result.contractType} />
+
         <View style={{ height: 40 }} />
       </ScrollView>
     </View>
   )
 }
+
+/* ── 대응 기관 섹션 ──────────────────────────────────── */
+const AGENCIES_MOBILE = [
+  {
+    id: 'klac', icon: '🏛', name: '대한법률구조공단',
+    desc: '무료 법률 상담 · 소송 지원 · 계약 분쟁 대리',
+    phone: '132', url: 'https://www.klac.or.kr',
+    tags: [] as string[], always: true,
+  },
+  {
+    id: 'moel', icon: '👷', name: '고용노동부',
+    desc: '임금체불 · 부당해고 · 근로계약 위반 신고',
+    phone: '1350', url: 'https://minwon.moel.go.kr',
+    tags: ['근로', '임금', '채용', '프리랜서', '알바', '용역'], always: false,
+  },
+  {
+    id: 'ftc', icon: '⚖️', name: '공정거래위원회',
+    desc: '불공정 약관 · 가맹점 분쟁 · 하도급 피해 신고',
+    phone: '1372', url: 'https://www.ftc.go.kr',
+    tags: ['가맹', '하도급', '대리점', '약관', '소비자', '유통'], always: false,
+  },
+  {
+    id: 'kca', icon: '🛡️', name: '한국소비자원',
+    desc: '소비자 계약 피해 · 환급 거부 · 위약금 분쟁',
+    phone: '1372', url: 'https://www.kca.go.kr',
+    tags: ['소비자', '렌탈', '구독', '방문판매', '학원', '헬스'], always: false,
+  },
+  {
+    id: 'molit', icon: '🏠', name: '국토교통부 임대차 분쟁',
+    desc: '전월세 분쟁 · 임대차 3법 위반 · 보증금 반환',
+    phone: '1599-0001', url: 'https://www.molit.go.kr',
+    tags: ['임대차', '전세', '월세', '주택', '상가', '임대'], always: false,
+  },
+]
+
+function AgencySection({ grade, contractType }: { grade: string; contractType?: string }) {
+  const ct = (contractType ?? '').toLowerCase()
+  const sorted = [...AGENCIES_MOBILE].sort((a, b) => {
+    if (a.always) return -1
+    if (b.always) return 1
+    const aM = a.tags.some(t => ct.includes(t))
+    const bM = b.tags.some(t => ct.includes(t))
+    if (aM && !bM) return -1
+    if (!aM && bM) return 1
+    return 0
+  })
+
+  return (
+    <View style={agencyStyles.wrap}>
+      <View style={agencyStyles.header}>
+        <Text style={agencyStyles.headerIcon}>🏢</Text>
+        <Text style={agencyStyles.headerTitle}>무료 법률 지원 기관</Text>
+      </View>
+      <Text style={agencyStyles.headerDesc}>
+        계약 피해 발생 시 아래 기관에서 <Text style={{ fontWeight: '700' }}>무료</Text>로 도움받을 수 있습니다.
+      </Text>
+
+      {sorted.map(ag => {
+        const isRelevant = ag.always || ag.tags.some(t => ct.includes(t))
+        return (
+          <View key={ag.id} style={[agencyStyles.card, isRelevant && agencyStyles.cardHighlight]}>
+            <View style={agencyStyles.cardTop}>
+              <Text style={agencyStyles.cardIcon}>{ag.icon}</Text>
+              <Text style={agencyStyles.cardName}>{ag.name}</Text>
+              {isRelevant && !ag.always && (
+                <View style={agencyStyles.relevantBadge}>
+                  <Text style={agencyStyles.relevantText}>관련</Text>
+                </View>
+              )}
+            </View>
+            <Text style={agencyStyles.cardDesc}>{ag.desc}</Text>
+            <View style={agencyStyles.cardBtns}>
+              <TouchableOpacity
+                style={agencyStyles.webBtn}
+                onPress={() => Linking.openURL(ag.url)}
+              >
+                <Text style={agencyStyles.webBtnText}>홈페이지 →</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={agencyStyles.phoneBtn}
+                onPress={() => Linking.openURL(`tel:${ag.phone}`)}
+              >
+                <Text style={agencyStyles.phoneBtnText}>📞 {ag.phone}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )
+      })}
+
+      <View style={[agencyStyles.notice, { borderColor: grade === 'danger' ? '#ef444433' : '#f59e0b33', backgroundColor: grade === 'danger' ? '#ef44440a' : '#f59e0b0a' }]}>
+        <Text style={agencyStyles.noticeText}>
+          {grade === 'danger'
+            ? '⚠️ 위험도가 높은 계약서입니다. 서명 전 반드시 전문가 검토를 권장합니다.'
+            : '💡 체크메이트는 정보 제공 서비스로, 법률 자문을 대체하지 않습니다.'}
+        </Text>
+      </View>
+    </View>
+  )
+}
+
+const agencyStyles = StyleSheet.create({
+  wrap: {
+    backgroundColor: '#1e2330',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#2d3348',
+    padding: 20,
+    marginBottom: 16,
+  },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
+  headerIcon: { fontSize: 20 },
+  headerTitle: { fontSize: 16, fontWeight: '800', color: colors.text },
+  headerDesc: { fontSize: 13, color: colors.textMuted, lineHeight: 20, marginBottom: 16 },
+  card: {
+    backgroundColor: colors.bg,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#2d3348',
+    padding: 14,
+    marginBottom: 10,
+  },
+  cardHighlight: {
+    borderColor: 'rgba(79,142,247,0.3)',
+    backgroundColor: 'rgba(79,142,247,0.04)',
+  },
+  cardTop: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
+  cardIcon: { fontSize: 18 },
+  cardName: { flex: 1, fontSize: 14, fontWeight: '700', color: colors.text },
+  relevantBadge: {
+    backgroundColor: 'rgba(79,142,247,0.15)',
+    borderRadius: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+  },
+  relevantText: { fontSize: 10, fontWeight: '700', color: colors.primary },
+  cardDesc: { fontSize: 12, color: colors.textMuted, lineHeight: 18, marginBottom: 10 },
+  cardBtns: { flexDirection: 'row', gap: 8 },
+  webBtn: {
+    backgroundColor: 'rgba(79,142,247,0.1)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(79,142,247,0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  webBtnText: { fontSize: 12, fontWeight: '600', color: colors.primary },
+  phoneBtn: {
+    backgroundColor: 'rgba(5,150,105,0.1)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(5,150,105,0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  phoneBtnText: { fontSize: 12, fontWeight: '600', color: '#059669' },
+  notice: {
+    borderRadius: 10,
+    borderWidth: 1,
+    padding: 12,
+    marginTop: 4,
+  },
+  noticeText: { fontSize: 13, color: colors.textMuted, lineHeight: 20 },
+})
 
 function ClauseItem({
   clause, isOpen, onToggle,
