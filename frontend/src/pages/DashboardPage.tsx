@@ -36,57 +36,6 @@ interface Contract {
 }
 
 
-/* ── Mock data ──────────────────────────────────────── */
-const MOCK_CONTRACTS: Contract[] = [
-  {
-    id: '1',
-    name: '(주)테크스타트 근로계약서',
-    type: '근로계약서',
-    typeEmoji: '👷',
-    score: 72,
-    risk: 'danger',
-    expiryDate: '2026-07-20',
-    daysLeft: 30,
-    status: 'danger',
-    analyzedAt: '2026-06-15',
-  },
-  {
-    id: '3',
-    name: '영상 편집 프리랜서 계약서',
-    type: '프리랜서 계약서',
-    typeEmoji: '💻',
-    score: 78,
-    risk: 'danger',
-    expiryDate: '2026-08-31',
-    daysLeft: 72,
-    status: 'danger',
-    analyzedAt: '2026-06-08',
-  },
-  {
-    id: '4',
-    name: '정수기 렌탈 서비스 이용계약서',
-    type: '렌탈·약정계약',
-    typeEmoji: '🔒',
-    score: 76,
-    risk: 'danger',
-    expiryDate: '2029-06-20',
-    daysLeft: 1092,
-    status: 'danger',
-    analyzedAt: '2026-06-05',
-  },
-  {
-    id: '5',
-    name: 'Adobe Creative Cloud 구독 약관',
-    type: '구독·이용약관',
-    typeEmoji: '📋',
-    score: 18,
-    risk: 'safe',
-    expiryDate: '2027-01-05',
-    daysLeft: 199,
-    status: 'safe',
-    analyzedAt: '2026-05-28',
-  },
-]
 
 
 /* ── Risk helpers ───────────────────────────────────── */
@@ -290,23 +239,6 @@ export default function DashboardPage() {
     navigate('/')
   }
 
-  const expiringContracts = savedAsContracts.filter((c) => c.daysLeft <= 30 && c.daysLeft > 0)
-
-  const filtered = savedAsContracts
-    .filter((c) => filter === 'all' || c.risk === filter)
-    .sort((a, b) => {
-      if (sortKey === 'score') return a.score - b.score
-      if (sortKey === 'expiry') return a.daysLeft - b.daysLeft
-      return b.analyzedAt.localeCompare(a.analyzedAt)
-    })
-
-  const totalCount = savedAsContracts.length
-  const dangerCount = savedAsContracts.filter((c) => c.risk === 'danger').length
-  const currentYearMonth = new Date().toISOString().slice(0, 7)
-  const thisMonthCount = savedAsContracts.filter((c) =>
-    c.analyzedAt.startsWith(currentYearMonth)
-  ).length
-
   const savedAsContracts: Contract[] = savedContracts.map(item => ({
     id: String(item.id),
     name: item.filename,
@@ -327,6 +259,23 @@ export default function DashboardPage() {
     !['근로계약서', '임대차계약서', '렌탈·약정계약'].includes(c.contract_type)
   )
   const enterpriseDangerCount = savedContracts.filter(c => c.grade === '위험').length
+
+  const expiringContracts = savedAsContracts.filter((c) => c.daysLeft <= 30 && c.daysLeft > 0)
+
+  const filtered = savedAsContracts
+    .filter((c) => filter === 'all' || c.risk === filter)
+    .sort((a, b) => {
+      if (sortKey === 'score') return a.score - b.score
+      if (sortKey === 'expiry') return a.daysLeft - b.daysLeft
+      return b.analyzedAt.localeCompare(a.analyzedAt)
+    })
+
+  const totalCount = savedAsContracts.length
+  const dangerCount = savedAsContracts.filter((c) => c.risk === 'danger').length
+  const currentYearMonth = new Date().toISOString().slice(0, 7)
+  const thisMonthCount = savedAsContracts.filter((c) =>
+    c.analyzedAt.startsWith(currentYearMonth)
+  ).length
 
   return (
     <div className="dash-page">
