@@ -192,6 +192,8 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [businessNumber, setBusinessNumber] = useState('')
+  const [bizStatus, setBizStatus] = useState<null | { status: string; status_text: string }>(null)
+  const [bizChecking, setBizChecking] = useState(false)
   const [showPw, setShowPw] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [agreeTerms, setAgreeTerms] = useState(false)
@@ -209,6 +211,26 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
   }
 
   const isBusinessNumberValid = businessNumber.replace(/\D/g, '').length === 10
+
+  const checkBusinessNumber = async (formatted: string) => {
+    const digits = formatted.replace(/\D/g, '')
+    if (digits.length !== 10) return
+    setBizChecking(true)
+    setBizStatus(null)
+    try {
+      const res = await fetch('/api/v1/business/check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ business_number: digits }),
+      })
+      const data = await res.json()
+      setBizStatus({ status: data.status, status_text: data.status_text })
+    } catch {
+      setBizStatus({ status: 'api_error', status_text: '조회 중 오류가 발생했습니다.' })
+    } finally {
+      setBizChecking(false)
+    }
+  }
 
   const allAgreed = agreeTerms && agreePrivacy
   const pwMatch = password === confirm || confirm === ''
@@ -381,17 +403,51 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
           <label className="auth-label">사업자등록번호</label>
           <input
             type="text"
-            className={`auth-input${businessNumber && !isBusinessNumberValid ? ' auth-input-error' : ''}`}
+            className={`auth-input${bizStatus && bizStatus.status === 'invalid_checksum' ? ' auth-input-error' : ''}`}
             placeholder="000-00-00000"
             value={businessNumber}
-            onChange={(e) => setBusinessNumber(formatBusinessNumber(e.target.value))}
+            onChange={(e) => {
+              const formatted = formatBusinessNumber(e.target.value)
+              setBusinessNumber(formatted)
+              setBizStatus(null)
+              if (formatted.replace(/\D/g, '').length === 10) checkBusinessNumber(formatted)
+            }}
             required={userType === 'enterprise'}
             maxLength={12}
             autoComplete="off"
           />
-          {businessNumber && !isBusinessNumberValid && (
-            <p className="auth-field-error">사업자등록번호 10자리를 입력해 주세요.</p>
+          {bizChecking && (
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>국세청 조회 중...</p>
           )}
+          {bizStatus && !bizChecking && (() => {
+            const colorMap: Record<string, string> = {
+              active: '#16a34a',
+              checksum_only: '#2563eb',
+              closed: '#dc2626',
+              suspended: '#d97706',
+              invalid_checksum: '#dc2626',
+              not_found: '#dc2626',
+              api_error: '#d97706',
+              unknown: '#6b7280',
+            }
+            const iconMap: Record<string, string> = {
+              active: '✓',
+              checksum_only: '✓',
+              closed: '✗',
+              suspended: '⚠',
+              invalid_checksum: '✗',
+              not_found: '✗',
+              api_error: '⚠',
+              unknown: '?',
+            }
+            const color = colorMap[bizStatus.status] ?? '#6b7280'
+            const icon = iconMap[bizStatus.status] ?? '?'
+            return (
+              <p style={{ fontSize: 12, color, marginTop: 4, fontWeight: 600 }}>
+                {icon} {bizStatus.status_text}
+              </p>
+            )
+          })()}
         </div>
       )}
 
@@ -415,7 +471,16 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
       </div>
 
       <button type="submit" className="auth-submit-btn"
-        disabled={!allAgreed || !pwMatch || loading || (userType === 'enterprise' && !isBusinessNumberValid)}>
+        disabled={
+          !allAgreed || !pwMatch || loading ||
+          (userType === 'enterprise' && (
+            !isBusinessNumberValid ||
+            bizChecking ||
+            bizStatus?.status === 'invalid_checksum' ||
+            bizStatus?.status === 'closed' ||
+            bizStatus?.status === 'not_found'
+          ))
+        }>
         {loading ? '가입 중...' : '회원가입'}
       </button>
 

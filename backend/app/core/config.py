@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     SMTP_FROM: Optional[str] = None      # 표시될 발신자 이메일 (미설정 시 SMTP_USER)
     FRONTEND_URL: str = "http://localhost:3000/checkmate"
 
+    # ── 국세청 사업자등록정보 API ──────────────────────────
+    NTS_API_KEY: Optional[str] = None
+
     class Config:
         env_file = ".env"
 
