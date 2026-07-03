@@ -90,6 +90,12 @@ const MOCK_CONTRACTS: Contract[] = [
 
 
 /* ── Risk helpers ───────────────────────────────────── */
+function gradeToRisk(grade: string): RiskLevel {
+  if (grade === '위험') return 'danger'
+  if (grade === '주의') return 'warn'
+  return 'safe'
+}
+
 function scoreColor(score: number) {
   if (score >= 61) return 'var(--risk-high)'
   if (score >= 31) return 'var(--risk-mid)'
@@ -284,9 +290,9 @@ export default function DashboardPage() {
     navigate('/')
   }
 
-  const expiringContracts = MOCK_CONTRACTS.filter((c) => c.daysLeft <= 30 && c.daysLeft > 0)
+  const expiringContracts = savedAsContracts.filter((c) => c.daysLeft <= 30 && c.daysLeft > 0)
 
-  const filtered = MOCK_CONTRACTS
+  const filtered = savedAsContracts
     .filter((c) => filter === 'all' || c.risk === filter)
     .sort((a, b) => {
       if (sortKey === 'score') return a.score - b.score
@@ -294,11 +300,25 @@ export default function DashboardPage() {
       return b.analyzedAt.localeCompare(a.analyzedAt)
     })
 
-  const totalCount = MOCK_CONTRACTS.length
-  const dangerCount = MOCK_CONTRACTS.filter((c) => c.risk === 'danger').length
-  const thisMonthCount = MOCK_CONTRACTS.filter((c) =>
-    c.analyzedAt.startsWith('2026-06')
+  const totalCount = savedAsContracts.length
+  const dangerCount = savedAsContracts.filter((c) => c.risk === 'danger').length
+  const currentYearMonth = new Date().toISOString().slice(0, 7)
+  const thisMonthCount = savedAsContracts.filter((c) =>
+    c.analyzedAt.startsWith(currentYearMonth)
   ).length
+
+  const savedAsContracts: Contract[] = savedContracts.map(item => ({
+    id: String(item.id),
+    name: item.filename,
+    type: item.contract_type,
+    typeEmoji: '',
+    score: item.score,
+    risk: gradeToRisk(item.grade),
+    expiryDate: '',
+    daysLeft: -1,
+    status: gradeToRisk(item.grade),
+    analyzedAt: item.saved_at ? item.saved_at.split('T')[0] : '',
+  }))
 
   const empContracts = savedContracts.filter(c => c.contract_type === '근로계약서')
   const leaseContracts = savedContracts.filter(c => c.contract_type === '임대차계약서')
@@ -722,9 +742,9 @@ export default function DashboardPage() {
                     onClick={() => setFilter(f)}
                   >
                     {f === 'all' ? `전체 ${totalCount}` :
-                     f === 'danger' ? `위험 ${MOCK_CONTRACTS.filter(c => c.risk === 'danger').length}` :
-                     f === 'warn'   ? `주의 ${MOCK_CONTRACTS.filter(c => c.risk === 'warn').length}` :
-                                     `안전 ${MOCK_CONTRACTS.filter(c => c.risk === 'safe').length}`}
+                     f === 'danger' ? `위험 ${savedAsContracts.filter(c => c.risk === 'danger').length}` :
+                     f === 'warn'   ? `주의 ${savedAsContracts.filter(c => c.risk === 'warn').length}` :
+                                     `안전 ${savedAsContracts.filter(c => c.risk === 'safe').length}`}
                   </button>
                 ))}
               </div>
@@ -757,9 +777,16 @@ export default function DashboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((c) => (
-                    <ContractRow key={c.id} contract={c} />
-                  ))}
+                  {filtered.map((c) => {
+                    const savedItem = savedContracts.find(s => String(s.id) === c.id)
+                    return (
+                      <ContractRow
+                        key={c.id}
+                        contract={c}
+                        onView={savedItem ? () => handleViewSaved(savedItem) : undefined}
+                      />
+                    )
+                  })}
                 </tbody>
               </table>
 
@@ -834,7 +861,7 @@ const ENTERPRISE_FEATURES = [
 ]
 
 /* ── Contract row ───────────────────────────────────── */
-function ContractRow({ contract: c }: { contract: Contract }) {
+function ContractRow({ contract: c, onView }: { contract: Contract; onView?: () => void }) {
   const navigate = useNavigate()
 
   const isExpiringSoon = c.daysLeft <= 30 && c.daysLeft > 0
@@ -875,12 +902,18 @@ function ContractRow({ contract: c }: { contract: Contract }) {
       {/* 만료일 */}
       <td>
         <div className="dash-expiry-cell">
-          <span className={`dash-expiry-date${isExpiringSoon ? ' urgent' : ''}`}>
-            {c.expiryDate}
-          </span>
-          <span className={`dash-days-left${isExpiringSoon ? ' urgent' : ''}`}>
-            {daysLeftLabel(c.daysLeft)}
-          </span>
+          {c.expiryDate ? (
+            <>
+              <span className={`dash-expiry-date${isExpiringSoon ? ' urgent' : ''}`}>
+                {c.expiryDate}
+              </span>
+              <span className={`dash-days-left${isExpiringSoon ? ' urgent' : ''}`}>
+                {daysLeftLabel(c.daysLeft)}
+              </span>
+            </>
+          ) : (
+            <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>-</span>
+          )}
         </div>
       </td>
 
@@ -897,7 +930,7 @@ function ContractRow({ contract: c }: { contract: Contract }) {
       <td className="dash-cell-action">
         <button
           className="dash-view-btn"
-          onClick={() => navigate('/result', { state: { directResult: MOCK_RESULT_MAP[c.id] } })}
+          onClick={() => onView ? onView() : navigate('/result', { state: { directResult: MOCK_RESULT_MAP[c.id] } })}
         >
           <span className="dash-view-btn-text">결과 보기</span>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
