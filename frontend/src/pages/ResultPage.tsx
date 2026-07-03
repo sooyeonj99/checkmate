@@ -777,6 +777,7 @@ export default function ResultPage() {
     (isMock || isSaved) ? 'saved' : 'pending'
   )
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const [showSignModal, setShowSignModal] = useState(false)
   const [signDoneMsg, setSignDoneMsg] = useState('')
 
@@ -784,16 +785,30 @@ export default function ResultPage() {
   const handleSave = useCallback(async () => {
     if (!contractId || !rawResult) { setSaveState('saved'); return }
     setSaving(true)
+    setSaveError('')
     try {
       const token = localStorage.getItem('cm_token')
-      await fetch(`/api/v1/contracts/${contractId}/save`, {
+      if (!token) {
+        setSaveError('로그인이 필요합니다. 다시 로그인해주세요.')
+        setSaving(false)
+        return
+      }
+      const res = await fetch(`/api/v1/contracts/${contractId}/save`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(rawResult),
       })
-      setSaveState('saved')
+      if (res.ok) {
+        setSaveState('saved')
+      } else if (res.status === 409) {
+        // 이미 저장된 경우 → 정상 처리
+        setSaveState('saved')
+      } else {
+        const errData = await res.json().catch(() => ({}))
+        setSaveError(`저장 실패 (${res.status}): ${errData.detail ?? '서버 오류'}`)
+      }
     } catch {
-      setSaveState('saved')   // 실패해도 PDF는 허용
+      setSaveError('네트워크 오류가 발생했습니다. 다시 시도해주세요.')
     } finally {
       setSaving(false)
     }
@@ -937,12 +952,21 @@ export default function ResultPage() {
                 저장 안 함
               </button>
             </div>
+            {saveError && (
+              <div style={{
+                width: '100%', marginTop: 10, padding: '10px 14px',
+                background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
+                borderRadius: 10, color: '#ef4444', fontSize: 13, fontWeight: 600,
+              }}>
+                ⚠ {saveError}
+              </div>
+            )}
           </div>
         )}
 
         {saveState === 'saved' && (
           <div className="result-saved-notice">
-            대시보드에 저장되었습니다. PDF 다운로드가 활성화되었습니다.
+            ✓ 대시보드에 저장되었습니다. PDF 다운로드와 전자서명이 활성화되었습니다.
           </div>
         )}
 
