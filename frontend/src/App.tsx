@@ -11,6 +11,7 @@ import TermsPage from './pages/TermsPage'
 import PrivacyPage from './pages/PrivacyPage'
 import ComingSoonPage from './pages/ComingSoonPage'
 import VerifyEmailPage from './pages/VerifyEmailPage'
+import SigningPage from './pages/SigningPage'
 import ChatWidget from './components/ChatWidget'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -32,6 +33,7 @@ function AppRoutes() {
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/coming-soon" element={<ComingSoonPage />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/sign/:token" element={<SigningPage />} />
         <Route
           path="/dashboard"
           element={

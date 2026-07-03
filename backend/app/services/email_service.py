@@ -110,3 +110,101 @@ def send_verification_email(to_email: str, username: str, token: str) -> None:
 </body>
 </html>"""
     _send_smtp(to_email, subject, html)
+
+
+def send_signing_request_email(
+    to_email: str,
+    requester_name: str,
+    contract_name: str,
+    token: str,
+    message: str | None = None,
+) -> None:
+    sign_url = f"{settings.FRONTEND_URL}/sign/{token}"
+    subject = f"[CHECKMATE] {requester_name}님이 계약서 서명을 요청했습니다"
+    msg_block = f"""
+      <div style="background:#f8faff;border-left:4px solid #2563eb;border-radius:0 10px 10px 0;
+                  padding:14px 18px;margin:16px 0 28px;font-size:14px;color:#334155;line-height:1.7;">
+        {message}
+      </div>""" if message else ""
+
+    html = f"""<!DOCTYPE html>
+<html lang="ko">
+<head><meta charset="utf-8"/></head>
+<body style="margin:0;padding:0;background:#f0f4ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+    <div style="background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);padding:32px 40px;text-align:center;">
+      <span style="color:#fff;font-size:20px;font-weight:800;letter-spacing:1.5px;">CHECKMATE</span>
+      <p style="color:rgba(255,255,255,0.75);font-size:13px;margin:8px 0 0;">AI 계약서 분석 서비스</p>
+    </div>
+    <div style="padding:40px;">
+      <h2 style="margin:0 0 10px;font-size:20px;color:#1e3a8a;font-weight:700;">서명 요청이 도착했습니다</h2>
+      <p style="color:#475569;font-size:15px;line-height:1.75;margin:0 0 6px;">
+        <strong>{requester_name}</strong>님이 아래 계약서에 서명을 요청했습니다.
+      </p>
+      <div style="background:#eff6ff;border-radius:10px;padding:12px 18px;margin:16px 0;font-weight:700;color:#1e3a8a;font-size:15px;">
+        📄 {contract_name}
+      </div>
+      {msg_block}
+      <div style="text-align:center;margin:0 0 28px;">
+        <a href="{sign_url}"
+           style="display:inline-block;padding:16px 40px;
+                  background:linear-gradient(135deg,#1e3a8a,#2563eb);
+                  color:#fff;text-decoration:none;border-radius:12px;
+                  font-weight:700;font-size:16px;">
+          계약서 확인 및 서명하기 →
+        </a>
+      </div>
+      <div style="background:#f8faff;border-radius:10px;padding:16px;margin-bottom:24px;">
+        <p style="color:#64748b;font-size:12px;margin:0 0 6px;">버튼이 작동하지 않으면 아래 링크를 복사하세요:</p>
+        <a href="{sign_url}" style="color:#2563eb;font-size:12px;word-break:break-all;">{sign_url}</a>
+      </div>
+      <div style="border-top:1px solid #e2e8f0;padding-top:18px;">
+        <p style="color:#94a3b8;font-size:12px;line-height:1.6;margin:0;">
+          ⏰ 이 링크는 <strong>7일</strong> 후 만료됩니다.<br/>
+          🔒 본인이 요청받지 않았다면 이 메일을 무시해 주세요.
+        </p>
+      </div>
+    </div>
+    <div style="background:#f8faff;padding:20px 40px;text-align:center;border-top:1px solid #e2e8f0;">
+      <p style="margin:0;font-size:12px;color:#94a3b8;">ⓒ 2026 CHECKMATE · AI 계약서 분석 서비스</p>
+    </div>
+  </div>
+</body>
+</html>"""
+    _send_smtp(to_email, subject, html)
+
+
+def send_signing_complete_email(
+    to_email: str,
+    requester_name: str,
+    requestee_name: str,
+    contract_name: str,
+) -> None:
+    subject = f"[CHECKMATE] {contract_name} 서명이 완료되었습니다"
+    html = f"""<!DOCTYPE html>
+<html lang="ko">
+<head><meta charset="utf-8"/></head>
+<body style="margin:0;padding:0;background:#f0f4ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+    <div style="background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);padding:32px 40px;text-align:center;">
+      <span style="color:#fff;font-size:20px;font-weight:800;letter-spacing:1.5px;">CHECKMATE</span>
+    </div>
+    <div style="padding:40px;">
+      <h2 style="margin:0 0 10px;font-size:20px;color:#16a34a;font-weight:700;">✓ 서명이 완료되었습니다</h2>
+      <p style="color:#475569;font-size:15px;line-height:1.75;margin:0 0 16px;">
+        <strong>{requestee_name}</strong>님이 아래 계약서에 서명을 완료했습니다.
+      </p>
+      <div style="background:#eff6ff;border-radius:10px;padding:12px 18px;margin:16px 0;font-weight:700;color:#1e3a8a;font-size:15px;">
+        📄 {contract_name}
+      </div>
+      <p style="color:#64748b;font-size:14px;line-height:1.7;margin:0;">
+        대시보드 → 전자서명 메뉴에서 서명 내역을 확인할 수 있습니다.
+      </p>
+    </div>
+    <div style="background:#f8faff;padding:20px 40px;text-align:center;border-top:1px solid #e2e8f0;">
+      <p style="margin:0;font-size:12px;color:#94a3b8;">ⓒ 2026 CHECKMATE</p>
+    </div>
+  </div>
+</body>
+</html>"""
+    _send_smtp(to_email, subject, html)

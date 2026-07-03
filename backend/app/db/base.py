@@ -9,3 +9,4 @@ class Base(DeclarativeBase):
 from app.models import user  # noqa: F401, E402
 from app.models import saved_contract  # noqa: F401, E402
 from app.models import subscription  # noqa: F401, E402
+from app.models import signing  # noqa: F401, E402
