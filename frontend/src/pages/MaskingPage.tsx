@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import api from '../services/api'
 
@@ -9,6 +9,12 @@ interface PiiEntity {
   start: number
   end: number
   original: string
+}
+
+interface CustomMask {
+  start: number
+  end: number
+  label: string
 }
 
 const TYPE_COLOR: Record<string, string> = {
@@ -28,68 +34,188 @@ const TYPE_COLOR: Record<string, string> = {
   KR_DRIVER_LIC:   '#ca8a04',
   KR_PASSPORT:     '#b45309',
   KR_VEHICLE:      '#15803d',
+  CUSTOM:          '#7c3aed',
 }
 
 function getColor(type: string) {
   return TYPE_COLOR[type] ?? '#64748b'
 }
 
-/* ── 텍스트에 하이라이트 렌더링 ── */
+/* ── 텍스트 하이라이트 + 직접 선택 마스킹 ── */
 function HighlightedText({
   text,
   entities,
   checkedIds,
   onToggle,
+  onAddCustom,
 }: {
   text: string
   entities: PiiEntity[]
   checkedIds: Set<number>
   onToggle: (id: number) => void
+  onAddCustom: (start: number, end: number, selectedText: string) => void
 }) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [popup, setPopup] = useState<{ x: number; y: number; start: number; end: number; text: string } | null>(null)
+
   const sorted = [...entities].sort((a, b) => a.start - b.start)
-  const segments: { text: string; entity?: PiiEntity }[] = []
+  const segments: { text: string; entity?: PiiEntity; charStart: number }[] = []
   let cursor = 0
 
   for (const e of sorted) {
-    if (e.start > cursor) segments.push({ text: text.slice(cursor, e.start) })
-    segments.push({ text: text.slice(e.start, e.end), entity: e })
+    if (e.start > cursor) {
+      segments.push({ text: text.slice(cursor, e.start), charStart: cursor })
+    }
+    segments.push({ text: text.slice(e.start, e.end), entity: e, charStart: e.start })
     cursor = e.end
   }
-  if (cursor < text.length) segments.push({ text: text.slice(cursor) })
+  if (cursor < text.length) segments.push({ text: text.slice(cursor), charStart: cursor })
+
+  /* DOM selection → char position 변환 */
+  const findCharPos = useCallback((node: Node, offset: number): number => {
+    let el: Element | null =
+      node.nodeType === Node.TEXT_NODE ? (node as Text).parentElement : (node as Element)
+    while (el && !el.hasAttribute('data-cs')) {
+      el = el.parentElement
+    }
+    if (!el) return 0
+    return parseInt(el.getAttribute('data-cs') || '0') + offset
+  }, [])
+
+  const handleMouseUp = useCallback(() => {
+    const sel = window.getSelection()
+    if (!sel || sel.isCollapsed) { setPopup(null); return }
+    const selectedText = sel.toString()
+    if (!selectedText.trim()) { setPopup(null); return }
+    if (!containerRef.current?.contains(sel.anchorNode)) { setPopup(null); return }
+
+    try {
+      const range = sel.getRangeAt(0)
+      let startChar = findCharPos(range.startContainer, range.startOffset)
+      let endChar = findCharPos(range.endContainer, range.endOffset)
+      if (startChar > endChar) [startChar, endChar] = [endChar, startChar]
+      if (endChar <= startChar) { setPopup(null); return }
+
+      /* 기존 엔티티와 겹치면 불가 */
+      const overlaps = entities.some(e => !(endChar <= e.start || startChar >= e.end))
+      if (overlaps) { setPopup(null); return }
+
+      const rect = range.getBoundingClientRect()
+      setPopup({
+        x: rect.left + rect.width / 2,
+        y: rect.bottom + 8,
+        start: startChar,
+        end: endChar,
+        text: selectedText,
+      })
+    } catch {
+      setPopup(null)
+    }
+  }, [entities, findCharPos])
+
+  /* 팝업 외부 클릭 시 닫기 */
+  useEffect(() => {
+    const handler = () => setPopup(null)
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const handleAddMask = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!popup) return
+    onAddCustom(popup.start, popup.end, popup.text)
+    setPopup(null)
+    window.getSelection()?.removeAllRanges()
+  }
 
   return (
-    <div style={{
-      fontFamily: 'monospace', fontSize: 13, lineHeight: 1.8,
-      color: 'var(--text)', whiteSpace: 'pre-wrap', wordBreak: 'break-all',
-    }}>
-      {segments.map((seg, i) => {
-        if (!seg.entity) return <span key={i}>{seg.text}</span>
-        const e = seg.entity
-        const checked = checkedIds.has(e.id)
-        const color = getColor(e.type)
-        return (
-          <span
-            key={i}
-            title={`${e.label} — 클릭하여 마스킹 ${checked ? '해제' : '선택'}`}
-            onClick={() => onToggle(e.id)}
+    <>
+      <div
+        ref={containerRef}
+        onMouseUp={handleMouseUp}
+        style={{
+          fontFamily: 'monospace', fontSize: 13, lineHeight: 1.8,
+          color: 'var(--text)', whiteSpace: 'pre-wrap', wordBreak: 'break-all',
+          userSelect: 'text',
+        }}
+      >
+        {segments.map((seg, i) => {
+          if (!seg.entity) {
+            return (
+              <span key={i} data-cs={seg.charStart}>
+                {seg.text}
+              </span>
+            )
+          }
+          const e = seg.entity
+          const checked = checkedIds.has(e.id)
+          const color = getColor(e.type)
+          const isCustom = e.type === 'CUSTOM'
+          return (
+            <span
+              key={i}
+              data-cs={seg.charStart}
+              title={`${e.label}${isCustom ? ' (직접 선택)' : ''} — 클릭하여 마스킹 ${checked ? '해제' : '선택'}`}
+              onClick={() => onToggle(e.id)}
+              style={{
+                background: checked ? `${color}28` : 'rgba(100,116,139,0.12)',
+                border: `1.5px ${checked ? 'solid' : 'dashed'} ${checked ? color : '#64748b'}`,
+                borderRadius: 4,
+                padding: '0 3px',
+                cursor: 'pointer',
+                color: checked ? color : 'var(--text-muted)',
+                fontWeight: checked ? 700 : 400,
+                textDecoration: checked ? 'none' : 'line-through',
+                transition: 'all 0.15s',
+                display: 'inline',
+              }}
+            >
+              {seg.text}
+            </span>
+          )
+        })}
+      </div>
+
+      {/* 선택 마스킹 팝업 */}
+      {popup && (
+        <div
+          onMouseDown={(e) => e.stopPropagation()}
+          style={{
+            position: 'fixed',
+            left: popup.x,
+            top: popup.y,
+            transform: 'translateX(-50%)',
+            zIndex: 9999,
+            background: '#1e3a8a',
+            color: '#fff',
+            borderRadius: 10,
+            padding: '8px 14px',
+            fontSize: 13,
+            fontWeight: 600,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <span style={{ opacity: 0.8, maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            "{popup.text.length > 20 ? popup.text.slice(0, 20) + '…' : popup.text}"
+          </span>
+          <button
+            onClick={handleAddMask}
             style={{
-              background: checked ? `${color}28` : 'rgba(100,116,139,0.12)',
-              border: `1.5px ${checked ? 'solid' : 'dashed'} ${checked ? color : '#64748b'}`,
-              borderRadius: 4,
-              padding: '0 3px',
-              cursor: 'pointer',
-              color: checked ? color : 'var(--text-muted)',
-              fontWeight: checked ? 700 : 400,
-              textDecoration: checked ? 'none' : 'line-through',
-              transition: 'all 0.15s',
-              display: 'inline',
+              background: '#fff', color: '#1e3a8a',
+              border: 'none', borderRadius: 6,
+              padding: '4px 10px', fontWeight: 700,
+              fontSize: 12, cursor: 'pointer',
             }}
           >
-            {seg.text}
-          </span>
-        )
-      })}
-    </div>
+            + 마스킹 추가
+          </button>
+        </div>
+      )}
+    </>
   )
 }
 
@@ -100,12 +226,14 @@ function EntityList({
   onToggle,
   onCheckAll,
   onUncheckAll,
+  onRemoveCustom,
 }: {
   entities: PiiEntity[]
   checkedIds: Set<number>
   onToggle: (id: number) => void
   onCheckAll: () => void
   onUncheckAll: () => void
+  onRemoveCustom: (id: number) => void
 }) {
   if (entities.length === 0) {
     return (
@@ -119,7 +247,7 @@ function EntityList({
           개인정보가 감지되지 않았습니다
         </p>
         <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-          바로 AI 분석을 진행할 수 있습니다
+          텍스트를 드래그해서 직접 마스킹할 부분을 선택하세요
         </p>
       </div>
     )
@@ -149,6 +277,7 @@ function EntityList({
         {entities.map(e => {
           const checked = checkedIds.has(e.id)
           const color = getColor(e.type)
+          const isCustom = e.type === 'CUSTOM'
           return (
             <div
               key={e.id}
@@ -184,6 +313,17 @@ function EntityList({
                   }}>{e.original}</span>
                 </div>
               </div>
+              {isCustom && (
+                <button
+                  onClick={(ev) => { ev.stopPropagation(); onRemoveCustom(e.id) }}
+                  title="삭제"
+                  style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: 'var(--text-muted)', fontSize: 16, lineHeight: 1,
+                    padding: '0 2px', flexShrink: 0,
+                  }}
+                >×</button>
+              )}
             </div>
           )
         })}
@@ -201,10 +341,12 @@ export default function MaskingPage() {
   const [loading, setLoading] = useState(true)
   const [text, setText] = useState('')
   const [entities, setEntities] = useState<PiiEntity[]>([])
+  const [customEntities, setCustomEntities] = useState<PiiEntity[]>([])
   const [checkedIds, setCheckedIds] = useState<Set<number>>(new Set())
   const [imageOnly, setImageOnly] = useState(false)
   const [fromOcr, setFromOcr] = useState(false)
   const [error, setError] = useState('')
+  const nextCustomId = useRef(-1)
 
   const isImageFile = /\.(jpg|jpeg|png)$/i.test(filename || '')
 
@@ -231,13 +373,44 @@ export default function MaskingPage() {
     })
   }, [])
 
+  const handleAddCustom = useCallback((start: number, end: number, selectedText: string) => {
+    const id = nextCustomId.current--
+    const newEntity: PiiEntity = {
+      id,
+      type: 'CUSTOM',
+      label: '<직접선택>',
+      start,
+      end,
+      original: selectedText.length > 30 ? selectedText.slice(0, 30) + '…' : selectedText,
+    }
+    setCustomEntities(prev => [...prev, newEntity])
+    setCheckedIds(prev => new Set([...prev, id]))
+  }, [])
+
+  const handleRemoveCustom = useCallback((id: number) => {
+    setCustomEntities(prev => prev.filter(e => e.id !== id))
+    setCheckedIds(prev => { const next = new Set(prev); next.delete(id); return next })
+  }, [])
+
+  const allEntities = [...entities, ...customEntities].sort((a, b) => a.start - b.start)
+
   const handleStart = () => {
+    const autoIds = entities.length > 0
+      ? Array.from(checkedIds).filter(id => id > 0)
+      : null
+
+    const customChecked = customEntities.filter(e => checkedIds.has(e.id))
+    const customMasks: CustomMask[] | null = customChecked.length > 0
+      ? customChecked.map(e => ({ start: e.start, end: e.end, label: e.label }))
+      : null
+
     navigate('/loading', {
       state: {
         contractId,
         filename,
         contractType,
-        selectedIds: entities.length > 0 ? Array.from(checkedIds) : null,
+        selectedIds: autoIds,
+        customMasks,
       },
     })
   }
@@ -306,6 +479,9 @@ export default function MaskingPage() {
           <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>
             AI가 감지한 개인정보를 확인하고, 마스킹할 항목을 직접 선택하세요.
             체크된 항목만 <strong style={{ color: 'var(--accent)' }}>&lt;레이블&gt;</strong>로 가려진 채 분석됩니다.
+            <span style={{ marginLeft: 8, color: '#7c3aed', fontWeight: 600 }}>
+              💡 텍스트를 드래그하면 원하는 부분을 직접 마스킹할 수 있습니다
+            </span>
           </p>
           {filename && (
             <div style={{
@@ -403,16 +579,17 @@ export default function MaskingPage() {
                   {fromOcr ? '📸 OCR 추출 텍스트' : '계약서 미리보기'}
                 </span>
                 <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  강조된 텍스트를 클릭해 마스킹 선택/해제
+                  강조된 텍스트 클릭 선택/해제 · <span style={{ color: '#7c3aed' }}>드래그로 직접 선택</span>
                 </span>
               </div>
               <div style={{ padding: '20px', maxHeight: 600, overflowY: 'auto' }}>
                 {text ? (
                   <HighlightedText
                     text={text}
-                    entities={entities}
+                    entities={allEntities}
                     checkedIds={checkedIds}
                     onToggle={toggle}
+                    onAddCustom={handleAddCustom}
                   />
                 ) : (
                   <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>텍스트를 불러올 수 없습니다.</p>
@@ -433,11 +610,12 @@ export default function MaskingPage() {
                   체크 항목만 마스킹되어 AI에 전달됩니다
                 </p>
                 <EntityList
-                  entities={entities}
+                  entities={allEntities}
                   checkedIds={checkedIds}
                   onToggle={toggle}
-                  onCheckAll={() => setCheckedIds(new Set(entities.map(e => e.id)))}
+                  onCheckAll={() => setCheckedIds(new Set(allEntities.map(e => e.id)))}
                   onUncheckAll={() => setCheckedIds(new Set())}
+                  onRemoveCustom={handleRemoveCustom}
                 />
               </div>
 
@@ -448,7 +626,9 @@ export default function MaskingPage() {
               }}>
                 <div style={{ fontWeight: 700, color: 'var(--accent)', marginBottom: 6 }}>마스킹 요약</div>
                 <div style={{ color: 'var(--text-muted)' }}>
-                  총 {entities.length}개 감지 · <strong style={{ color: 'var(--accent)' }}>{checkedIds.size}개</strong> 마스킹 예정
+                  AI 감지 {entities.length}개 + 직접 선택 {customEntities.length}개
+                  <br/>
+                  <strong style={{ color: 'var(--accent)' }}>{checkedIds.size}개</strong> 마스킹 예정
                 </div>
               </div>
 

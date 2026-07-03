@@ -316,6 +316,7 @@ async def analyze_with_gemini(
     filename: str,
     selected_ids: list[int] | None = None,
     user_type: str | None = None,
+    custom_masks: list[dict] | None = None,
 ) -> AnalysisResult:
     """
     Gemini API로 계약서 파일 분석 (단일 또는 다중 파일 지원)
@@ -325,7 +326,7 @@ async def analyze_with_gemini(
       2. 텍스트는 Presidio 마스킹 후 합산
       3. Gemini로 전체 분석 (이미지+텍스트 혼합 가능)
     """
-    from app.services.masking_service import mask_pii, detect_pii, mask_pii_selective
+    from app.services.masking_service import mask_pii, detect_pii, mask_pii_selective, apply_custom_masks
     from app.core.config import settings as _settings
 
     # 단일 파일도 리스트로 통일
@@ -359,8 +360,9 @@ async def analyze_with_gemini(
                     masking_result = mask_pii_selective(cached_text, _entities, selected_ids)
                 else:
                     masking_result = mask_pii(cached_text)
-                combined_texts.append(masking_result.masked_text)
-                total_masked_count += masking_result.masked_count
+                masked = apply_custom_masks(masking_result.masked_text, custom_masks or [])
+                combined_texts.append(masked)
+                total_masked_count += masking_result.masked_count + (len(custom_masks) if custom_masks else 0)
                 logger.info(f"이미지 OCR 마스킹 완료 ({masking_result.masked_count}건)")
             else:
                 # 캐시 없음 → Gemini Vision 폴백
@@ -378,7 +380,8 @@ async def analyze_with_gemini(
             else:
                 masking_result = mask_pii(raw)
             del raw
-            combined_texts.append(masking_result.masked_text)
+            masked = apply_custom_masks(masking_result.masked_text, custom_masks or [])
+            combined_texts.append(masked)
             total_masked_count += masking_result.masked_count
             logger.info(f"마스킹 완료 ({masking_result.masked_count}건)")
 
@@ -393,7 +396,8 @@ async def analyze_with_gemini(
             else:
                 masking_result = mask_pii(raw)
             del raw
-            combined_texts.append(masking_result.masked_text)
+            masked = apply_custom_masks(masking_result.masked_text, custom_masks or [])
+            combined_texts.append(masked)
             total_masked_count += masking_result.masked_count
             logger.info(f"마스킹 완료 ({masking_result.masked_count}건)")
 

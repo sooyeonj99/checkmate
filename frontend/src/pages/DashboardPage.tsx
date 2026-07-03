@@ -145,6 +145,7 @@ export default function DashboardPage() {
   /* 전자서명 */
   const [showSignModal, setShowSignModal] = useState(false)
   const [signingTarget, setSigningTarget] = useState<{ id: string; name: string } | null>(null)
+  const [signingDefaultTab, setSigningDefaultTab] = useState<'self' | 'request'>('self')
   const [sentRecords, setSentRecords] = useState<SigningRecordOut[]>([])
   const [receivedRecords, setReceivedRecords] = useState<SigningRecordOut[]>([])
   const [signingTab, setSigningTab] = useState<'sent' | 'received'>('sent')
@@ -474,9 +475,13 @@ export default function DashboardPage() {
                         <button
                           className="saved-view-btn"
                           style={{ background: 'rgba(37,99,235,0.1)', color: 'var(--accent)', border: '1px solid rgba(37,99,235,0.2)' }}
-                          onClick={() => { setSigningTarget({ id: String(item.id), name: item.filename }); setShowSignModal(true) }}
+                          onClick={() => {
+                            setSigningDefaultTab(user?.user_type === 'enterprise' ? 'request' : 'self')
+                            setSigningTarget({ id: String(item.id), name: item.filename })
+                            setShowSignModal(true)
+                          }}
                         >
-                          전자서명
+                          {user?.user_type === 'enterprise' ? '계약서 보내기' : '전자서명'}
                         </button>
                         <button
                           className="saved-delete-btn"
@@ -636,8 +641,8 @@ export default function DashboardPage() {
                               <button className="saved-view-btn" onClick={() => handleViewSaved(item)}>결과 보기</button>
                               <button className="saved-view-btn"
                                 style={{ background: 'rgba(37,99,235,0.1)', color: 'var(--accent)', border: '1px solid rgba(37,99,235,0.2)' }}
-                                onClick={() => { setSigningTarget({ id: String(item.id), name: item.filename }); setShowSignModal(true) }}>
-                                전자서명
+                                onClick={() => { setSigningDefaultTab('request'); setSigningTarget({ id: String(item.id), name: item.filename }); setShowSignModal(true) }}>
+                                계약서 보내기
                               </button>
                               <button className="saved-delete-btn" onClick={() => handleDeleteSaved(item.id)} disabled={deletingId === item.id}>
                                 {deletingId === item.id ? '삭제 중...' : '삭제'}
@@ -932,6 +937,7 @@ export default function DashboardPage() {
         <SigningModal
           contractId={signingTarget.id}
           contractName={signingTarget.name}
+          defaultTab={signingDefaultTab}
           onClose={() => { setShowSignModal(false); setSigningTarget(null) }}
           onDone={(msg) => {
             setShowSignModal(false)

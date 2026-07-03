@@ -118,9 +118,16 @@ async def upload_contract(
     )
 
 
+class CustomMaskItem(BaseModel):
+    start: int
+    end: int
+    label: str = '<직접선택>'
+
+
 class AnalyzeRequest(BaseModel):
     selected_ids: list[int] | None = None
     user_type: str | None = None  # freelancer | employee | small_biz | subscription | newcomer
+    custom_masks: list[CustomMaskItem] | None = None
 
 
 def _load_contract_dir(contract_id: str):
@@ -221,6 +228,7 @@ async def analyze_contract(contract_id: str, body: AnalyzeRequest | None = None)
     original_filename = meta.get("original_filename", os.path.basename(file_paths[0]))
     selected_ids = body.selected_ids if body else None
     user_type = body.user_type if body else None
+    custom_masks = [m.dict() for m in body.custom_masks] if body and body.custom_masks else None
 
     # Gemini API 연동
     if settings.GEMINI_API_KEY:
@@ -228,7 +236,8 @@ async def analyze_contract(contract_id: str, body: AnalyzeRequest | None = None)
             from app.services.gemini_service import analyze_with_gemini
             result = await analyze_with_gemini(
                 contract_id, file_paths, original_filename,
-                selected_ids=selected_ids, user_type=user_type
+                selected_ids=selected_ids, user_type=user_type,
+                custom_masks=custom_masks
             )
             if meta.get("contract_type"):
                 result.contract_type = meta["contract_type"]

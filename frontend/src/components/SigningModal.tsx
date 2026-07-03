@@ -4,14 +4,15 @@ import SignaturePad from './SignaturePad'
 interface Props {
   contractId: string
   contractName: string
+  defaultTab?: 'self' | 'request'
   onClose: () => void
   onDone: (msg: string) => void
 }
 
 type Tab = 'self' | 'request'
 
-export default function SigningModal({ contractId, contractName, onClose, onDone }: Props) {
-  const [tab, setTab] = useState<Tab>('self')
+export default function SigningModal({ contractId, contractName, defaultTab, onClose, onDone }: Props) {
+  const [tab, setTab] = useState<Tab>(defaultTab ?? 'self')
 
   // 내가 서명
   const [selfSig, setSelfSig] = useState('')

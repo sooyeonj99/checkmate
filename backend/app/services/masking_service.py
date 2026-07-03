@@ -374,6 +374,20 @@ def mask_pii_selective(text: str, entities: list[PiiEntity], selected_ids: list[
     )
 
 
+def apply_custom_masks(text: str, custom_masks: list[dict]) -> str:
+    """사용자가 직접 선택한 텍스트 범위를 마스킹."""
+    if not custom_masks:
+        return text
+    sorted_masks = sorted(custom_masks, key=lambda m: m['start'], reverse=True)
+    result = text
+    for m in sorted_masks:
+        start, end = m.get('start', 0), m.get('end', 0)
+        label = m.get('label', '<직접선택>')
+        if 0 <= start < end <= len(result):
+            result = result[:start] + label + result[end:]
+    return result
+
+
 def mask_pii(text: str) -> MaskingResult:
     """
     계약서 텍스트의 개인정보를 마스킹합니다.
