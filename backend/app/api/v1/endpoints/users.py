@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from jose import JWTError
+from pydantic import BaseModel
 from app.db.session import get_db
 from app.schemas.user import UserResponse
 from app.services.user_service import get_user_by_id
@@ -26,3 +27,18 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 @router.get("/me", response_model=UserResponse)
 def get_me(current_user=Depends(get_current_user)):
     return current_user
+
+
+class PushTokenRequest(BaseModel):
+    push_token: str
+
+
+@router.post("/push-token")
+def register_push_token(
+    body: PushTokenRequest,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    current_user.push_token = body.push_token
+    db.commit()
+    return {"success": True}

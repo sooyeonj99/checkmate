@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { MOCK_RESULT_MAP } from '../data/mockResults'
+import SigningModal from '../components/SigningModal'
 
 /* ── Saved contract types (API) ─────────────────────── */
 interface SavedContractItem {
@@ -55,6 +56,21 @@ function daysLeftLabel(days: number) {
   if (days <= 0) return '만료됨'
   if (days === 1) return '오늘 만료'
   return `${days}일 후`
+}
+
+/* ── Signing types ──────────────────────────────────── */
+interface SigningRecordOut {
+  id: number
+  type: string
+  contract_name: string
+  requestee_email: string | null
+  status: string
+  requester_name: string
+  requestee_name: string | null
+  created_at: string
+  expires_at: string | null
+  has_requester_signature: boolean
+  has_requestee_signature: boolean
 }
 
 /* ── Sub-components ─────────────────────────────────── */
@@ -125,6 +141,14 @@ export default function DashboardPage() {
   const [savedContracts, setSavedContracts] = useState<SavedContractItem[]>([])
   const [savedLoading, setSavedLoading] = useState(true)
   const [deletingId, setDeletingId] = useState<number | null>(null)
+
+  /* 전자서명 */
+  const [showSignModal, setShowSignModal] = useState(false)
+  const [signingTarget, setSigningTarget] = useState<{ id: string; name: string } | null>(null)
+  const [sentRecords, setSentRecords] = useState<SigningRecordOut[]>([])
+  const [receivedRecords, setReceivedRecords] = useState<SigningRecordOut[]>([])
+  const [signingTab, setSigningTab] = useState<'sent' | 'received'>('sent')
+  const [signToast, setSignToast] = useState('')
 
   /* 구독 관리 */
   const [subs, setSubs] = useState<SubItem[]>([])
@@ -199,7 +223,19 @@ export default function DashboardPage() {
     }
   }, [])
 
-  useEffect(() => { fetchSaved(); fetchSubs() }, [fetchSaved, fetchSubs])
+  const fetchSigningRecords = useCallback(async () => {
+    const token = localStorage.getItem('cm_token')
+    if (!token) return
+    const headers = { Authorization: `Bearer ${token}` }
+    const [sentRes, recvRes] = await Promise.all([
+      fetch('/api/v1/signing/my-records', { headers }),
+      fetch('/api/v1/signing/received', { headers }),
+    ])
+    if (sentRes.ok) setSentRecords(await sentRes.json())
+    if (recvRes.ok) setReceivedRecords(await recvRes.json())
+  }, [])
+
+  useEffect(() => { fetchSaved(); fetchSubs(); fetchSigningRecords() }, [fetchSaved, fetchSubs, fetchSigningRecords])
 
   const handleDeleteSaved = useCallback(async (id: number) => {
     if (!confirm('이 분석 결과를 삭제할까요?')) return
@@ -436,6 +472,13 @@ export default function DashboardPage() {
                           결과 보기
                         </button>
                         <button
+                          className="saved-view-btn"
+                          style={{ background: 'rgba(37,99,235,0.1)', color: 'var(--accent)', border: '1px solid rgba(37,99,235,0.2)' }}
+                          onClick={() => { setSigningTarget({ id: String(item.id), name: item.filename }); setShowSignModal(true) }}
+                        >
+                          전자서명
+                        </button>
+                        <button
                           className="saved-delete-btn"
                           onClick={() => handleDeleteSaved(item.id)}
                           disabled={deletingId === item.id}
@@ -448,6 +491,95 @@ export default function DashboardPage() {
                 })}
               </div>
             )}
+          </div>
+
+          {/* ── 전자서명 내역 ── */}
+          <div className="saved-contracts-section" style={{ marginTop: 28 }}>
+            <div className="saved-contracts-header">
+              <div>
+                <h2 className="dash-title" style={{ fontSize: 18, marginBottom: 4 }}>전자서명 내역</h2>
+                <p className="dash-subtitle" style={{ fontSize: 13 }}>보낸 서명 요청 및 받은 서명 요청을 확인합니다</p>
+              </div>
+            </div>
+            {/* 탭 */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+              {(['sent', 'received'] as const).map((t) => (
+                <button key={t} onClick={() => setSigningTab(t)} style={{
+                  padding: '8px 20px', borderRadius: 20, border: 'none', cursor: 'pointer',
+                  fontWeight: 700, fontSize: 13,
+                  background: signingTab === t ? 'var(--accent)' : 'var(--bg)',
+                  color: signingTab === t ? '#fff' : 'var(--text-muted)',
+                }}>
+                  {t === 'sent' ? `보낸 요청 (${sentRecords.length})` : `받은 요청 (${receivedRecords.length})`}
+                </button>
+              ))}
+            </div>
+            {(() => {
+              const records = signingTab === 'sent' ? sentRecords : receivedRecords
+              if (records.length === 0) return (
+                <div className="saved-empty">
+                  <span style={{ fontSize: 32 }}>✍️</span>
+                  <p>{signingTab === 'sent' ? '보낸 서명 요청이 없습니다.' : '받은 서명 요청이 없습니다.'}</p>
+                </div>
+              )
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {records.map((r) => {
+                    const statusColor = r.status === 'signed' ? '#16a34a' : r.status === 'expired' ? '#94a3b8' : '#d97706'
+                    const statusText = r.status === 'signed' ? '서명 완료' : r.status === 'expired' ? '만료됨' : '서명 대기'
+                    return (
+                      <div key={r.id} style={{
+                        display: 'flex', alignItems: 'center', gap: 14,
+                        background: 'var(--bg-card)', border: '1px solid var(--border)',
+                        borderRadius: 12, padding: '14px 18px',
+                      }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)', marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            📄 {r.contract_name}
+                          </div>
+                          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                            {signingTab === 'sent'
+                              ? `→ ${r.requestee_email || '본인 서명'}`
+                              : `← ${r.requester_name}님의 요청`}
+                            {' · '}{new Date(r.created_at).toLocaleDateString('ko-KR')}
+                          </div>
+                        </div>
+                        <span style={{
+                          padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700,
+                          background: `${statusColor}18`, color: statusColor,
+                          whiteSpace: 'nowrap',
+                        }}>
+                          {statusText}
+                        </span>
+                        {r.status === 'signed' && (
+                          <button
+                            onClick={async () => {
+                              const token = localStorage.getItem('cm_token')
+                              const res = await fetch(`/api/v1/signing/${r.id}/certificate`, {
+                                headers: { Authorization: `Bearer ${token}` },
+                              })
+                              if (res.ok) {
+                                const html = await res.text()
+                                const w = window.open('', '_blank')
+                                w?.document.write(html)
+                                w?.document.close()
+                              }
+                            }}
+                            style={{
+                              padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border)',
+                              background: 'var(--bg)', color: 'var(--text)', fontSize: 12,
+                              cursor: 'pointer', whiteSpace: 'nowrap', fontWeight: 600,
+                            }}
+                          >
+                            인증서 보기
+                          </button>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })()}
           </div>
 
           {/* ── 기업 전용: 계약 유형별 현황 ── */}
@@ -502,6 +634,11 @@ export default function DashboardPage() {
                             </div>
                             <div className="saved-card-actions">
                               <button className="saved-view-btn" onClick={() => handleViewSaved(item)}>결과 보기</button>
+                              <button className="saved-view-btn"
+                                style={{ background: 'rgba(37,99,235,0.1)', color: 'var(--accent)', border: '1px solid rgba(37,99,235,0.2)' }}
+                                onClick={() => { setSigningTarget({ id: String(item.id), name: item.filename }); setShowSignModal(true) }}>
+                                전자서명
+                              </button>
                               <button className="saved-delete-btn" onClick={() => handleDeleteSaved(item.id)} disabled={deletingId === item.id}>
                                 {deletingId === item.id ? '삭제 중...' : '삭제'}
                               </button>
@@ -789,6 +926,35 @@ export default function DashboardPage() {
           <div style={{ height: 40 }} />
         </div>
       </main>
+
+      {/* ── 전자서명 모달 ── */}
+      {showSignModal && signingTarget && (
+        <SigningModal
+          contractId={signingTarget.id}
+          contractName={signingTarget.name}
+          onClose={() => { setShowSignModal(false); setSigningTarget(null) }}
+          onDone={(msg) => {
+            setShowSignModal(false)
+            setSigningTarget(null)
+            setSignToast(msg)
+            fetchSigningRecords()
+            setTimeout(() => setSignToast(''), 4000)
+          }}
+        />
+      )}
+
+      {/* ── 서명 완료 토스트 ── */}
+      {signToast && (
+        <div style={{
+          position: 'fixed', bottom: 32, left: '50%', transform: 'translateX(-50%)',
+          background: '#16a34a', color: '#fff', borderRadius: 12,
+          padding: '14px 24px', fontWeight: 700, fontSize: 15,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.2)', zIndex: 9999,
+          display: 'flex', alignItems: 'center', gap: 10,
+        }}>
+          ✓ {signToast}
+        </div>
+      )}
     </div>
   )
 }

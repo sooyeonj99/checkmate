@@ -22,6 +22,17 @@ interface SavedContract {
   saved_at: string
 }
 
+interface SigningRecord {
+  id: number
+  type: string
+  token: string
+  contract_name: string
+  requestee_email: string | null
+  status: string
+  requester_name: string
+  created_at: string
+}
+
 export default function DashboardScreen() {
   const { user } = useAuth()
   const navigation = useNavigation<any>()
@@ -31,6 +42,8 @@ export default function DashboardScreen() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [deletingId, setDeletingId] = useState<number | null>(null)
+  const [receivedRecords, setReceivedRecords] = useState<SigningRecord[]>([])
+  const [signingReqEmail, setSigningReqEmail] = useState('')
 
   const empContracts = saved.filter(c => c.contract_type === '근로계약서')
   const leaseContracts = saved.filter(c => c.contract_type === '임대차계약서')
@@ -49,11 +62,19 @@ export default function DashboardScreen() {
     }
   }, [])
 
+  const fetchReceivedRequests = useCallback(async () => {
+    try {
+      const { data } = await api.get('/signing/received')
+      setReceivedRecords(data)
+    } catch {}
+  }, [])
+
   // 화면 포커스 시마다 새로고침 (저장 후 돌아왔을 때)
   useFocusEffect(useCallback(() => {
     setLoading(true)
     fetchSaved()
-  }, [fetchSaved]))
+    fetchReceivedRequests()
+  }, [fetchSaved, fetchReceivedRequests]))
 
   const handleRefresh = () => {
     setRefreshing(true)
@@ -94,6 +115,30 @@ export default function DashboardScreen() {
     } catch {
       Alert.alert('오류', '결과를 불러올 수 없습니다.')
     }
+  }
+
+  const handleSigningRequest = (item: SavedContract) => {
+    Alert.prompt(
+      '서명 요청 보내기',
+      `"${item.filename}"\n\n상대방 이메일을 입력하세요:`,
+      async (email) => {
+        if (!email) return
+        try {
+          await api.post('/signing/request', {
+            contract_id: String(item.id),
+            contract_name: item.filename,
+            requestee_email: email,
+          })
+          Alert.alert('완료', `${email}으로 서명 요청 메일을 발송했습니다.`)
+          fetchReceivedRequests()
+        } catch (e: any) {
+          Alert.alert('오류', e?.response?.data?.detail ?? '서명 요청 중 오류가 발생했습니다.')
+        }
+      },
+      'plain-text',
+      '',
+      'email-address'
+    )
   }
 
   const handleLogout = () => {
@@ -217,6 +262,12 @@ export default function DashboardScreen() {
                     <Text style={styles.viewBtnText}>결과 보기</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
+                    style={[styles.viewBtn, styles.signBtn]}
+                    onPress={() => handleSigningRequest(item)}
+                  >
+                    <Text style={styles.signBtnText}>전자서명</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
                     style={styles.deleteBtn}
                     onPress={() => handleDelete(item)}
                     disabled={deletingId === item.id}
@@ -287,6 +338,12 @@ export default function DashboardScreen() {
                             <Text style={styles.viewBtnText}>결과 보기</Text>
                           </TouchableOpacity>
                           <TouchableOpacity
+                            style={[styles.viewBtn, styles.signBtn]}
+                            onPress={() => handleSigningRequest(item)}
+                          >
+                            <Text style={styles.signBtnText}>전자서명</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
                             style={styles.deleteBtn}
                             onPress={() => handleDelete(item)}
                             disabled={deletingId === item.id}
@@ -316,6 +373,50 @@ export default function DashboardScreen() {
               <Text style={styles.comingSoonCardSub}>계약 만료일 추적 및 갱신 알림 기능</Text>
             </View>
           </>
+        )}
+
+        {/* ── 받은 서명 요청 ── */}
+        <View style={[styles.sectionHeader, { marginTop: 28 }]}>
+          <Text style={styles.sectionTitle}>받은 서명 요청</Text>
+          {receivedRecords.length > 0 && (
+            <Text style={styles.sectionCount}>{receivedRecords.length}건</Text>
+          )}
+        </View>
+        {receivedRecords.length === 0 ? (
+          <View style={[styles.emptyBox, { paddingVertical: 18 }]}>
+            <Text style={styles.emptySub}>받은 서명 요청이 없습니다</Text>
+          </View>
+        ) : (
+          receivedRecords.map((rec) => {
+            const isPending = rec.status === 'pending'
+            const isSigned = rec.status === 'signed'
+            const statusColor = isSigned ? '#16a34a' : isPending ? '#d97706' : '#94a3b8'
+            const statusText = isSigned ? '서명 완료' : isPending ? '서명 대기' : '만료됨'
+            return (
+              <View key={rec.id} style={[styles.sigRecordCard]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.sigRecordName} numberOfLines={1}>{rec.contract_name}</Text>
+                  <Text style={styles.sigRecordFrom}>{rec.requester_name}님의 요청</Text>
+                  <Text style={styles.sigRecordDate}>
+                    {new Date(rec.created_at).toLocaleDateString('ko-KR')}
+                  </Text>
+                </View>
+                <View style={{ alignItems: 'flex-end', gap: 8 }}>
+                  <View style={[styles.sigStatusBadge, { backgroundColor: `${statusColor}18` }]}>
+                    <Text style={[styles.sigStatusText, { color: statusColor }]}>{statusText}</Text>
+                  </View>
+                  {isPending && (
+                    <TouchableOpacity
+                      style={styles.signNowBtn}
+                      onPress={() => navigation.navigate('Signing' as any, { token: rec.token })}
+                    >
+                      <Text style={styles.signNowBtnText}>서명하기</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+            )
+          })
         )}
 
         {/* 서비스 특징 */}
@@ -464,4 +565,22 @@ const styles = StyleSheet.create({
   },
   comingSoonCardTitle: { color: colors.text, fontWeight: '700', fontSize: 15 },
   comingSoonCardSub: { color: colors.textSecondary, fontSize: 12, marginTop: 4 },
+  signBtn: { backgroundColor: 'rgba(37,99,235,0.1)', flex: 0.8 },
+  signBtnText: { color: colors.primary, fontWeight: '700', fontSize: 13 },
+  sigRecordCard: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: colors.bgCard, borderRadius: 12,
+    borderWidth: 1, borderColor: colors.border,
+    padding: 14, marginBottom: 8,
+  },
+  sigRecordName: { color: colors.text, fontWeight: '700', fontSize: 14, marginBottom: 3 },
+  sigRecordFrom: { color: colors.textMuted, fontSize: 12, marginBottom: 2 },
+  sigRecordDate: { color: colors.textMuted, fontSize: 11 },
+  sigStatusBadge: { borderRadius: 12, paddingHorizontal: 10, paddingVertical: 3 },
+  sigStatusText: { fontSize: 11, fontWeight: '700' },
+  signNowBtn: {
+    backgroundColor: colors.primary, borderRadius: 8,
+    paddingHorizontal: 12, paddingVertical: 6,
+  },
+  signNowBtnText: { color: '#fff', fontSize: 12, fontWeight: '700' },
 })

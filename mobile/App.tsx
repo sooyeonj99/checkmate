@@ -4,7 +4,9 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { StatusBar } from 'expo-status-bar'
-import { View, ActivityIndicator } from 'react-native'
+import { View, ActivityIndicator, Platform } from 'react-native'
+import * as Device from 'expo-device'
+import * as Notifications from 'expo-notifications'
 
 import { AuthProvider, useAuth } from './src/context/AuthContext'
 
@@ -17,13 +19,45 @@ import MaskingReviewScreen from './src/screens/MaskingReviewScreen'
 import LoadingScreen from './src/screens/LoadingScreen'
 import ResultScreen from './src/screens/ResultScreen'
 import ProfileScreen from './src/screens/ProfileScreen'
+import SigningScreen from './src/screens/SigningScreen'
 import { colors } from './src/theme/colors'
+import api from './src/services/api'
+
+// ── 알림 핸들러 설정 ──────────────────────────────────────────────────────────
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+})
+
+async function registerForPushNotificationsAsync(): Promise<string | null> {
+  if (!Device.isDevice) return null
+  const { status: existing } = await Notifications.getPermissionsAsync()
+  let finalStatus = existing
+  if (existing !== 'granted') {
+    const { status } = await Notifications.requestPermissionsAsync()
+    finalStatus = status
+  }
+  if (finalStatus !== 'granted') return null
+  const token = (await Notifications.getExpoPushTokenAsync()).data
+  if (Platform.OS === 'android') {
+    Notifications.setNotificationChannelAsync('default', {
+      name: 'default',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+    })
+  }
+  return token
+}
 
 // ── 네비게이터 타입 ────────────────────────────────────────────────────────────
 
 export type RootStackParamList = {
   Auth: undefined
   Main: undefined
+  Signing: { token: string }
 }
 
 export type TabParamList = {
@@ -122,6 +156,34 @@ function MainTabs() {
 function Navigation() {
   const { user, isLoading, pendingResult, setPendingResult } = useAuth()
   const prevUserRef = useRef<typeof user>(null)
+  const notifSubRef = useRef<any>(null)
+  const responseSubRef = useRef<any>(null)
+
+  // 푸시 토큰 등록 (로그인 후)
+  useEffect(() => {
+    if (!user) return
+    registerForPushNotificationsAsync().then(token => {
+      if (token) {
+        api.post('/users/push-token', { push_token: token }).catch(() => {})
+      }
+    })
+
+    // 포그라운드 알림 수신 (표시만)
+    notifSubRef.current = Notifications.addNotificationReceivedListener(() => {})
+
+    // 알림 탭 → 서명 화면으로 이동
+    responseSubRef.current = Notifications.addNotificationResponseReceivedListener(response => {
+      const data = response.notification.request.content.data as any
+      if (data?.type === 'signing_request' && data?.token && navigationRef.isReady()) {
+        navigationRef.navigate('Signing' as any, { token: data.token })
+      }
+    })
+
+    return () => {
+      notifSubRef.current?.remove()
+      responseSubRef.current?.remove()
+    }
+  }, [user])
 
   // 재로그인 후 Result 화면으로 자동 복귀
   useEffect(() => {
@@ -132,7 +194,7 @@ function Navigation() {
       const timer = setTimeout(() => {
         if (navigationRef.isReady()) {
           // @ts-ignore — 중첩 탭+스택 네비게이션 타입 한계로 cast 필요
-          navigationRef.navigate('분석하기', {
+          navigationRef.navigate('분析하기', {
             screen: 'Result',
             params: {
               analysisResult: pendingResult.analysisResult,
@@ -158,9 +220,15 @@ function Navigation() {
     <NavigationContainer ref={navigationRef}>
       <RootStack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
-          <RootStack.Screen name="Main" component={MainTabs} />
+          <>
+            <RootStack.Screen name="Main" component={MainTabs} />
+            <RootStack.Screen name="Signing" component={SigningScreen} />
+          </>
         ) : (
-          <RootStack.Screen name="Auth" component={AuthScreen} />
+          <>
+            <RootStack.Screen name="Auth" component={AuthScreen} />
+            <RootStack.Screen name="Signing" component={SigningScreen} />
+          </>
         )}
       </RootStack.Navigator>
     </NavigationContainer>

@@ -112,7 +112,34 @@ function SignupForm({ onLogin }: { onLogin: (token: string, user: any) => Promis
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [businessNumber, setBusinessNumber] = useState('')
+  const [bizStatus, setBizStatus] = useState<'idle' | 'checking' | 'valid' | 'invalid'>('idle')
   const [loading, setLoading] = useState(false)
+
+  const formatBizNum = (v: string) => {
+    const d = v.replace(/\D/g, '').slice(0, 10)
+    if (d.length <= 3) return d
+    if (d.length <= 5) return `${d.slice(0, 3)}-${d.slice(3)}`
+    return `${d.slice(0, 3)}-${d.slice(3, 5)}-${d.slice(5)}`
+  }
+
+  const handleBizChange = async (val: string) => {
+    const formatted = formatBizNum(val)
+    setBusinessNumber(formatted)
+    const digits = formatted.replace(/\D/g, '')
+    if (digits.length === 10) {
+      setBizStatus('checking')
+      try {
+        const res = await api.post('/business/check', { business_number: digits })
+        const ok = ['active', 'checksum_only'].includes(res.data.status)
+        setBizStatus(ok ? 'valid' : 'invalid')
+      } catch {
+        setBizStatus('invalid')
+      }
+    } else {
+      setBizStatus('idle')
+    }
+  }
 
   const handleSubmit = async () => {
     if (!username || !email || !password) {
@@ -123,9 +150,16 @@ function SignupForm({ onLogin }: { onLogin: (token: string, user: any) => Promis
       Alert.alert('입력 오류', '비밀번호는 8자 이상이어야 합니다.')
       return
     }
+    if (userType === 'enterprise' && bizStatus !== 'valid') {
+      Alert.alert('입력 오류', '유효한 사업자등록번호를 입력해주세요.')
+      return
+    }
     setLoading(true)
     try {
-      await api.post('/auth/register', { username, email, password, user_type: userType })
+      await api.post('/auth/register', {
+        username, email, password, user_type: userType,
+        business_number: userType === 'enterprise' ? businessNumber.replace(/\D/g, '') : undefined,
+      })
       const { data } = await api.post('/auth/login', { email, password })
       await onLogin(data.access_token, data.user)
     } catch (e: any) {
@@ -210,7 +244,37 @@ function SignupForm({ onLogin }: { onLogin: (token: string, user: any) => Promis
         onChangeText={setPassword}
         secureTextEntry
       />
-      <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} disabled={loading}>
+      {userType === 'enterprise' && (
+        <>
+          <Text style={styles.label}>사업자등록번호 *</Text>
+          <View style={{ position: 'relative' }}>
+            <TextInput
+              style={[styles.input, {
+                borderColor: bizStatus === 'valid' ? '#16a34a' : bizStatus === 'invalid' ? '#dc2626' : colors.border,
+                paddingRight: 90,
+              }]}
+              placeholder="000-00-00000"
+              placeholderTextColor={colors.textMuted}
+              value={businessNumber}
+              onChangeText={handleBizChange}
+              keyboardType="numeric"
+            />
+            {bizStatus !== 'idle' && (
+              <View style={{ position: 'absolute', right: 12, top: 0, bottom: 0, justifyContent: 'center' }}>
+                {bizStatus === 'checking'
+                  ? <ActivityIndicator size="small" color={colors.primary} />
+                  : <Text style={{ fontSize: 12, fontWeight: '700', color: bizStatus === 'valid' ? '#16a34a' : '#dc2626' }}>
+                      {bizStatus === 'valid' ? '✓ 확인됨' : '✗ 미확인'}
+                    </Text>
+                }
+              </View>
+            )}
+          </View>
+        </>
+      )}
+      <TouchableOpacity style={[styles.submitBtn, {
+        opacity: (userType === 'enterprise' && bizStatus !== 'valid') ? 0.5 : 1,
+      }]} onPress={handleSubmit} disabled={loading || (userType === 'enterprise' && bizStatus !== 'valid')}>
         {loading
           ? <ActivityIndicator color="#fff" />
           : <Text style={styles.submitText}>회원가입</Text>
