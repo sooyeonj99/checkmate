@@ -27,6 +27,8 @@ def create_user(db: Session, user_in: UserCreate) -> User:
         is_verified=False,
         verification_token=token,
         verification_token_expires=datetime.now() + timedelta(hours=24),
+        user_type=user_in.user_type,
+        business_number=user_in.business_number,
     )
     db.add(user)
     db.commit()

@@ -191,6 +191,7 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
+  const [businessNumber, setBusinessNumber] = useState('')
   const [showPw, setShowPw] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [agreeTerms, setAgreeTerms] = useState(false)
@@ -199,6 +200,15 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
   const [loading, setLoading] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
   const [sentEmail, setSentEmail] = useState('')
+
+  const formatBusinessNumber = (val: string) => {
+    const digits = val.replace(/\D/g, '').slice(0, 10)
+    if (digits.length <= 3) return digits
+    if (digits.length <= 5) return `${digits.slice(0, 3)}-${digits.slice(3)}`
+    return `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5)}`
+  }
+
+  const isBusinessNumberValid = businessNumber.replace(/\D/g, '').length === 10
 
   const allAgreed = agreeTerms && agreePrivacy
   const pwMatch = password === confirm || confirm === ''
@@ -212,13 +222,19 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!allAgreed || !pwMatch) return
+    if (userType === 'enterprise' && !isBusinessNumberValid) {
+      setError('사업자등록번호를 올바르게 입력해 주세요. (10자리)')
+      return
+    }
     setError('')
     setLoading(true)
     try {
+      const body: Record<string, string> = { email, username, password, user_type: userType }
+      if (userType === 'enterprise') body.business_number = businessNumber.replace(/\D/g, '')
       const res = await fetch('/api/v1/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, username, password, user_type: userType }),
+        body: JSON.stringify(body),
       })
       const data = await safeJson(res)
       if (!res.ok) throw new Error(data.detail ?? '회원가입 실패')
@@ -360,6 +376,25 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
         {confirm && !pwMatch && <p className="auth-field-error">비밀번호가 일치하지 않습니다.</p>}
       </div>
 
+      {userType === 'enterprise' && (
+        <div className="auth-field">
+          <label className="auth-label">사업자등록번호</label>
+          <input
+            type="text"
+            className={`auth-input${businessNumber && !isBusinessNumberValid ? ' auth-input-error' : ''}`}
+            placeholder="000-00-00000"
+            value={businessNumber}
+            onChange={(e) => setBusinessNumber(formatBusinessNumber(e.target.value))}
+            required={userType === 'enterprise'}
+            maxLength={12}
+            autoComplete="off"
+          />
+          {businessNumber && !isBusinessNumberValid && (
+            <p className="auth-field-error">사업자등록번호 10자리를 입력해 주세요.</p>
+          )}
+        </div>
+      )}
+
       <div className="auth-agree-box">
         <label className="auth-check-row auth-check-all">
           <input type="checkbox" checked={allAgreed} onChange={handleAllAgree} />
@@ -379,7 +414,8 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
         </label>
       </div>
 
-      <button type="submit" className="auth-submit-btn" disabled={!allAgreed || !pwMatch || loading}>
+      <button type="submit" className="auth-submit-btn"
+        disabled={!allAgreed || !pwMatch || loading || (userType === 'enterprise' && !isBusinessNumberValid)}>
         {loading ? '가입 중...' : '회원가입'}
       </button>
 
