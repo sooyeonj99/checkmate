@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import auth, users, contracts, chat, subscriptions, business, signing
+from app.api.v1.endpoints import auth, users, contracts, chat, subscriptions, business, signing, templates
 
 api_router = APIRouter(prefix="/api/v1")
 
@@ -10,3 +10,4 @@ api_router.include_router(chat.router)
 api_router.include_router(subscriptions.router)
 api_router.include_router(business.router)
 api_router.include_router(signing.router)
+api_router.include_router(templates.router)

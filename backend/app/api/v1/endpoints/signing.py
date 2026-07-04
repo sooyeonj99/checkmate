@@ -73,6 +73,7 @@ class PublicSigningInfo(BaseModel):
     status: str
     is_expired: bool
     requester_signed: bool
+    contract_html: Optional[str] = None
 
 
 # ── Helpers ──────────────────────────────────────────
@@ -308,6 +309,7 @@ def get_signing_info(token: str, db: Session = Depends(get_db)):
         status=record.status,
         is_expired=is_expired,
         requester_signed=bool(record.requester_signature),
+        contract_html=record.contract_html,
     )
 
 

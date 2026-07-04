@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { MOCK_RESULT_MAP } from '../data/mockResults'
 import SigningModal from '../components/SigningModal'
+import TemplateModal from '../components/TemplateModal'
 
 /* ── Saved contract types (API) ─────────────────────── */
 interface SavedContractItem {
@@ -150,6 +151,9 @@ export default function DashboardPage() {
   const [receivedRecords, setReceivedRecords] = useState<SigningRecordOut[]>([])
   const [signingTab, setSigningTab] = useState<'sent' | 'received'>('sent')
   const [signToast, setSignToast] = useState('')
+
+  /* 계약서 템플릿 */
+  const [showTemplateModal, setShowTemplateModal] = useState(false)
 
   /* 구독 관리 */
   const [subs, setSubs] = useState<SubItem[]>([])
@@ -587,6 +591,54 @@ export default function DashboardPage() {
             })()}
           </div>
 
+          {/* ── 기업 전용: 계약서 템플릿 발송 ── */}
+          {user?.user_type === 'enterprise' && (
+            <div className="saved-contracts-section" style={{ marginTop: 28 }}>
+              <div className="saved-contracts-header">
+                <div>
+                  <h2 className="dash-title" style={{ fontSize: 18, marginBottom: 4 }}>📑 계약서 템플릿 발송</h2>
+                  <p className="dash-subtitle" style={{ fontSize: 13 }}>
+                    미리 준비된 계약서 양식에 내용을 채워 상대방에게 바로 발송하고 전자서명을 받으세요
+                  </p>
+                </div>
+                <button
+                  className="btn-primary"
+                  style={{ fontSize: 13, padding: '8px 18px' }}
+                  onClick={() => setShowTemplateModal(true)}
+                >
+                  📝 템플릿으로 계약서 보내기
+                </button>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
+                {[
+                  { icon: '👷', name: '표준 근로계약서', desc: '고용노동부 표준 양식', color: '#3b82f6' },
+                  { icon: '🏢', name: '부동산 임대차계약서', desc: '사무실·창고·매장 임대', color: '#8b5cf6' },
+                  { icon: '📋', name: '업무위탁(용역)계약서', desc: '프리랜서·외주 업무 위탁', color: '#10b981' },
+                ].map(t => (
+                  <div key={t.name} style={{
+                    background: 'var(--bg)', border: '1px solid var(--border)',
+                    borderRadius: 14, padding: '18px 16px',
+                    display: 'flex', flexDirection: 'column', gap: 8,
+                  }}>
+                    <span style={{ fontSize: 28 }}>{t.icon}</span>
+                    <div style={{ fontWeight: 700, fontSize: 14, color: t.color }}>{t.name}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t.desc}</div>
+                    <button
+                      onClick={() => setShowTemplateModal(true)}
+                      style={{
+                        marginTop: 'auto', padding: '7px 12px', borderRadius: 8,
+                        border: `1.5px solid ${t.color}30`, background: `${t.color}10`,
+                        color: t.color, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                      }}
+                    >
+                      이 양식 사용하기
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* ── 기업 전용: 계약 유형별 현황 ── */}
           {user?.user_type === 'enterprise' && (
             <div style={{ marginTop: 8 }}>
@@ -931,6 +983,19 @@ export default function DashboardPage() {
           <div style={{ height: 40 }} />
         </div>
       </main>
+
+      {/* ── 계약서 템플릿 모달 ── */}
+      {showTemplateModal && (
+        <TemplateModal
+          onClose={() => setShowTemplateModal(false)}
+          onDone={(msg) => {
+            setShowTemplateModal(false)
+            setSignToast(msg)
+            fetchSigningRecords()
+            setTimeout(() => setSignToast(''), 5000)
+          }}
+        />
+      )}
 
       {/* ── 전자서명 모달 ── */}
       {showSignModal && signingTarget && (

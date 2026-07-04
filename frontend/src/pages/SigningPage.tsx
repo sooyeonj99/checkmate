@@ -10,6 +10,7 @@ interface SigningInfo {
   status: string
   is_expired: boolean
   requester_signed: boolean
+  contract_html: string | null
 }
 
 export default function SigningPage() {
@@ -22,6 +23,7 @@ export default function SigningPage() {
   const [signerName, setSignerName] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
+  const [showContract, setShowContract] = useState(false)
 
   useEffect(() => {
     if (!token) return
@@ -142,6 +144,34 @@ export default function SigningPage() {
                 </div>
               )}
             </div>
+
+            {/* 계약서 원문 보기 (템플릿 계약서) */}
+            {info.contract_html && (
+              <div style={{ marginBottom: 20 }}>
+                <button
+                  type="button"
+                  onClick={() => setShowContract(v => !v)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    width: '100%', padding: '11px 16px', borderRadius: 10,
+                    border: '1.5px solid var(--accent)', background: 'rgba(37,99,235,0.06)',
+                    color: 'var(--accent)', fontWeight: 700, fontSize: 14, cursor: 'pointer',
+                  }}
+                >
+                  📄 {showContract ? '계약서 내용 접기 ▲' : '계약서 전문 보기 ▼'}
+                </button>
+                {showContract && (
+                  <div style={{ marginTop: 12, border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+                    <iframe
+                      srcDoc={info.contract_html}
+                      style={{ width: '100%', height: 420, border: 'none', display: 'block' }}
+                      title="계약서 내용"
+                      sandbox="allow-same-origin"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
 
             {!info.is_expired && info.status !== 'signed' && (
               <form onSubmit={handleSubmit}>
