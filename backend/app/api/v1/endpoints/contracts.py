@@ -128,6 +128,7 @@ class AnalyzeRequest(BaseModel):
     selected_ids: list[int] | None = None
     user_type: str | None = None  # freelancer | employee | small_biz | subscription | newcomer
     custom_masks: list[CustomMaskItem] | None = None
+    ocr_text_override: str | None = None  # 빈칸 채우기로 완성된 OCR 텍스트
 
 
 def _load_contract_dir(contract_id: str):
@@ -172,18 +173,20 @@ async def preview_contract(contract_id: str):
 
     # 이미지 OCR (Gemini)
     ocr_cache: dict[str, str] = {}
+    all_missing_fields: list = []
     from_ocr = False
 
     if image_paths and settings.GEMINI_API_KEY:
         for img_fp in image_paths:
             try:
                 logger.info(f"이미지 OCR 시작: {Path(img_fp).name}")
-                ocr_text = extract_text_from_image_with_gemini(img_fp)
+                ocr_text, missing_fields = extract_text_from_image_with_gemini(img_fp)
                 if ocr_text:
                     ocr_cache[Path(img_fp).name] = ocr_text
                     texts.append(ocr_text)
                     from_ocr = True
-                    logger.info(f"OCR 완료: {Path(img_fp).name} ({len(ocr_text)}자)")
+                    all_missing_fields.extend(missing_fields)
+                    logger.info(f"OCR 완료: {Path(img_fp).name} ({len(ocr_text)}자, 빈칸 {len(missing_fields)}개)")
             except Exception as e:
                 logger.warning(f"이미지 OCR 실패 ({Path(img_fp).name}): {e}")
 
@@ -194,8 +197,7 @@ async def preview_contract(contract_id: str):
                 json.dump(ocr_cache, f, ensure_ascii=False)
 
     if not texts:
-        # OCR 불가 또는 API 키 없음 → 기존 방식으로 폴백
-        return {"image_only": True, "text": None, "entities": [], "from_ocr": False}
+        return {"image_only": True, "text": None, "entities": [], "from_ocr": False, "missing_fields": []}
 
     combined = "\n\n--- 다음 파일 ---\n\n".join(texts)
     entities = detect_pii(combined)
@@ -204,6 +206,7 @@ async def preview_contract(contract_id: str):
         "image_only": False,
         "from_ocr": from_ocr,
         "text": combined[:5000],
+        "missing_fields": all_missing_fields,
         "entities": [
             {
                 "id": e.id,
@@ -224,11 +227,21 @@ async def preview_contract(contract_id: str):
     summary="계약서 AI 분석",
 )
 async def analyze_contract(contract_id: str, body: AnalyzeRequest | None = None):
-    _, meta, file_paths = _load_contract_dir(contract_id)
+    contract_dir, meta, file_paths = _load_contract_dir(contract_id)
     original_filename = meta.get("original_filename", os.path.basename(file_paths[0]))
     selected_ids = body.selected_ids if body else None
     user_type = body.user_type if body else None
     custom_masks = [m.dict() for m in body.custom_masks] if body and body.custom_masks else None
+
+    # 빈칸 채우기로 완성된 OCR 텍스트 → ocr_cache에 반영
+    if body and body.ocr_text_override:
+        cache_path = os.path.join(contract_dir, "ocr_cache.json")
+        img_files = [f for f in os.listdir(contract_dir)
+                     if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+        img_key = img_files[0] if img_files else "image.jpg"
+        with open(cache_path, "w", encoding="utf-8") as _f:
+            json.dump({img_key: body.ocr_text_override}, _f, ensure_ascii=False)
+        logger.info(f"OCR 완성 텍스트 캐시 저장 ({len(body.ocr_text_override)}자)")
 
     # Gemini API 연동
     if settings.GEMINI_API_KEY:
@@ -239,7 +252,9 @@ async def analyze_contract(contract_id: str, body: AnalyzeRequest | None = None)
                 selected_ids=selected_ids, user_type=user_type,
                 custom_masks=custom_masks
             )
-            if meta.get("contract_type"):
+            # contract_type은 Gemini가 문서 내용으로 판단한 것을 우선 사용
+            # meta의 유형(사용자 선택)은 Gemini가 반환하지 못한 경우에만 폴백
+            if not result.contract_type and meta.get("contract_type"):
                 result.contract_type = meta["contract_type"]
             return result
         except Exception as e:

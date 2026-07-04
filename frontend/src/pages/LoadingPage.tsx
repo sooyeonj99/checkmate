@@ -301,7 +301,7 @@ function MsgArea({ step, stepIndex, msgKey }: MsgAreaProps) {
 export default function LoadingPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { contractId, useMock, selectedIds, customMasks, userType } = (location.state as any) || {}
+  const { contractId, useMock, selectedIds, customMasks, userType, ocrTextOverride } = (location.state as any) || {}
 
   const [stepIndex, setStepIndex] = useState(0)
   const [msgKey, setMsgKey] = useState(0)
@@ -344,6 +344,7 @@ export default function LoadingPage() {
         ...(selectedIds != null ? { selected_ids: selectedIds } : {}),
         ...(customMasks != null ? { custom_masks: customMasks } : {}),
         ...(userType ? { user_type: userType } : {}),
+        ...(ocrTextOverride ? { ocr_text_override: ocrTextOverride } : {}),
       },
       { timeout: 120000 }
     )

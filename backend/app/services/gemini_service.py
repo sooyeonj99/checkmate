@@ -182,19 +182,27 @@ def _select_prompt(user_type: str | None) -> str:
     return _PROMPT_MAP.get(user_type or "", _PROMPT)
 
 # ── Gemini 프롬프트 (이미지 OCR 전용) ───────────────────────────────────────
-_PROMPT_OCR = """이 계약서 이미지에서 모든 텍스트를 빠짐없이 추출해주세요.
+_PROMPT_OCR = """이 계약서 이미지에서 모든 텍스트를 빠짐없이 추출하고, JSON으로만 응답하세요.
 
-[반드시 포함해야 할 항목]
+[추출 규칙]
 - 제목, 조항 번호, 조항 내용 전체
-- 노란색·주황색 형광펜으로 강조된 텍스트
-- 빨간색·파란색 등 색깔로 표시된 텍스트
-- 빈칸(_____)에 수기·타이핑으로 채워진 내용 (읽기 어려우면 [판독불가]로 표시)
-- 표(테이블) 안의 모든 행·열 데이터 (숫자, 금액 포함)
-- 서명란, 날짜, 도장 옆 텍스트
-- 괄호 안 내용, 작은 글씨, 주석
-- ** 또는 ■ 등 기호로 가려진 부분은 [마스킹] 으로 표시
+- 노란색·주황색 형광펜으로 강조된 텍스트 (반드시 포함)
+- 빨간색·파란색 등 색깔 텍스트 (반드시 포함)
+- 빈칸(_____)에 채워진 수기·타이핑 내용 → 읽기 어려우면 [빈칸N] 으로 표시 (N은 1부터 순서대로)
+- 표(테이블) 안의 모든 데이터, 숫자, 금액
+- 서명란, 날짜, 도장 주변 텍스트
+- ** 또는 ■ 기호로 가려진 부분 → [마스킹] 으로 표시
 
-마크다운, 코드블록, 부가 설명 없이 원문 텍스트만 그대로 출력하세요."""
+[출력 형식 — 반드시 순수 JSON만, 마크다운·코드블록 금지]
+{
+  "text": "추출한 전체 텍스트. 읽기 어려운 빈칸은 [빈칸1], [빈칸2] 순서로 표시",
+  "missing_fields": [
+    {"id": 1, "label": "해당 빈칸이 어떤 항목인지 (예: 근로계약 시작일)", "hint": "입력 예시 (예: 2024년 7월 1일)"},
+    {"id": 2, "label": "...", "hint": "..."}
+  ]
+}
+
+빈칸이 없으면 missing_fields는 빈 배열 [] 로 반환."""
 
 # ── Gemini 프롬프트 (이미지 분석용 — OCR 캐시 없을 때 폴백) ───────────────
 _PROMPT_IMAGE = """당신은 한국 법률 계약서 분석 전문가입니다.
@@ -296,12 +304,21 @@ def _parse_response(raw: str, contract_id: str, filename: str) -> tuple[Analysis
     return result, extracted_text
 
 
-def extract_text_from_image_with_gemini(file_path: str) -> str:
-    """이미지에서 텍스트만 추출 (OCR 전용 — 분석 없음)"""
+def extract_text_from_image_with_gemini(file_path: str) -> tuple[str, list]:
+    """이미지에서 텍스트 추출 (OCR 전용).
+    Returns: (extracted_text, missing_fields)
+    missing_fields: [{"id": N, "label": "설명", "hint": "예시"}, ...]
+    """
     model = _init_model()
     img = PIL.Image.open(file_path)
     response = model.generate_content([_PROMPT_OCR, img])
-    return response.text.strip()
+    raw = re.sub(r"```(?:json)?\s*|\s*```", "", response.text).strip()
+    try:
+        data = json.loads(raw)
+        return data.get("text", raw), data.get("missing_fields", [])
+    except Exception:
+        # JSON 파싱 실패 → 텍스트 그대로 반환 (빈칸 없음)
+        return raw, []
 
 
 def extract_texts_from_files(file_paths: list[str]) -> tuple[list[str], list]:

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import api from '../services/api'
 
@@ -15,6 +15,12 @@ interface CustomMask {
   start: number
   end: number
   label: string
+}
+
+interface MissingField {
+  id: number
+  label: string
+  hint: string
 }
 
 const TYPE_COLOR: Record<string, string> = {
@@ -347,6 +353,8 @@ export default function MaskingPage() {
   const [fromOcr, setFromOcr] = useState(false)
   const [error, setError] = useState('')
   const nextCustomId = useRef(-1)
+  const [missingFields, setMissingFields] = useState<MissingField[]>([])
+  const [filledValues, setFilledValues] = useState<Record<number, string>>({})
 
   const isImageFile = /\.(jpg|jpeg|png)$/i.test(filename || '')
 
@@ -360,6 +368,9 @@ export default function MaskingPage() {
         setText(data.text ?? '')
         setEntities(data.entities ?? [])
         setCheckedIds(new Set((data.entities ?? []).map((e: PiiEntity) => e.id)))
+        if (data.missing_fields && data.missing_fields.length > 0) {
+          setMissingFields(data.missing_fields)
+        }
       })
       .catch(() => setError('미리보기를 불러오지 못했습니다. 바로 분석을 진행합니다.'))
       .finally(() => setLoading(false))
@@ -394,6 +405,18 @@ export default function MaskingPage() {
 
   const allEntities = [...entities, ...customEntities].sort((a, b) => a.start - b.start)
 
+  // 빈칸 채우기: 사용자 입력값으로 [빈칸N] 마커 치환한 완성 텍스트
+  const completedText = useMemo(() => {
+    if (missingFields.length === 0) return text
+    let t = text
+    for (const field of missingFields) {
+      t = t.split(`[빈칸${field.id}]`).join(filledValues[field.id] || `[빈칸${field.id}]`)
+    }
+    return t
+  }, [text, missingFields, filledValues])
+
+  const allFilled = missingFields.every(f => (filledValues[f.id] || '').trim() !== '')
+
   const handleStart = () => {
     const autoIds = entities.length > 0
       ? Array.from(checkedIds).filter(id => id > 0)
@@ -411,6 +434,7 @@ export default function MaskingPage() {
         contractType,
         selectedIds: autoIds,
         customMasks,
+        ocrTextOverride: missingFields.length > 0 ? completedText : undefined,
       },
     })
   }
@@ -561,6 +585,63 @@ export default function MaskingPage() {
                 <span style={{ opacity: 0.85 }}>
                   자동 인식이므로 일부 오류가 있을 수 있습니다. 내용을 확인 후 마스킹을 선택해 분석을 진행하세요.
                 </span>
+              </div>
+            </div>
+          )}
+
+          {/* ── 빈칸 채우기 섹션 (OCR이 읽지 못한 부분) ── */}
+          {missingFields.length > 0 && (
+            <div style={{
+              marginBottom: 20,
+              background: 'var(--bg-card)',
+              border: '2px solid rgba(245,158,11,0.4)',
+              borderRadius: 16,
+              padding: '20px 24px',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                <span style={{ fontSize: 22 }}>✍️</span>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--text)' }}>
+                    OCR이 읽지 못한 빈칸을 채워주세요
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+                    직접 입력하면 분석 정확도가 높아집니다. 모르면 비워도 됩니다.
+                  </div>
+                </div>
+                {allFilled && (
+                  <span style={{
+                    marginLeft: 'auto', fontSize: 12, fontWeight: 700,
+                    color: '#16a34a', background: 'rgba(22,163,74,0.1)',
+                    padding: '3px 10px', borderRadius: 20,
+                  }}>✓ 모두 입력됨</span>
+                )}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12 }}>
+                {missingFields.map(field => (
+                  <div key={field.id}>
+                    <label style={{
+                      fontSize: 12, fontWeight: 700, color: 'var(--text)',
+                      display: 'block', marginBottom: 5,
+                    }}>
+                      {field.label}
+                      <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: 4 }}>
+                        (빈칸{field.id})
+                      </span>
+                    </label>
+                    <input
+                      type="text"
+                      value={filledValues[field.id] || ''}
+                      onChange={e => setFilledValues(prev => ({ ...prev, [field.id]: e.target.value }))}
+                      placeholder={field.hint}
+                      style={{
+                        width: '100%', padding: '9px 12px', borderRadius: 10,
+                        border: `1.5px solid ${filledValues[field.id] ? 'rgba(22,163,74,0.5)' : 'rgba(245,158,11,0.4)'}`,
+                        background: 'var(--bg)', color: 'var(--text)', fontSize: 13,
+                        boxSizing: 'border-box', outline: 'none',
+                      }}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
           )}
