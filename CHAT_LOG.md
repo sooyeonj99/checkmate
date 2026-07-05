@@ -1157,11 +1157,63 @@ SMS (NCP SENS — 환경변수 설정 시 활성)
 
 | 커밋 | 내용 |
 |------|------|
+| `1aa48e9` | fix: team.py 이메일 서비스 함수명 수정 (_send_smtp) |
+| `4c99d05` | feat: 6대 기능 완전 구현 (서명문서/PDF 리포트/체크리스트/만료추적/팀관리/B2B 대시보드) |
 | `b63500a` | feat: 앱 서명 요청 모달 추가 (이메일/전화번호 선택 발송) |
 | `3b05ffb` | feat: 핸드폰 번호 전자서명 요청 기능 구현 |
 | `8350810` | feat: 전자서명 완전 구현 (웹+앱) — 서명 패드, 요청, 푸시 알림, 인증서 |
-| `188ef4b` | feat: 사업자등록번호 체크섬 검증 + 국세청 API 실시간 조회 |
-| `88d3093` | feat: 개인/기업 회원 분리 - 사업자등록번호 등록 지원 |
+
+---
+
+## 9. 이번 세션 구현 완료 기능 (2026-07-06)
+
+### Feature 1: 앱 서명된 문서 보기
+- `mobile/src/screens/SignedDocScreen.tsx` — WebView로 서명 완료 문서 표시
+- `mobile/src/screens/ReportDocScreen.tsx` — WebView로 분석 리포트 표시
+- App.tsx에 스크린 등록 (`SignedDoc`, `ReportDoc` 파라미터 타입 추가)
+- DashboardScreen.tsx에 "문서 보기" + "📄 리포트" 버튼 추가
+
+### Feature 2: PDF 리포트 다운로드
+- `GET /api/v1/contracts/saved/{id}/report` — 완전한 HTML 리포트 반환
+  - 색상 코딩된 조항별 위험도, 점수, 등급, 요약, 인쇄 버튼
+  - `@media print` CSS로 인쇄 버튼 자동 숨김 (브라우저 print-to-PDF 지원)
+- 웹 DashboardPage.tsx: "📄 리포트" 버튼 → 새 탭에서 HTML 열기
+- 앱 DashboardScreen.tsx: "📄 리포트" 버튼 → ReportDocScreen 네비게이션
+
+### Feature 3: 계약 전 체크리스트
+- 웹 `ResultPage.tsx`: `ChecklistSection` 컴포넌트 — 계약서 유형별 10개 항목
+  - 근로/임대차/프리랜서/기본 4가지 분류
+  - 체크박스 인터랙션 (세션 로컬 상태)
+- 앱 `ResultScreen.tsx`: `ChecklistSection` 리액트 네이티브 컴포넌트 — 7개 항목
+
+### Feature 4: 계약 만료일 추적/알림
+- `backend/app/models/saved_contract.py`: `expiry_date`, `expiry_notice_days` 컬럼 추가
+- `PUT /api/v1/contracts/saved/{id}/expiry` — 만료일 저장
+- `GET /api/v1/contracts/expiring` — 알림 대상 계약 목록 (days_left ≤ notice_days)
+- 웹 DashboardPage.tsx: 만료 배너 + 인라인 날짜 피커 ("📅 만료일" 토글)
+- DB 마이그레이션: `ssh_fix.py`에 ALTER TABLE 추가
+
+### Feature 5: 팀 관리 (기업)
+- `backend/app/models/team.py`: `TeamMember` 모델 (enterprise_user_id, member_email, role, status, invite_token)
+- `backend/app/api/v1/endpoints/team.py`:
+  - `POST /team/invite` — 이메일로 팀원 초대 (초대 메일 발송)
+  - `GET /team/members` — 팀원 목록 조회
+  - `GET /team/accept?token=` — 초대 수락 (토큰 검증 + 사용자 연결)
+  - `DELETE /team/members/{id}` — 팀원 삭제
+- `frontend/src/pages/TeamAcceptPage.tsx` — 초대 링크 수락 페이지
+- `/team/accept` 라우트 App.tsx에 등록
+- 웹 DashboardPage.tsx: 팀 관리 UI (초대 폼 + 팀원 목록 + 상태 배지)
+
+### Feature 6: B2B SaaS 대시보드
+- 웹 DashboardPage.tsx 기업 전용 섹션:
+  - 통계 카드 6개: 총 계약서 / 이번 달 분석 / 위험 / 주의 / 안전 / 활성 팀원
+  - 계약 유형 분포 바 차트 (API 응답 기반 동적 렌더링)
+  - 위험도 분포 바 (위험/주의/안전 색상 구분)
+- ENTERPRISE_FEATURES 목록 업데이트: 팀 관리/B2B 대시보드/PDF 리포트/만료추적 → 준비중 해제
+
+### 기타 버그 수정
+- `DashboardPage.tsx`: 중복 변수명 `expiringContracts` → `expiringLocalContracts`로 충돌 해결
+- `ResultPage.tsx`: `React.useState` → `useState` (모듈 모드 호환), `contract_type` 필드 인터페이스 추가
 
 ---
 
