@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-type Tab = 'login' | 'signup'
+type Tab = 'login' | 'signup' | 'find-id' | 'forgot-password'
 
 /* ── JSON 안전 파싱 헬퍼 ──────────────────────────────
    GitHub Pages 등 백엔드 없는 환경에서 HTML이 반환될 때
@@ -27,6 +27,8 @@ export default function AuthPage() {
   const [tab, setTab] = useState<Tab>('login')
   const navigate = useNavigate()
 
+  const isSubView = tab === 'find-id' || tab === 'forgot-password'
+
   return (
     <div className="auth-page">
       <div className="auth-bg" />
@@ -39,7 +41,7 @@ export default function AuthPage() {
 
       <div className="auth-card">
         {/* GitHub Pages 데모 안내 배너 */}
-        {IS_GITHUB_PAGES && (
+        {IS_GITHUB_PAGES && !isSubView && (
           <div className="auth-deploy-banner">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0, marginTop: 1 }}>
               <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
@@ -51,20 +53,28 @@ export default function AuthPage() {
           </div>
         )}
 
-        <div className="auth-tabs">
-          <button className={`auth-tab${tab === 'login' ? ' active' : ''}`} onClick={() => setTab('login')}>
-            로그인
-          </button>
-          <button className={`auth-tab${tab === 'signup' ? ' active' : ''}`} onClick={() => setTab('signup')}>
-            회원가입
-          </button>
-        </div>
-
-        {tab === 'login' ? (
-          <LoginForm onSuccess={() => navigate('/dashboard')} />
-        ) : (
-          <SignupForm onSwitchToLogin={() => setTab('login')} />
+        {/* 서브뷰(아이디찾기/비밀번호찾기)일 때는 탭 숨김 */}
+        {!isSubView && (
+          <div className="auth-tabs">
+            <button className={`auth-tab${tab === 'login' ? ' active' : ''}`} onClick={() => setTab('login')}>
+              로그인
+            </button>
+            <button className={`auth-tab${tab === 'signup' ? ' active' : ''}`} onClick={() => setTab('signup')}>
+              회원가입
+            </button>
+          </div>
         )}
+
+        {tab === 'login' && (
+          <LoginForm
+            onSuccess={() => navigate('/dashboard')}
+            onFindId={() => setTab('find-id')}
+            onForgotPassword={() => setTab('forgot-password')}
+          />
+        )}
+        {tab === 'signup' && <SignupForm onSwitchToLogin={() => setTab('login')} />}
+        {tab === 'find-id' && <FindIdForm onBack={() => setTab('login')} />}
+        {tab === 'forgot-password' && <ForgotPasswordForm onBack={() => setTab('login')} />}
       </div>
 
       <p className="auth-footer-note">
@@ -76,7 +86,11 @@ export default function AuthPage() {
 }
 
 /* ── 로그인 폼 ── */
-function LoginForm({ onSuccess }: { onSuccess: () => void }) {
+function LoginForm({ onSuccess, onFindId, onForgotPassword }: {
+  onSuccess: () => void
+  onFindId: () => void
+  onForgotPassword: () => void
+}) {
   const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -177,6 +191,13 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
       <button type="submit" className="auth-submit-btn" disabled={loading}>
         {loading ? '로그인 중...' : '로그인'}
       </button>
+
+      {/* 아이디/비밀번호 찾기 */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 12 }}>
+        <button type="button" className="auth-find-link" onClick={onFindId}>아이디 찾기</button>
+        <span style={{ color: 'var(--border)', fontSize: 13 }}>|</span>
+        <button type="button" className="auth-find-link" onClick={onForgotPassword}>비밀번호 찾기</button>
+      </div>
 
       <div className="auth-divider"><span>또는 소셜 계정으로 계속하기</span></div>
       <SocialButtons />
@@ -487,6 +508,154 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
       <div className="auth-divider"><span>또는 소셜 계정으로 시작하기</span></div>
       <SocialButtons />
     </form>
+  )
+}
+
+/* ── 아이디 찾기 폼 ── */
+function FindIdForm({ onBack }: { onBack: () => void }) {
+  const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [done, setDone] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    try {
+      const res = await fetch('/api/v1/auth/find-id', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      const data = await safeJson(res)
+      if (!res.ok) throw new Error(data.detail ?? '오류가 발생했습니다.')
+      setDone(true)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : '오류가 발생했습니다.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="auth-form">
+      {/* 헤더 */}
+      <div style={{ marginBottom: 24 }}>
+        <button type="button" onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-muted)', fontSize: 13, background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: 16 }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M19 12H5M12 5l-7 7 7 7"/>
+          </svg>
+          로그인으로 돌아가기
+        </button>
+        <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: 'var(--text)' }}>아이디 찾기</h3>
+        <p style={{ margin: '6px 0 0', fontSize: 13, color: 'var(--text-muted)' }}>가입 시 사용한 이메일을 입력하면 계정 정보를 보내드립니다.</p>
+      </div>
+
+      {done ? (
+        <div className="auth-email-sent">
+          <div className="auth-email-sent-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.5">
+              <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <h3 className="auth-email-sent-title">메일을 확인해 주세요</h3>
+          <p className="auth-email-sent-desc">
+            <strong>{email}</strong>으로<br/>아이디(닉네임) 정보를 발송했습니다.
+          </p>
+          <div className="auth-email-sent-tip">메일이 보이지 않으면 스팸 폴더를 확인해 주세요.</div>
+          <button type="button" className="auth-submit-btn" style={{ marginTop: 8 }} onClick={onBack}>
+            로그인으로 이동
+          </button>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit}>
+          {error && <div className="auth-error-banner">{error}</div>}
+          <div className="auth-field">
+            <label className="auth-label">가입 이메일</label>
+            <input type="email" className="auth-input" placeholder="example@email.com"
+              value={email} onChange={e => setEmail(e.target.value)} required autoFocus />
+          </div>
+          <button type="submit" className="auth-submit-btn" disabled={loading} style={{ marginTop: 4 }}>
+            {loading ? '전송 중...' : '아이디 찾기'}
+          </button>
+        </form>
+      )}
+    </div>
+  )
+}
+
+/* ── 비밀번호 찾기 폼 ── */
+function ForgotPasswordForm({ onBack }: { onBack: () => void }) {
+  const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [done, setDone] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    try {
+      const res = await fetch('/api/v1/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      const data = await safeJson(res)
+      if (!res.ok) throw new Error(data.detail ?? '오류가 발생했습니다.')
+      setDone(true)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : '오류가 발생했습니다.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="auth-form">
+      {/* 헤더 */}
+      <div style={{ marginBottom: 24 }}>
+        <button type="button" onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-muted)', fontSize: 13, background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: 16 }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M19 12H5M12 5l-7 7 7 7"/>
+          </svg>
+          로그인으로 돌아가기
+        </button>
+        <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: 'var(--text)' }}>비밀번호 찾기</h3>
+        <p style={{ margin: '6px 0 0', fontSize: 13, color: 'var(--text-muted)' }}>이메일로 비밀번호 재설정 링크를 보내드립니다. (유효시간 1시간)</p>
+      </div>
+
+      {done ? (
+        <div className="auth-email-sent">
+          <div className="auth-email-sent-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.5">
+              <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <h3 className="auth-email-sent-title">재설정 링크를 발송했습니다</h3>
+          <p className="auth-email-sent-desc">
+            <strong>{email}</strong>으로<br/>비밀번호 재설정 링크를 보냈습니다.<br/>링크는 <strong>1시간</strong> 동안 유효합니다.
+          </p>
+          <div className="auth-email-sent-tip">메일이 보이지 않으면 스팸 폴더를 확인해 주세요.</div>
+          <button type="button" className="auth-submit-btn" style={{ marginTop: 8 }} onClick={onBack}>
+            로그인으로 이동
+          </button>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit}>
+          {error && <div className="auth-error-banner">{error}</div>}
+          <div className="auth-field">
+            <label className="auth-label">가입 이메일</label>
+            <input type="email" className="auth-input" placeholder="example@email.com"
+              value={email} onChange={e => setEmail(e.target.value)} required autoFocus />
+          </div>
+          <button type="submit" className="auth-submit-btn" disabled={loading} style={{ marginTop: 4 }}>
+            {loading ? '전송 중...' : '비밀번호 재설정 메일 받기'}
+          </button>
+        </form>
+      )}
+    </div>
   )
 }
 

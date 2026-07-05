@@ -19,5 +19,7 @@ class User(Base):
     user_type: Mapped[str] = mapped_column(String(20), default='personal', server_default='personal')
     business_number: Mapped[Optional[str]] = mapped_column(String(12), nullable=True)
     push_token: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    password_reset_token: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, index=True)
+    password_reset_token_expires: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())

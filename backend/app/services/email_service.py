@@ -112,6 +112,99 @@ def send_verification_email(to_email: str, username: str, token: str) -> None:
     _send_smtp(to_email, subject, html)
 
 
+def send_find_id_email(to_email: str, username: str) -> None:
+    subject = "[CHECKMATE] 아이디(닉네임) 확인 안내"
+    html = f"""<!DOCTYPE html>
+<html lang="ko">
+<head><meta charset="utf-8"/></head>
+<body style="margin:0;padding:0;background:#f0f4ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+    <div style="background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);padding:32px 40px;text-align:center;">
+      <span style="color:#fff;font-size:20px;font-weight:800;letter-spacing:1.5px;">CHECKMATE</span>
+      <p style="color:rgba(255,255,255,0.75);font-size:13px;margin:8px 0 0;">AI 계약서 분석 서비스</p>
+    </div>
+    <div style="padding:40px;">
+      <h2 style="margin:0 0 16px;font-size:22px;color:#1e3a8a;font-weight:700;">아이디 확인</h2>
+      <p style="color:#475569;font-size:15px;line-height:1.75;margin:0 0 24px;">
+        요청하신 계정 정보를 안내해 드립니다.
+      </p>
+      <div style="background:#eff6ff;border-radius:12px;padding:20px 24px;margin-bottom:28px;border:1px solid #bfdbfe;">
+        <div style="font-size:12px;color:#64748b;margin-bottom:6px;">가입된 이메일</div>
+        <div style="font-size:16px;font-weight:700;color:#1e3a8a;">{to_email}</div>
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid #bfdbfe;">
+          <div style="font-size:12px;color:#64748b;margin-bottom:6px;">닉네임</div>
+          <div style="font-size:16px;font-weight:700;color:#1e3a8a;">{username}</div>
+        </div>
+      </div>
+      <p style="color:#475569;font-size:14px;line-height:1.75;margin:0 0 24px;">
+        위 이메일로 로그인하실 수 있습니다.<br/>
+        비밀번호가 기억나지 않으시면 <strong>비밀번호 찾기</strong>를 이용해 주세요.
+      </p>
+      <div style="border-top:1px solid #e2e8f0;padding-top:20px;">
+        <p style="color:#94a3b8;font-size:12px;line-height:1.6;margin:0;">
+          🔒 본인이 요청하지 않으셨다면 이 메일을 무시해 주세요.<br/>
+          📧 문의: support@checkmate.kr
+        </p>
+      </div>
+    </div>
+    <div style="background:#f8faff;padding:20px 40px;text-align:center;border-top:1px solid #e2e8f0;">
+      <p style="margin:0;font-size:12px;color:#94a3b8;">ⓒ 2026 CHECKMATE · AI 계약서 분석 서비스</p>
+    </div>
+  </div>
+</body>
+</html>"""
+    _send_smtp(to_email, subject, html)
+
+
+def send_password_reset_email(to_email: str, username: str, token: str) -> None:
+    reset_url = f"{settings.FRONTEND_URL}/reset-password?token={token}"
+    subject = "[CHECKMATE] 비밀번호 재설정 안내"
+    html = f"""<!DOCTYPE html>
+<html lang="ko">
+<head><meta charset="utf-8"/></head>
+<body style="margin:0;padding:0;background:#f0f4ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+    <div style="background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);padding:32px 40px;text-align:center;">
+      <span style="color:#fff;font-size:20px;font-weight:800;letter-spacing:1.5px;">CHECKMATE</span>
+      <p style="color:rgba(255,255,255,0.75);font-size:13px;margin:8px 0 0;">AI 계약서 분석 서비스</p>
+    </div>
+    <div style="padding:40px;">
+      <h2 style="margin:0 0 16px;font-size:22px;color:#1e3a8a;font-weight:700;">안녕하세요, {username}님!</h2>
+      <p style="color:#475569;font-size:15px;line-height:1.75;margin:0 0 32px;">
+        비밀번호 재설정 요청이 접수되었습니다.<br/>
+        아래 버튼을 클릭하여 새 비밀번호를 설정해 주세요.
+      </p>
+      <div style="text-align:center;margin:0 0 32px;">
+        <a href="{reset_url}"
+           style="display:inline-block;padding:16px 40px;
+                  background:linear-gradient(135deg,#1e3a8a,#2563eb);
+                  color:#fff;text-decoration:none;border-radius:12px;
+                  font-weight:700;font-size:16px;
+                  box-shadow:0 4px 16px rgba(37,99,235,0.35);">
+          비밀번호 재설정하기 →
+        </a>
+      </div>
+      <div style="background:#f8faff;border-radius:10px;padding:16px;margin-bottom:24px;">
+        <p style="color:#64748b;font-size:12px;margin:0 0 6px;">버튼이 작동하지 않으면 아래 링크를 복사해 주세요:</p>
+        <a href="{reset_url}" style="color:#2563eb;font-size:12px;word-break:break-all;">{reset_url}</a>
+      </div>
+      <div style="border-top:1px solid #e2e8f0;padding-top:20px;">
+        <p style="color:#94a3b8;font-size:12px;line-height:1.6;margin:0;">
+          ⏰ 이 링크는 <strong>1시간</strong> 후 만료됩니다.<br/>
+          🔒 본인이 요청하지 않으셨다면 이 메일을 무시해 주세요.<br/>
+          📧 문의: support@checkmate.kr
+        </p>
+      </div>
+    </div>
+    <div style="background:#f8faff;padding:20px 40px;text-align:center;border-top:1px solid #e2e8f0;">
+      <p style="margin:0;font-size:12px;color:#94a3b8;">ⓒ 2026 CHECKMATE · AI 계약서 분석 서비스</p>
+    </div>
+  </div>
+</body>
+</html>"""
+    _send_smtp(to_email, subject, html)
+
+
 def send_signing_request_email(
     to_email: str,
     requester_name: str,

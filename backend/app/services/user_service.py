@@ -50,3 +50,24 @@ def refresh_verification_token(db: Session, user: User) -> str:
     db.commit()
     db.refresh(user)
     return token
+
+
+def get_user_by_reset_token(db: Session, token: str) -> User | None:
+    return db.query(User).filter(User.password_reset_token == token).first()
+
+
+def create_password_reset_token(db: Session, user: User) -> str:
+    token = secrets.token_urlsafe(32)
+    user.password_reset_token = token
+    user.password_reset_token_expires = datetime.now() + timedelta(hours=1)
+    db.commit()
+    db.refresh(user)
+    return token
+
+
+def reset_user_password(db: Session, user: User, new_password: str) -> None:
+    from app.core.security import hash_password
+    user.hashed_password = hash_password(new_password)
+    user.password_reset_token = None
+    user.password_reset_token_expires = None
+    db.commit()
