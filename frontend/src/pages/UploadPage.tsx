@@ -353,20 +353,6 @@ export default function UploadPage() {
     }
   }
 
-  const handleDirectAnalyze = async () => {
-    if (!contractType) return
-    setAnalyzing(true)
-    setUploadError(null)
-    try {
-      const result = await uploadFiles()
-      navigate('/loading', { state: { contractId: result.contractId, contractType } })
-    } catch {
-      navigate('/loading', { state: { useMock: true, filename: fileList[0]?.name ?? '계약서', contractType } })
-    } finally {
-      setAnalyzing(false)
-    }
-  }
-
   return (
     <>
       <Navbar />
