@@ -10,7 +10,7 @@ from app.api.v1.endpoints.users import get_current_user
 from app.db.session import get_db
 from app.models.team import TeamMember
 from app.models.user import User
-from app.services.email_service import send_email
+from app.services.email_service import _send_smtp
 
 router = APIRouter(prefix="/team", tags=["팀 관리"])
 
@@ -84,10 +84,10 @@ def invite_member(
     from app.core.config import settings
     invite_link = f"{settings.FRONTEND_URL}/team/accept?token={token}"
     try:
-        send_email(
+        _send_smtp(
             to_email=str(body.email),
             subject=f"[CHECKMATE] {current_user.username}님이 팀에 초대했습니다",
-            body=f"""안녕하세요!<br><br>
+            html_body=f"""안녕하세요!<br><br>
 <b>{current_user.username}</b>님이 CHECKMATE 팀에 초대했습니다.<br><br>
 아래 링크를 클릭하여 팀에 합류하세요:<br>
 <a href="{invite_link}">{invite_link}</a><br><br>
