@@ -185,31 +185,6 @@ function FileListPreview({ files, onRemove, onAddMore }: {
 }
 
 
-function ContractTypeSelector({ selected, onSelect }: { selected: ContractType | null; onSelect: (t: ContractType) => void }) {
-  return (
-    <div className="panel-card">
-      <div className="panel-card-title">계약 유형 선택</div>
-      <div className="contract-type-grid">
-        {CONTRACT_TYPES.map(({ id, emoji, label, wide }) => (
-          <button
-            key={id}
-            className={`contract-type-btn${wide ? ' wide' : ''}${selected === id ? ' selected' : ''}`}
-            onClick={() => onSelect(id)}
-          >
-            <span className="contract-type-emoji">{emoji}</span>
-            <span className="contract-type-label">{label}</span>
-            {selected === id && (
-              <svg style={{ marginLeft: 'auto' }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="3">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            )}
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 function PrivacyNotice() {
   return (
     <div className="privacy-notice">
@@ -222,33 +197,123 @@ function PrivacyNotice() {
   )
 }
 
-function SubmitButton({ enabled, loading, onClick }: { enabled: boolean; loading: boolean; onClick: () => void }) {
+function StartButton({ hasFile, loading, onClick }: { hasFile: boolean; loading: boolean; onClick: () => void }) {
   return (
     <div className="submit-section">
       <button
         className={`submit-btn${loading ? ' loading' : ''}`}
-        disabled={!enabled || loading}
+        disabled={!hasFile || loading}
         onClick={onClick}
       >
         {loading ? (
           <>
             <div className="spinner" />
-            분석 중...
+            업로드 중...
           </>
         ) : (
           <>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ flexShrink: 0 }}>
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
-            AI 분석 시작하기
+            <span style={{ lineHeight: 1.3 }}>
+              AI 분석 시작하기
+              {hasFile && (
+                <span style={{ display: 'block', fontSize: 11, opacity: 0.75, fontWeight: 400, marginTop: 2 }}>
+                  계약서 유형 선택하기 →
+                </span>
+              )}
+            </span>
           </>
         )}
       </button>
-      {!enabled && !loading && (
-        <p className="submit-helper">
-          {!enabled ? '파일과 계약 유형을 모두 선택해주세요' : ''}
-        </p>
+      {!hasFile && !loading && (
+        <p className="submit-helper">파일을 먼저 선택해주세요</p>
       )}
+    </div>
+  )
+}
+
+/* ── Contract Type Modal ────────────────────────────── */
+interface ContractTypeModalProps {
+  contractType: ContractType | null
+  onSelect: (t: ContractType) => void
+  onMasking: () => void
+  onDirectAnalyze: () => void
+  onClose: () => void
+  loading: boolean
+}
+
+function ContractTypeModal({
+  contractType, onSelect, onMasking, onDirectAnalyze, onClose, loading,
+}: ContractTypeModalProps) {
+  return (
+    <div className="ctype-modal-overlay" onClick={() => { if (!loading) onClose() }}>
+      <div className="ctype-modal-card" onClick={e => e.stopPropagation()}>
+
+        <div className="ctype-modal-header">
+          <div>
+            <h2 className="ctype-modal-title">계약서 유형 선택</h2>
+            <p className="ctype-modal-sub">분석할 계약서의 유형을 선택하고 분석 방식을 고르세요</p>
+          </div>
+          <button className="ctype-modal-close" onClick={onClose} disabled={loading}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        <div className="contract-type-grid" style={{ marginBottom: 24 }}>
+          {CONTRACT_TYPES.map(({ id, emoji, label, wide }) => (
+            <button
+              key={id}
+              className={`contract-type-btn${wide ? ' wide' : ''}${contractType === id ? ' selected' : ''}`}
+              onClick={() => onSelect(id)}
+              disabled={loading}
+            >
+              <span className="contract-type-emoji">{emoji}</span>
+              <span className="contract-type-label">{label}</span>
+              {contractType === id && (
+                <svg style={{ marginLeft: 'auto' }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="3">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              )}
+            </button>
+          ))}
+        </div>
+
+        <div className="ctype-modal-divider">
+          <span>분석 방식 선택</span>
+        </div>
+
+        <div className="ctype-modal-actions">
+          <button
+            className={`ctype-action-btn ctype-btn-masking${!contractType || loading ? ' disabled' : ''}`}
+            disabled={!contractType || loading}
+            onClick={onMasking}
+          >
+            <div className="ctype-action-icon">✏️</div>
+            <div className="ctype-action-text">
+              <span className="ctype-action-title">글씨 추출하기</span>
+              <span className="ctype-action-desc">OCR로 텍스트 추출 후 마스킹 선택</span>
+            </div>
+          </button>
+          <button
+            className={`ctype-action-btn ctype-btn-analyze${!contractType || loading ? ' disabled' : ''}`}
+            disabled={!contractType || loading}
+            onClick={onDirectAnalyze}
+          >
+            <div className="ctype-action-icon">🔍</div>
+            <div className="ctype-action-text">
+              <span className="ctype-action-title">업로드 문서 분석하기</span>
+              <span className="ctype-action-desc">바로 AI 위험 조항 분석 시작</span>
+            </div>
+          </button>
+        </div>
+
+        {!contractType && (
+          <p className="ctype-modal-helper">먼저 계약서 유형을 선택해주세요</p>
+        )}
+      </div>
     </div>
   )
 }
@@ -258,6 +323,7 @@ export default function UploadPage() {
   const navigate = useNavigate()
   const [fileList, setFileList] = useState<FileInfo[]>([])
   const [contractType, setContractType] = useState<ContractType | null>(null)
+  const [showTypeModal, setShowTypeModal] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
 
@@ -276,24 +342,41 @@ export default function UploadPage() {
 
   const handleRemove = (idx: number) => setFileList(prev => prev.filter((_, i) => i !== idx))
 
-  const handleAnalyze = async () => {
-    if (!fileList.length || !contractType) return
+  const uploadFiles = async () => {
+    const formData = new FormData()
+    fileList.forEach(fi => formData.append('files', fi.file))
+    formData.append('contract_type', contractType ?? 'other')
+    const { data } = await api.post('/contracts/upload', formData)
+    return { contractId: data.contract_id, filename: data.filename }
+  }
+
+  const handleMasking = async () => {
+    if (!contractType) return
     setAnalyzing(true)
     setUploadError(null)
-
     try {
-      const formData = new FormData()
-      fileList.forEach(fi => formData.append('files', fi.file))
-      formData.append('contract_type', contractType)
-
-      const { data } = await api.post('/contracts/upload', formData)
-      navigate('/masking', { state: { contractId: data.contract_id, filename: data.filename, contractType: data.contract_type } })
+      const result = await uploadFiles()
+      navigate('/masking', { state: { contractId: result.contractId, filename: result.filename, contractType } })
     } catch {
       navigate('/loading', { state: { useMock: true, filename: fileList[0]?.name ?? '계약서', contractType } })
+    } finally {
+      setAnalyzing(false)
     }
   }
 
-  const canSubmit = fileList.length > 0 && !!contractType
+  const handleDirectAnalyze = async () => {
+    if (!contractType) return
+    setAnalyzing(true)
+    setUploadError(null)
+    try {
+      const result = await uploadFiles()
+      navigate('/loading', { state: { contractId: result.contractId, contractType } })
+    } catch {
+      navigate('/loading', { state: { useMock: true, filename: fileList[0]?.name ?? '계약서', contractType } })
+    } finally {
+      setAnalyzing(false)
+    }
+  }
 
   return (
     <>
@@ -335,11 +418,14 @@ export default function UploadPage() {
               }
             </div>
 
-            {/* Right: Type + CTA */}
+            {/* Right: Privacy notice + CTA button */}
             <div className="upload-right-panel">
-              <ContractTypeSelector selected={contractType} onSelect={setContractType} />
               <PrivacyNotice />
-              <SubmitButton enabled={canSubmit} loading={analyzing} onClick={handleAnalyze} />
+              <StartButton
+                hasFile={fileList.length > 0}
+                loading={analyzing}
+                onClick={() => setShowTypeModal(true)}
+              />
               {uploadError && (
                 <div style={{
                   marginTop: 12, padding: '12px 16px',
@@ -355,6 +441,18 @@ export default function UploadPage() {
           </div>
         </div>
       </main>
+
+      {/* Contract Type Selection Modal */}
+      {showTypeModal && (
+        <ContractTypeModal
+          contractType={contractType}
+          onSelect={setContractType}
+          onMasking={handleMasking}
+          onDirectAnalyze={handleDirectAnalyze}
+          onClose={() => { if (!analyzing) setShowTypeModal(false) }}
+          loading={analyzing}
+        />
+      )}
     </>
   )
 }
