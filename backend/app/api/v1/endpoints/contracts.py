@@ -142,7 +142,8 @@ def _load_contract_dir(contract_id: str):
     if os.path.exists(meta_path):
         with open(meta_path, encoding="utf-8") as f:
             meta = json.load(f)
-    all_files = sorted([f for f in os.listdir(contract_dir) if f != "meta.json"])
+    _SKIP = {"meta.json", "ocr_cache.json"}
+    all_files = sorted([f for f in os.listdir(contract_dir) if f not in _SKIP])
     if not all_files:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
             detail="업로드된 파일을 찾을 수 없습니다.")
