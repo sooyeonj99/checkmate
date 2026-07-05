@@ -20,6 +20,8 @@ import LoadingScreen from './src/screens/LoadingScreen'
 import ResultScreen from './src/screens/ResultScreen'
 import ProfileScreen from './src/screens/ProfileScreen'
 import SigningScreen from './src/screens/SigningScreen'
+import SignedDocScreen from './src/screens/SignedDocScreen'
+import ReportDocScreen from './src/screens/ReportDocScreen'
 import { colors } from './src/theme/colors'
 import api from './src/services/api'
 
@@ -58,6 +60,8 @@ export type RootStackParamList = {
   Auth: undefined
   Main: undefined
   Signing: { token: string }
+  SignedDoc: { recordId: number; contractName: string }
+  ReportDoc: { savedId: number; filename: string }
 }
 
 export type TabParamList = {
@@ -223,6 +227,8 @@ function Navigation() {
           <>
             <RootStack.Screen name="Main" component={MainTabs} />
             <RootStack.Screen name="Signing" component={SigningScreen} />
+            <RootStack.Screen name="SignedDoc" component={SignedDocScreen} />
+            <RootStack.Screen name="ReportDoc" component={ReportDocScreen} />
           </>
         ) : (
           <>

@@ -259,10 +259,16 @@ export default function DashboardScreen() {
                     <Text style={styles.viewBtnText}>결과 보기</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
+                    style={[styles.viewBtn, { backgroundColor: 'rgba(37,99,235,0.12)', flex: 0.7 }]}
+                    onPress={() => navigation.navigate('ReportDoc' as any, { savedId: item.id, filename: item.filename })}
+                  >
+                    <Text style={[styles.viewBtnText, { color: colors.primary }]}>📄 리포트</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
                     style={[styles.viewBtn, styles.signBtn]}
                     onPress={() => handleSigningRequest(item)}
                   >
-                    <Text style={styles.signBtnText}>전자서명</Text>
+                    <Text style={styles.signBtnText}>서명</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.deleteBtn}
@@ -408,6 +414,14 @@ export default function DashboardScreen() {
                       onPress={() => navigation.navigate('Signing' as any, { token: rec.token })}
                     >
                       <Text style={styles.signNowBtnText}>서명하기</Text>
+                    </TouchableOpacity>
+                  )}
+                  {isSigned && (
+                    <TouchableOpacity
+                      style={[styles.signNowBtn, { backgroundColor: '#16a34a' }]}
+                      onPress={() => navigation.navigate('SignedDoc' as any, { recordId: rec.id, contractName: rec.contract_name })}
+                    >
+                      <Text style={styles.signNowBtnText}>문서 보기</Text>
                     </TouchableOpacity>
                   )}
                 </View>

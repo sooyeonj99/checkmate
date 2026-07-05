@@ -341,6 +341,66 @@ async def save_contract(
     return {"id": saved.id, "saved_at": saved.saved_at.isoformat()}
 
 
+# ── 만료일 설정 ───────────────────────────────────────────────────────
+
+class ExpiryUpdate(BaseModel):
+    expiry_date: Optional[str] = None   # ISO 날짜 문자열 "2026-12-31"
+    expiry_notice_days: int = 7
+
+@router.put(
+    "/saved/{saved_id}/expiry",
+    summary="계약 만료일 설정",
+)
+async def set_expiry(
+    saved_id: int,
+    body: ExpiryUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    row = db.query(SavedContract).filter_by(id=saved_id, user_id=current_user.id).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="저장된 계약서를 찾을 수 없습니다.")
+    row.expiry_date = datetime.fromisoformat(body.expiry_date) if body.expiry_date else None
+    row.expiry_notice_days = body.expiry_notice_days
+    db.commit()
+    return {"ok": True}
+
+
+@router.get(
+    "/expiring",
+    summary="만료 임박 계약서 목록",
+)
+async def expiring_contracts(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    from datetime import timedelta
+    now = datetime.now()
+    rows = (
+        db.query(SavedContract)
+        .filter(
+            SavedContract.user_id == current_user.id,
+            SavedContract.expiry_date.isnot(None),
+        )
+        .all()
+    )
+    result = []
+    for r in rows:
+        if not r.expiry_date:
+            continue
+        days_left = (r.expiry_date - now).days
+        if days_left <= r.expiry_notice_days:
+            result.append({
+                "id": r.id,
+                "filename": r.filename,
+                "contract_type": r.contract_type,
+                "expiry_date": r.expiry_date.strftime("%Y-%m-%d"),
+                "days_left": max(days_left, 0),
+                "expired": days_left < 0,
+            })
+    return sorted(result, key=lambda x: x["days_left"])
+
+
 # ── 저장된 계약서 목록 ────────────────────────────────────────────────
 
 @router.get(
@@ -409,6 +469,137 @@ async def delete_saved_contract(
         raise HTTPException(status_code=404, detail="저장된 계약서를 찾을 수 없습니다.")
     db.delete(row)
     db.commit()
+
+
+# ── PDF 리포트 ────────────────────────────────────────────────────────
+
+@router.get(
+    "/saved/{saved_id}/report",
+    summary="분석 결과 PDF 리포트 (HTML)",
+)
+async def get_report(
+    saved_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    from fastapi.responses import HTMLResponse
+    row = db.query(SavedContract).filter_by(id=saved_id, user_id=current_user.id).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="저장된 계약서를 찾을 수 없습니다.")
+
+    r = row.result_json
+    clauses = r.get("clauses", [])
+    grade = r.get("grade", "안전")
+    score = r.get("score", 0)
+    contract_type = r.get("contract_type", "기타 계약서")
+    summary = r.get("summary", "")
+    saved_at = row.saved_at.strftime("%Y-%m-%d %H:%M")
+
+    grade_color = {"위험": "#ef4444", "주의": "#f59e0b", "안전": "#22c55e"}.get(grade, "#64748b")
+    risk_map = {"danger": ("#fef2f2", "#ef4444", "위험"), "warn": ("#fffbeb", "#f59e0b", "주의"), "safe": ("#f0fdf4", "#22c55e", "안전")}
+
+    clauses_html = ""
+    for c in clauses:
+        bg, col, label = risk_map.get(c.get("risk", "safe"), ("#f8fafc", "#64748b", "안전"))
+        clauses_html += f"""
+<div class="clause" style="border-left:4px solid {col};background:{bg}">
+  <div class="clause-head">
+    <span class="clause-article">{c.get('article','')}</span>
+    <span class="clause-title">{c.get('title','')}</span>
+    <span class="risk-badge" style="background:{col};color:#fff">{label}</span>
+  </div>
+  <p class="clause-desc">{c.get('description','')}</p>
+  {"<div class='clause-section'><strong>원문:</strong><p>" + c.get('original','') + "</p></div>" if c.get('original') else ""}
+  {"<div class='clause-section'><strong>쉬운 설명:</strong><p>" + c.get('simple_explanation','') + "</p></div>" if c.get('simple_explanation') else ""}
+  {"<div class='clause-section suggest'><strong>수정 제안:</strong><p>" + c.get('suggestion','') + "</p></div>" if c.get('suggestion') else ""}
+  {"<div class='clause-section'><strong>관련 법령:</strong><p>" + c.get('law_ref','') + "</p></div>" if c.get('law_ref') else ""}
+</div>"""
+
+    html = f"""<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>CHECKMATE 분석 리포트 — {row.filename}</title>
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif;
+    background: #f8fafc; color: #1e293b; padding: 32px 16px; }}
+  .card {{ max-width: 780px; margin: 0 auto; background: #fff; border-radius: 16px;
+    padding: 40px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }}
+  .logo {{ color: #1e3a8a; font-size: 13px; font-weight: 800; letter-spacing: 2px; margin-bottom: 24px; }}
+  h1 {{ font-size: 20px; color: #1e293b; margin-bottom: 4px; }}
+  .meta {{ font-size: 12px; color: #94a3b8; margin-bottom: 28px; }}
+  .score-row {{ display: flex; gap: 20px; margin-bottom: 28px; flex-wrap: wrap; }}
+  .score-box {{ flex: 1; min-width: 120px; background: #f8fafc; border-radius: 12px; padding: 16px; text-align: center; border: 1px solid #e2e8f0; }}
+  .score-val {{ font-size: 32px; font-weight: 800; }}
+  .score-label {{ font-size: 11px; color: #94a3b8; margin-top: 4px; }}
+  .summary-box {{ background: #eff6ff; border-radius: 12px; padding: 16px 20px; margin-bottom: 28px; font-size: 14px; line-height: 1.7; color: #1e3a8a; border-left: 4px solid #2563eb; }}
+  .section-title {{ font-size: 13px; font-weight: 700; color: #94a3b8; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; }}
+  .clause {{ border-radius: 10px; padding: 16px 18px; margin-bottom: 14px; }}
+  .clause-head {{ display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }}
+  .clause-article {{ font-size: 12px; color: #64748b; font-weight: 600; }}
+  .clause-title {{ font-size: 14px; font-weight: 700; flex: 1; }}
+  .risk-badge {{ font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }}
+  .clause-desc {{ font-size: 13px; color: #475569; margin-bottom: 8px; line-height: 1.6; }}
+  .clause-section {{ margin-top: 8px; font-size: 12px; line-height: 1.7; color: #64748b; }}
+  .clause-section strong {{ color: #475569; }}
+  .clause-section p {{ margin-top: 3px; }}
+  .suggest {{ color: #1e3a8a; }}
+  .footer {{ margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8; text-align: center; }}
+  .print-btn {{ display: block; margin: 0 auto 24px; padding: 12px 32px; background: #1e3a8a; color: #fff;
+    border: none; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 700; }}
+  @media print {{
+    body {{ background: white; padding: 0; }}
+    .card {{ box-shadow: none; border-radius: 0; }}
+    .no-print {{ display: none !important; }}
+  }}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">CHECKMATE — AI 계약서 분석 리포트</div>
+  <h1>{row.filename}</h1>
+  <div class="meta">{contract_type} &nbsp;·&nbsp; 분석 저장일: {saved_at}</div>
+
+  <button class="print-btn no-print" onclick="window.print()">📄 PDF로 저장 (인쇄)</button>
+
+  <div class="score-row">
+    <div class="score-box">
+      <div class="score-val" style="color:{grade_color}">{score}</div>
+      <div class="score-label">위험 점수</div>
+    </div>
+    <div class="score-box">
+      <div class="score-val" style="color:{grade_color}">{grade}</div>
+      <div class="score-label">등급</div>
+    </div>
+    <div class="score-box">
+      <div class="score-val" style="color:#ef4444">{r.get('danger_count',0)}</div>
+      <div class="score-label">위험 조항</div>
+    </div>
+    <div class="score-box">
+      <div class="score-val" style="color:#f59e0b">{r.get('warn_count',0)}</div>
+      <div class="score-label">주의 조항</div>
+    </div>
+    <div class="score-box">
+      <div class="score-val" style="color:#22c55e">{r.get('safe_count',0)}</div>
+      <div class="score-label">안전 조항</div>
+    </div>
+  </div>
+
+  {"<div class='summary-box'>" + summary + "</div>" if summary else ""}
+
+  <div class="section-title">조항별 분석 결과</div>
+  {clauses_html}
+
+  <div class="footer">
+    본 리포트는 CHECKMATE AI 계약서 분석 서비스를 통해 생성되었습니다.<br/>
+    법적 효력은 없으며 참고 목적으로만 사용하세요. · ⓒ 2026 CHECKMATE
+  </div>
+</div>
+</body>
+</html>"""
+    return HTMLResponse(content=html)
 
 
 # ── 목업 분석 결과 (Gemini 미연결 또는 오류 시 반환) ───────────────

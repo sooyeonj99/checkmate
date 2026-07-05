@@ -276,6 +276,9 @@ export default function ResultScreen() {
           />
         ))}
 
+        {/* 계약 전 체크리스트 */}
+        <ChecklistSection contractType={result.contractType} />
+
         {/* 무료 법률 지원 기관 */}
         <AgencySection grade={result.grade} contractType={result.contractType} />
 
@@ -318,6 +321,95 @@ const AGENCIES_MOBILE = [
     tags: ['임대차', '전세', '월세', '주택', '상가', '임대'], always: false,
   },
 ]
+
+const CHECKLIST_ITEMS: Record<string, { id: string; text: string }[]> = {
+  근로: [
+    { id: 'e1', text: '근로계약서를 서면으로 작성했나요?' },
+    { id: 'e2', text: '임금 금액과 지급일이 명시되어 있나요?' },
+    { id: 'e3', text: '근로시간(주 52시간 이내)이 기재되어 있나요?' },
+    { id: 'e4', text: '포괄임금제 조항이 포함되어 있지 않나요?' },
+    { id: 'e5', text: '경업금지 조항의 범위가 합리적인가요?' },
+    { id: 'e6', text: '해고 사유와 절차가 명확하게 규정되어 있나요?' },
+    { id: 'e7', text: '4대보험 가입이 명시되어 있나요?' },
+  ],
+  임대차: [
+    { id: 'l1', text: '등기부등본으로 소유권을 확인했나요?' },
+    { id: 'l2', text: '임대차 기간(시작일·종료일)이 명확한가요?' },
+    { id: 'l3', text: '보증금 반환 조건이 명확하게 규정되어 있나요?' },
+    { id: 'l4', text: '원상복구 범위가 합리적으로 제한되어 있나요?' },
+    { id: 'l5', text: '임대차 신고(확정일자)를 완료했나요?' },
+    { id: 'l6', text: '근저당 등 권리 제한이 없는지 확인했나요?' },
+    { id: 'l7', text: '관리비 항목과 금액이 명시되어 있나요?' },
+  ],
+  프리랜서: [
+    { id: 'f1', text: '업무 범위와 결과물 기준이 명시되어 있나요?' },
+    { id: 'f2', text: '대금 지급 일정과 조건이 명확한가요?' },
+    { id: 'f3', text: '지식재산권 귀속이 합리적으로 규정되어 있나요?' },
+    { id: 'f4', text: '추가 업무 시 별도 보상 조항이 있나요?' },
+    { id: 'f5', text: '납품 후 수정 횟수와 범위가 명시되어 있나요?' },
+    { id: 'f6', text: '일방 해지 시 위약금이 균형 잡혀 있나요?' },
+    { id: 'f7', text: '분쟁 해결 기관이 합리적으로 지정되어 있나요?' },
+  ],
+  기본: [
+    { id: 'g1', text: '계약 당사자 정보가 정확하게 기재되어 있나요?' },
+    { id: 'g2', text: '계약 기간과 효력 발생 조건이 명확한가요?' },
+    { id: 'g3', text: '의무와 권리가 균형 있게 배분되어 있나요?' },
+    { id: 'g4', text: '위약금·손해배상 조항이 과도하지 않나요?' },
+    { id: 'g5', text: '자동 갱신 조항의 해지 기간을 확인했나요?' },
+    { id: 'g6', text: '개인정보 처리 조항이 적법한가요?' },
+    { id: 'g7', text: '모든 조항을 충분히 이해하고 서명하나요?' },
+  ],
+}
+
+function ChecklistSection({ contractType }: { contractType?: string }) {
+  const ct = (contractType ?? '').toLowerCase()
+  const items = ct.includes('근로') ? CHECKLIST_ITEMS.근로
+    : ct.includes('임대') ? CHECKLIST_ITEMS.임대차
+    : ct.includes('프리랜서') || ct.includes('용역') ? CHECKLIST_ITEMS.프리랜서
+    : CHECKLIST_ITEMS.기본
+
+  const [checked, setChecked] = useState<Record<string, boolean>>({})
+  const total = items.length
+  const done = Object.values(checked).filter(Boolean).length
+  const toggle = (id: string) => setChecked(prev => ({ ...prev, [id]: !prev[id] }))
+
+  return (
+    <View style={checkStyles.wrap}>
+      <View style={checkStyles.header}>
+        <Text style={checkStyles.title}>계약 체결 전 체크리스트</Text>
+        <View style={[checkStyles.badge, { backgroundColor: done === total ? 'rgba(34,197,94,0.12)' : 'rgba(245,158,11,0.12)' }]}>
+          <Text style={[checkStyles.badgeText, { color: done === total ? '#16a34a' : '#d97706' }]}>{done}/{total}</Text>
+        </View>
+      </View>
+      {items.map((item) => (
+        <TouchableOpacity key={item.id} onPress={() => toggle(item.id)} style={checkStyles.row}>
+          <View style={[checkStyles.checkbox, checked[item.id] && checkStyles.checkboxChecked]}>
+            {checked[item.id] && <Text style={checkStyles.checkmark}>✓</Text>}
+          </View>
+          <Text style={[checkStyles.itemText, checked[item.id] && checkStyles.itemTextDone]}>{item.text}</Text>
+        </TouchableOpacity>
+      ))}
+      {done === total && (
+        <Text style={checkStyles.allDone}>✅ 모든 항목 확인 완료! 안전하게 계약을 진행하세요.</Text>
+      )}
+    </View>
+  )
+}
+
+const checkStyles = StyleSheet.create({
+  wrap: { marginHorizontal: 16, marginBottom: 24, backgroundColor: colors.bgCard, borderRadius: 14, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, borderBottomWidth: 1, borderBottomColor: colors.border },
+  title: { fontSize: 12, fontWeight: '700', color: colors.textMuted, letterSpacing: 1, textTransform: 'uppercase' },
+  badge: { borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 },
+  badgeText: { fontSize: 12, fontWeight: '700' },
+  row: { flexDirection: 'row', alignItems: 'flex-start', padding: 12, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: colors.border + '66', gap: 10 },
+  checkbox: { width: 20, height: 20, borderRadius: 5, borderWidth: 2, borderColor: colors.border, alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 },
+  checkboxChecked: { backgroundColor: '#16a34a', borderColor: '#16a34a' },
+  checkmark: { color: '#fff', fontSize: 11, fontWeight: '800' },
+  itemText: { flex: 1, fontSize: 13, color: colors.text, lineHeight: 20 },
+  itemTextDone: { color: colors.textMuted, textDecorationLine: 'line-through' },
+  allDone: { fontSize: 12, color: '#16a34a', fontWeight: '700', textAlign: 'center', padding: 12 },
+})
 
 function AgencySection({ grade, contractType }: { grade: string; contractType?: string }) {
   const ct = (contractType ?? '').toLowerCase()

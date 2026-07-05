@@ -21,6 +21,7 @@ from app.db.base import Base
 import app.models.user
 import app.models.signing
 import app.models.user_template
+import app.models.team
 Base.metadata.create_all(bind=engine)
 
 # ALTER TABLE for new columns (safe - ignores if already exists)
@@ -44,6 +45,13 @@ if 'user_template_id' not in existing_signing:
 if 'requestee_phone' not in existing_signing:
     cur.execute('ALTER TABLE signing_records ADD COLUMN requestee_phone VARCHAR(20)')
     print('Added column: signing_records.requestee_phone')
+existing_saved = [row[1] for row in cur.execute('PRAGMA table_info(saved_contracts)').fetchall()]
+if 'expiry_date' not in existing_saved:
+    cur.execute('ALTER TABLE saved_contracts ADD COLUMN expiry_date DATETIME')
+    print('Added column: saved_contracts.expiry_date')
+if 'expiry_notice_days' not in existing_saved:
+    cur.execute('ALTER TABLE saved_contracts ADD COLUMN expiry_notice_days INTEGER DEFAULT 7')
+    print('Added column: saved_contracts.expiry_notice_days')
 conn.commit()
 conn.close()
 print('DB migration OK')

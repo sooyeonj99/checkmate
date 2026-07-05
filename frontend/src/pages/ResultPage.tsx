@@ -26,6 +26,7 @@ interface Clause {
 interface AnalysisResult {
   contractName: string
   contractMeta: string
+  contract_type?: string
   analysisDate: string
   totalClauses: number
   score: number
@@ -547,6 +548,119 @@ function ClauseList({ clauses }: { clauses: Clause[] }) {
   )
 }
 
+/* ── 계약 전 체크리스트 ──────────────────────────────────── */
+
+const CHECKLIST: Record<string, { id: string; text: string }[]> = {
+  근로: [
+    { id: 'e1', text: '근로계약서를 서면으로 작성했나요?' },
+    { id: 'e2', text: '임금 금액과 지급일이 명시되어 있나요?' },
+    { id: 'e3', text: '근로시간(주 52시간 이내)이 기재되어 있나요?' },
+    { id: 'e4', text: '휴일·휴가 규정이 명시되어 있나요?' },
+    { id: 'e5', text: '수습기간과 수습 급여가 명확하게 기재되어 있나요?' },
+    { id: 'e6', text: '포괄임금제 조항이 포함되어 있지 않나요?' },
+    { id: 'e7', text: '경업금지 조항의 범위가 합리적인가요?' },
+    { id: 'e8', text: '해고 사유와 절차가 명확하게 규정되어 있나요?' },
+    { id: 'e9', text: '4대보험 가입이 명시되어 있나요?' },
+    { id: 'e10', text: '퇴직금 규정이 법정 기준 이상인가요?' },
+  ],
+  임대차: [
+    { id: 'l1', text: '임대인의 신원과 소유권이 등기부등본으로 확인되었나요?' },
+    { id: 'l2', text: '임대차 기간(시작일·종료일)이 명확하게 기재되어 있나요?' },
+    { id: 'l3', text: '임대료 및 관리비 금액과 지급 방법이 명시되어 있나요?' },
+    { id: 'l4', text: '보증금 반환 조건과 절차가 명확한가요?' },
+    { id: 'l5', text: '임차인의 원상복구 범위가 합리적으로 제한되어 있나요?' },
+    { id: 'l6', text: '근저당·전세권 등 권리 제한이 없는지 확인했나요?' },
+    { id: 'l7', text: '계약 갱신 거절 사유가 법정 요건과 일치하나요?' },
+    { id: 'l8', text: '수선의무가 임대인에게 적절히 배분되어 있나요?' },
+    { id: 'l9', text: '전대차(재임대) 허용 여부가 명시되어 있나요?' },
+    { id: 'l10', text: '임대차 신고(확정일자)를 완료했나요?' },
+  ],
+  프리랜서: [
+    { id: 'f1', text: '업무 범위와 결과물 기준이 구체적으로 명시되어 있나요?' },
+    { id: 'f2', text: '대금 지급 일정과 조건이 명확하게 기재되어 있나요?' },
+    { id: 'f3', text: '결과물의 지식재산권 귀속이 합리적으로 규정되어 있나요?' },
+    { id: 'f4', text: '추가 업무 요청 시 별도 보상 조항이 있나요?' },
+    { id: 'f5', text: '일방적 계약 해지 시 위약금 조항이 균형 잡혀 있나요?' },
+    { id: 'f6', text: '납품 후 수정 범위와 횟수가 명시되어 있나요?' },
+    { id: 'f7', text: '비밀유지(NDA) 조항의 범위가 과도하지 않나요?' },
+    { id: 'f8', text: '세금계산서·계산서 발행 조건이 명시되어 있나요?' },
+    { id: 'f9', text: '완성물 검수 기준과 기간이 합리적인가요?' },
+    { id: 'f10', text: '분쟁 해결 기관(관할 법원 등)이 합리적으로 지정되어 있나요?' },
+  ],
+  기본: [
+    { id: 'g1', text: '계약 당사자 정보(이름, 연락처)가 정확하게 기재되어 있나요?' },
+    { id: 'g2', text: '계약 기간과 효력 발생 조건이 명확한가요?' },
+    { id: 'g3', text: '의무와 권리가 양측에 균형 있게 배분되어 있나요?' },
+    { id: 'g4', text: '위약금·손해배상 조항이 과도하지 않나요?' },
+    { id: 'g5', text: '자동 갱신·자동 연장 조항이 있다면 해지 기간을 확인했나요?' },
+    { id: 'g6', text: '계약 변경·수정 절차가 명시되어 있나요?' },
+    { id: 'g7', text: '불가항력(천재지변 등) 조항이 포함되어 있나요?' },
+    { id: 'g8', text: '분쟁 발생 시 중재·소송 절차가 명시되어 있나요?' },
+    { id: 'g9', text: '개인정보 처리·보관 조항이 적법한가요?' },
+    { id: 'g10', text: '모든 조항을 충분히 이해한 뒤 서명하나요?' },
+  ],
+}
+
+function ChecklistSection({ contractType }: { contractType?: string }) {
+  const ct = (contractType ?? '').toLowerCase()
+  const items = ct.includes('근로') || ct.includes('employment') ? CHECKLIST.근로
+    : ct.includes('임대') || ct.includes('lease') ? CHECKLIST.임대차
+    : ct.includes('프리랜서') || ct.includes('freelance') || ct.includes('용역') ? CHECKLIST.프리랜서
+    : CHECKLIST.기본
+
+  const [checked, setChecked] = useState<Record<string, boolean>>({})
+  const total = items.length
+  const done = Object.values(checked).filter(Boolean).length
+
+  const toggle = (id: string) => setChecked(prev => ({ ...prev, [id]: !prev[id] }))
+
+  return (
+    <div style={{ marginBottom: 32 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase' }}>
+          계약 체결 전 체크리스트
+        </span>
+        <span style={{
+          fontSize: 12, fontWeight: 700, padding: '2px 10px', borderRadius: 10,
+          background: done === total ? 'rgba(34,197,94,0.12)' : 'rgba(245,158,11,0.12)',
+          color: done === total ? '#16a34a' : '#d97706',
+        }}>
+          {done} / {total} 완료
+        </span>
+      </div>
+      <div style={{ background: 'var(--bg-card)', borderRadius: 14, border: '1px solid var(--border)', overflow: 'hidden' }}>
+        {items.map((item, i) => (
+          <label key={item.id} onClick={() => toggle(item.id)} style={{
+            display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 16px',
+            cursor: 'pointer', borderBottom: i < items.length - 1 ? '1px solid var(--border)' : 'none',
+            background: checked[item.id] ? 'rgba(34,197,94,0.04)' : 'transparent',
+            transition: 'background 0.15s',
+          }}>
+            <div style={{
+              width: 20, height: 20, borderRadius: 6, border: `2px solid ${checked[item.id] ? '#16a34a' : 'var(--border)'}`,
+              background: checked[item.id] ? '#16a34a' : 'transparent',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1,
+              transition: 'all 0.15s',
+            }}>
+              {checked[item.id] && <span style={{ color: '#fff', fontSize: 12, fontWeight: 800 }}>✓</span>}
+            </div>
+            <span style={{
+              fontSize: 13, lineHeight: '1.5',
+              color: checked[item.id] ? 'var(--text-muted)' : 'var(--text)',
+              textDecoration: checked[item.id] ? 'line-through' : 'none',
+            }}>{item.text}</span>
+          </label>
+        ))}
+      </div>
+      {done === total && (
+        <div style={{ textAlign: 'center', marginTop: 10, fontSize: 13, color: '#16a34a', fontWeight: 700 }}>
+          ✅ 모든 항목을 확인했습니다. 안전하게 계약을 진행하세요!
+        </div>
+      )}
+    </div>
+  )
+}
+
 /* ── ExpertCard ────────────────────────────────────── */
 /* ── 대응 기관 데이터 ──────────────────────────────────── */
 const AGENCIES = [
@@ -919,6 +1033,9 @@ export default function ResultPage() {
 
             <div className="section-eyebrow" style={{ marginTop: result.summary ? 0 : 32 }}>위험 조항 상세 분석</div>
             <ClauseList clauses={result.clauses} />
+
+            <div className="section-eyebrow">계약 체결 전 체크리스트</div>
+            <ChecklistSection contractType={result.contract_type ?? result.contractMeta} />
 
             <div className="section-eyebrow">무료 법률 지원 기관</div>
             <ExpertCard grade={result.grade} contractType={result.contractMeta} />

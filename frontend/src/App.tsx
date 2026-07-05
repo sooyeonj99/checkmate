@@ -14,6 +14,7 @@ import VerifyEmailPage from './pages/VerifyEmailPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import SigningPage from './pages/SigningPage'
 import TemplateEditorPage from './pages/TemplateEditorPage'
+import TeamAcceptPage from './pages/TeamAcceptPage'
 import ChatWidget from './components/ChatWidget'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -39,6 +40,7 @@ function AppRoutes() {
         <Route path="/sign/:token" element={<SigningPage />} />
         <Route path="/template-editor" element={<ProtectedRoute><TemplateEditorPage /></ProtectedRoute>} />
         <Route path="/template-editor/:id" element={<ProtectedRoute><TemplateEditorPage /></ProtectedRoute>} />
+        <Route path="/team/accept" element={<TeamAcceptPage />} />
         <Route
           path="/dashboard"
           element={
