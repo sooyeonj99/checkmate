@@ -1,15 +1,21 @@
+import os
 import secrets
+import uuid
+import base64
 from datetime import datetime, timedelta
 from typing import Optional
 
-from fastapi import APIRouter, Depends, BackgroundTasks
+from fastapi import APIRouter, Depends, BackgroundTasks, HTTPException, UploadFile, File, Form
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
 
 from app.api.v1.endpoints.users import get_current_user
+from app.core.config import settings
 from app.db.session import get_db
 from app.models.signing import SigningRecord
 from app.models.user import User
+from app.models.user_template import UserTemplate
 from app.services.email_service import send_signing_request_email
 from app.services.push_service import send_push_signing_request
 
@@ -97,15 +103,13 @@ DEFAULT_TEMPLATES = [
     <div class="sig-label">사용자 (갑)</div>
     <p>사업장명 : {{company}}</p>
     <p>대표자 : {{employer}}</p>
-    <div class="sig-line"></div>
-    <p style="font-size:12px;color:#94a3b8;text-align:center">전자서명</p>
+    <div class="sig-line" style="display:flex;align-items:center;justify-content:center">{{SIG_REQUESTER}}</div>
   </div>
   <div class="sig-box">
     <div class="sig-label">근로자 (을)</div>
     <p>성명 : {{worker}}</p>
     <br/>
-    <div class="sig-line"></div>
-    <p style="font-size:12px;color:#94a3b8;text-align:center">전자서명</p>
+    <div class="sig-line" style="display:flex;align-items:center;justify-content:center">{{SIG_REQUESTEE}}</div>
   </div>
 </div>
 </body></html>"""
@@ -189,15 +193,13 @@ DEFAULT_TEMPLATES = [
     <div class="sig-label">임대인 (갑)</div>
     <p>성명 : {{landlord}}</p>
     <br/>
-    <div class="sig-line"></div>
-    <p style="font-size:12px;color:#94a3b8;text-align:center">전자서명</p>
+    <div class="sig-line" style="display:flex;align-items:center;justify-content:center">{{SIG_REQUESTER}}</div>
   </div>
   <div class="sig-box">
     <div class="sig-label">임차인 (을)</div>
     <p>성명 : {{tenant}}</p>
     <br/>
-    <div class="sig-line"></div>
-    <p style="font-size:12px;color:#94a3b8;text-align:center">전자서명</p>
+    <div class="sig-line" style="display:flex;align-items:center;justify-content:center">{{SIG_REQUESTEE}}</div>
   </div>
 </div>
 </body></html>"""
@@ -276,15 +278,13 @@ DEFAULT_TEMPLATES = [
     <div class="sig-label">위탁자 (갑)</div>
     <p>상호 : {{client}}</p>
     <p>대표자 : {{client_rep}}</p>
-    <div class="sig-line"></div>
-    <p style="font-size:12px;color:#94a3b8;text-align:center">전자서명</p>
+    <div class="sig-line" style="display:flex;align-items:center;justify-content:center">{{SIG_REQUESTER}}</div>
   </div>
   <div class="sig-box">
     <div class="sig-label">수탁자 (을)</div>
     <p>성명 : {{contractor}}</p>
     <br/>
-    <div class="sig-line"></div>
-    <p style="font-size:12px;color:#94a3b8;text-align:center">전자서명</p>
+    <div class="sig-line" style="display:flex;align-items:center;justify-content:center">{{SIG_REQUESTEE}}</div>
   </div>
 </div>
 </body></html>"""
@@ -401,5 +401,228 @@ def send_template_contract(
             body.contract_name,
             token,
         )
+
+    return {"success": True, "token": token, "expires_at": expires.isoformat()}
+
+
+# ── 사용자 정의 템플릿 ────────────────────────────────────────────────────
+
+TEMPLATE_UPLOAD_DIR = os.path.join(settings.UPLOAD_DIR, "user_templates")
+ALLOWED_EXTS = {".jpg", ".jpeg", ".png", ".pdf"}
+MAX_TEMPLATE_SIZE = 10 * 1024 * 1024  # 10 MB
+
+
+class UserTemplateOut(BaseModel):
+    id: int
+    name: str
+    content_type: str
+    file_ext: Optional[str]
+    sig1_x: float
+    sig1_y: float
+    sig1_w: float
+    sig1_h: float
+    sig2_x: Optional[float]
+    sig2_y: Optional[float]
+    sig2_w: Optional[float]
+    sig2_h: Optional[float]
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+@router.get("/user", response_model=list[UserTemplateOut])
+def list_user_templates(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return db.query(UserTemplate).filter(UserTemplate.owner_id == current_user.id).order_by(UserTemplate.created_at.desc()).all()
+
+
+@router.post("/user", response_model=UserTemplateOut)
+async def create_user_template(
+    name: str = Form(...),
+    sig1_x: float = Form(5.0),
+    sig1_y: float = Form(82.0),
+    sig1_w: float = Form(40.0),
+    sig1_h: float = Form(10.0),
+    sig2_x: Optional[float] = Form(None),
+    sig2_y: Optional[float] = Form(None),
+    sig2_w: Optional[float] = Form(None),
+    sig2_h: Optional[float] = Form(None),
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if ext not in ALLOWED_EXTS:
+        raise HTTPException(400, f"지원하지 않는 파일 형식: {ext}")
+
+    content = await file.read()
+    if len(content) > MAX_TEMPLATE_SIZE:
+        raise HTTPException(413, "파일이 너무 큽니다. 최대 10MB")
+
+    tpl_id = str(uuid.uuid4())
+    tpl_dir = os.path.join(TEMPLATE_UPLOAD_DIR, tpl_id)
+    os.makedirs(tpl_dir, exist_ok=True)
+    file_path = os.path.join(tpl_dir, f"contract{ext}")
+    with open(file_path, "wb") as f:
+        f.write(content)
+
+    record = UserTemplate(
+        owner_id=current_user.id,
+        name=name,
+        content_type="image" if ext in {".jpg", ".jpeg", ".png"} else "pdf",
+        file_path=file_path,
+        file_ext=ext,
+        sig1_x=sig1_x,
+        sig1_y=sig1_y,
+        sig1_w=sig1_w,
+        sig1_h=sig1_h,
+        sig2_x=sig2_x,
+        sig2_y=sig2_y,
+        sig2_w=sig2_w,
+        sig2_h=sig2_h,
+    )
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+    return record
+
+
+@router.get("/user/{tpl_id}/file")
+def get_user_template_file(
+    tpl_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    tpl = db.query(UserTemplate).filter(UserTemplate.id == tpl_id).first()
+    if not tpl:
+        raise HTTPException(404, "템플릿을 찾을 수 없습니다.")
+    if tpl.owner_id != current_user.id:
+        raise HTTPException(403, "접근 권한이 없습니다.")
+    if not tpl.file_path or not os.path.exists(tpl.file_path):
+        raise HTTPException(404, "파일을 찾을 수 없습니다.")
+
+    with open(tpl.file_path, "rb") as f:
+        data = f.read()
+    b64 = base64.b64encode(data).decode()
+    mime = "application/pdf" if tpl.file_ext == ".pdf" else f"image/{tpl.file_ext.lstrip('.')}"
+    return {"data_url": f"data:{mime};base64,{b64}", "ext": tpl.file_ext}
+
+
+@router.put("/user/{tpl_id}", response_model=UserTemplateOut)
+def update_user_template_position(
+    tpl_id: int,
+    sig1_x: float = Form(...),
+    sig1_y: float = Form(...),
+    sig1_w: float = Form(...),
+    sig1_h: float = Form(...),
+    sig2_x: Optional[float] = Form(None),
+    sig2_y: Optional[float] = Form(None),
+    sig2_w: Optional[float] = Form(None),
+    sig2_h: Optional[float] = Form(None),
+    name: Optional[str] = Form(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    tpl = db.query(UserTemplate).filter(UserTemplate.id == tpl_id).first()
+    if not tpl:
+        raise HTTPException(404, "템플릿을 찾을 수 없습니다.")
+    if tpl.owner_id != current_user.id:
+        raise HTTPException(403, "접근 권한이 없습니다.")
+    if name:
+        tpl.name = name
+    tpl.sig1_x = sig1_x
+    tpl.sig1_y = sig1_y
+    tpl.sig1_w = sig1_w
+    tpl.sig1_h = sig1_h
+    tpl.sig2_x = sig2_x
+    tpl.sig2_y = sig2_y
+    tpl.sig2_w = sig2_w
+    tpl.sig2_h = sig2_h
+    db.commit()
+    db.refresh(tpl)
+    return tpl
+
+
+@router.delete("/user/{tpl_id}")
+def delete_user_template(
+    tpl_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    tpl = db.query(UserTemplate).filter(UserTemplate.id == tpl_id).first()
+    if not tpl:
+        raise HTTPException(404, "템플릿을 찾을 수 없습니다.")
+    if tpl.owner_id != current_user.id:
+        raise HTTPException(403, "접근 권한이 없습니다.")
+    if tpl.file_path and os.path.exists(tpl.file_path):
+        import shutil
+        shutil.rmtree(os.path.dirname(tpl.file_path), ignore_errors=True)
+    db.delete(tpl)
+    db.commit()
+    return {"success": True}
+
+
+@router.post("/user/{tpl_id}/send")
+def send_user_template_contract(
+    tpl_id: int,
+    requestee_email: str = Form(...),
+    message: Optional[str] = Form(None),
+    my_signature: Optional[str] = Form(None),
+    background_tasks: BackgroundTasks = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    tpl = db.query(UserTemplate).filter(UserTemplate.id == tpl_id).first()
+    if not tpl:
+        raise HTTPException(404, "템플릿을 찾을 수 없습니다.")
+    if tpl.owner_id != current_user.id:
+        raise HTTPException(403, "접근 권한이 없습니다.")
+
+    if my_signature and len(my_signature.encode()) > 300_000:
+        raise HTTPException(413, "서명 이미지가 너무 큽니다.")
+
+    token = secrets.token_urlsafe(32)
+    expires = datetime.now() + timedelta(days=14)
+
+    record = SigningRecord(
+        type="request",
+        contract_id=f"utpl_{tpl_id}_{int(datetime.now().timestamp())}",
+        contract_name=tpl.name,
+        requester_id=current_user.id,
+        requester_email=current_user.email,
+        requester_name=current_user.username,
+        requestee_email=requestee_email,
+        message=message,
+        token=token,
+        status="pending",
+        requester_signature=my_signature,
+        requester_signed_at=datetime.now() if my_signature else None,
+        expires_at=expires,
+        user_template_id=tpl_id,
+    )
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+
+    if background_tasks:
+        background_tasks.add_task(
+            send_signing_request_email,
+            requestee_email,
+            current_user.username,
+            tpl.name,
+            token,
+            message,
+        )
+        requestee_user = db.query(User).filter(User.email == requestee_email).first()
+        if requestee_user and requestee_user.push_token:
+            background_tasks.add_task(
+                send_push_signing_request,
+                requestee_user.push_token,
+                current_user.username,
+                tpl.name,
+                token,
+            )
 
     return {"success": True, "token": token, "expires_at": expires.isoformat()}

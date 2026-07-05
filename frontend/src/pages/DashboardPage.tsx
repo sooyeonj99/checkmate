@@ -155,6 +155,25 @@ export default function DashboardPage() {
   /* 계약서 템플릿 */
   const [showTemplateModal, setShowTemplateModal] = useState(false)
 
+  /* 커스텀 템플릿 */
+  interface UserTemplateItem { id: number; name: string; content_type: string; file_ext: string | null; created_at: string }
+  const [userTemplates, setUserTemplates] = useState<UserTemplateItem[]>([])
+  const fetchUserTemplates = useCallback(async () => {
+    const token = localStorage.getItem('cm_token')
+    if (!token) return
+    try {
+      const res = await fetch('/api/v1/templates/user', { headers: { Authorization: `Bearer ${token}` } })
+      if (res.ok) setUserTemplates(await res.json())
+    } catch {}
+  }, [])
+
+  const deleteUserTemplate = async (id: number) => {
+    if (!confirm('이 템플릿을 삭제할까요?')) return
+    const token = localStorage.getItem('cm_token')
+    await fetch(`/api/v1/templates/user/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } })
+    fetchUserTemplates()
+  }
+
   /* 구독 관리 */
   const [subs, setSubs] = useState<SubItem[]>([])
   const [showSubModal, setShowSubModal] = useState(false)
@@ -240,7 +259,7 @@ export default function DashboardPage() {
     if (recvRes.ok) setReceivedRecords(await recvRes.json())
   }, [])
 
-  useEffect(() => { fetchSaved(); fetchSubs(); fetchSigningRecords() }, [fetchSaved, fetchSubs, fetchSigningRecords])
+  useEffect(() => { fetchSaved(); fetchSubs(); fetchSigningRecords(); fetchUserTemplates() }, [fetchSaved, fetchSubs, fetchSigningRecords, fetchUserTemplates])
 
   const handleDeleteSaved = useCallback(async (id: number) => {
     if (!confirm('이 분석 결과를 삭제할까요?')) return
@@ -561,27 +580,51 @@ export default function DashboardPage() {
                           {statusText}
                         </span>
                         {r.status === 'signed' && (
-                          <button
-                            onClick={async () => {
-                              const token = localStorage.getItem('cm_token')
-                              const res = await fetch(`/api/v1/signing/${r.id}/certificate`, {
-                                headers: { Authorization: `Bearer ${token}` },
-                              })
-                              if (res.ok) {
-                                const html = await res.text()
-                                const w = window.open('', '_blank')
-                                w?.document.write(html)
-                                w?.document.close()
-                              }
-                            }}
-                            style={{
-                              padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border)',
-                              background: 'var(--bg)', color: 'var(--text)', fontSize: 12,
-                              cursor: 'pointer', whiteSpace: 'nowrap', fontWeight: 600,
-                            }}
-                          >
-                            인증서 보기
-                          </button>
+                          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                            <button
+                              onClick={async () => {
+                                const token = localStorage.getItem('cm_token')
+                                const res = await fetch(`/api/v1/signing/${r.id}/signed-doc`, {
+                                  headers: { Authorization: `Bearer ${token}` },
+                                })
+                                if (res.ok) {
+                                  const html = await res.text()
+                                  const w = window.open('', '_blank')
+                                  w?.document.write(html)
+                                  w?.document.close()
+                                }
+                              }}
+                              style={{
+                                padding: '6px 12px', borderRadius: 8,
+                                border: '1px solid rgba(37,99,235,0.35)',
+                                background: 'rgba(37,99,235,0.08)', color: 'var(--accent)',
+                                fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap', fontWeight: 700,
+                              }}
+                            >
+                              📄 서명된 문서
+                            </button>
+                            <button
+                              onClick={async () => {
+                                const token = localStorage.getItem('cm_token')
+                                const res = await fetch(`/api/v1/signing/${r.id}/certificate`, {
+                                  headers: { Authorization: `Bearer ${token}` },
+                                })
+                                if (res.ok) {
+                                  const html = await res.text()
+                                  const w = window.open('', '_blank')
+                                  w?.document.write(html)
+                                  w?.document.close()
+                                }
+                              }}
+                              style={{
+                                padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border)',
+                                background: 'var(--bg)', color: 'var(--text-muted)', fontSize: 12,
+                                cursor: 'pointer', whiteSpace: 'nowrap', fontWeight: 600,
+                              }}
+                            >
+                              인증서
+                            </button>
+                          </div>
                         )}
                       </div>
                     )
@@ -636,6 +679,86 @@ export default function DashboardPage() {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* ── 기업 전용: 내 커스텀 템플릿 ── */}
+          {user?.user_type === 'enterprise' && (
+            <div className="saved-contracts-section" style={{ marginTop: 28 }}>
+              <div className="saved-contracts-header">
+                <div>
+                  <h2 className="dash-title" style={{ fontSize: 18, marginBottom: 4 }}>📁 내 계약서 템플릿</h2>
+                  <p className="dash-subtitle" style={{ fontSize: 13 }}>
+                    계약서 파일을 업로드하고 서명 받을 위치를 지정해 저장하면, 다음에 바로 재사용할 수 있습니다
+                  </p>
+                </div>
+                <button
+                  className="btn-primary"
+                  style={{ fontSize: 13, padding: '8px 18px' }}
+                  onClick={() => navigate('/template-editor')}
+                >
+                  + 새 템플릿 만들기
+                </button>
+              </div>
+              {userTemplates.length === 0 ? (
+                <div className="saved-empty">
+                  <span style={{ fontSize: 32 }}>📂</span>
+                  <p>저장된 템플릿이 없습니다.</p>
+                  <p style={{ fontSize: 13 }}>계약서 파일을 업로드하고 서명 위치를 지정해 템플릿으로 저장하세요.</p>
+                  <button
+                    onClick={() => navigate('/template-editor')}
+                    style={{
+                      marginTop: 12, padding: '10px 24px', borderRadius: 10,
+                      background: 'var(--accent)', color: '#fff', border: 'none',
+                      fontWeight: 700, fontSize: 14, cursor: 'pointer',
+                    }}
+                  >
+                    첫 번째 템플릿 만들기
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 14 }}>
+                  {userTemplates.map(t => (
+                    <div key={t.id} style={{
+                      background: 'var(--bg)', border: '1px solid var(--border)',
+                      borderRadius: 14, padding: '18px 16px',
+                      display: 'flex', flexDirection: 'column', gap: 10,
+                    }}>
+                      <div style={{ fontSize: 28 }}>
+                        {t.content_type === 'image' ? '🖼️' : t.file_ext === '.pdf' ? '📄' : '📝'}
+                      </div>
+                      <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {t.name}
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                        {new Date(t.created_at).toLocaleDateString('ko-KR')} 저장
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
+                        <button
+                          onClick={() => navigate(`/template-editor/${t.id}`)}
+                          style={{
+                            flex: 1, padding: '7px', borderRadius: 8,
+                            border: '1.5px solid var(--accent)', background: 'rgba(37,99,235,0.08)',
+                            color: 'var(--accent)', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                          }}
+                        >
+                          위치 수정
+                        </button>
+                        <button
+                          onClick={() => deleteUserTemplate(t.id)}
+                          style={{
+                            padding: '7px 10px', borderRadius: 8,
+                            border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.06)',
+                            color: '#dc2626', fontSize: 12, cursor: 'pointer',
+                          }}
+                        >
+                          삭제
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

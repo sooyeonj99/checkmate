@@ -1,3 +1,5 @@
+import base64
+import os
 import secrets
 from datetime import datetime, timedelta
 from typing import Optional
@@ -366,6 +368,98 @@ def submit_signature(
         )
 
     return {"success": True, "signed_at": record.requestee_signed_at}
+
+
+@router.get("/{record_id}/signed-doc", response_class=HTMLResponse)
+def get_signed_document(
+    record_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """서명 완료된 계약서 문서 반환 — 서명 이미지가 계약서 내에 삽입됨."""
+    record = db.query(SigningRecord).filter(SigningRecord.id == record_id).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="서명 기록을 찾을 수 없습니다.")
+    if record.requester_id != current_user.id and record.requestee_email != current_user.email:
+        raise HTTPException(status_code=403, detail="접근 권한이 없습니다.")
+    if record.status != "signed":
+        raise HTTPException(status_code=400, detail="서명이 완료되지 않은 문서입니다.")
+
+    req_sig_html = (
+        f'<img src="{record.requester_signature}" style="max-height:80px;max-width:200px;display:block"/>'
+        if record.requester_signature else '<span style="color:#94a3b8;font-size:12px">서명 없음</span>'
+    )
+    rec_sig_html = (
+        f'<img src="{record.requestee_signature}" style="max-height:80px;max-width:200px;display:block"/>'
+        if record.requestee_signature else '<span style="color:#94a3b8;font-size:12px">서명 없음</span>'
+    )
+
+    footer_html = f"""
+<div style="margin-top:48px;padding:24px 40px;border-top:2px solid #e2e8f0;background:#f8fafc;text-align:center">
+  <p style="color:#16a34a;font-weight:700;font-size:15px;margin:0 0 6px">✓ 전자서명 완료 문서</p>
+  <p style="color:#64748b;font-size:12px;margin:0 0 4px">
+    요청자: {record.requester_name} ({record.requester_email})
+    {"&nbsp;·&nbsp; 서명자: " + (record.requestee_name or "") + " (" + (record.requestee_email or "") + ")" if record.requestee_name else ""}
+  </p>
+  <p style="color:#94a3b8;font-size:11px;margin:0 0 14px">
+    완료일: {record.requestee_signed_at.strftime('%Y-%m-%d %H:%M') if record.requestee_signed_at else '-'}
+    &nbsp;·&nbsp; 문서 ID: {record.token[:20]}...
+  </p>
+  <button onclick="window.print()" style="padding:10px 28px;background:#1e3a8a;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600">
+    PDF로 저장 (인쇄)
+  </button>
+</div>
+"""
+
+    if record.contract_html:
+        html = record.contract_html
+        html = html.replace("{{SIG_REQUESTER}}", req_sig_html)
+        html = html.replace("{{SIG_REQUESTEE}}", rec_sig_html)
+        html = html.replace("</body>", footer_html + "</body>")
+        return HTMLResponse(content=html)
+
+    # 사용자 업로드 이미지 템플릿
+    if record.user_template_id:
+        from app.models.user_template import UserTemplate
+        tpl = db.query(UserTemplate).filter(UserTemplate.id == record.user_template_id).first()
+        if tpl and tpl.file_path and os.path.exists(tpl.file_path):
+            with open(tpl.file_path, "rb") as f:
+                file_data = f.read()
+            ext = (tpl.file_ext or ".png").lstrip(".")
+            mime = f"image/{ext}" if ext != "pdf" else "application/pdf"
+            file_b64 = base64.b64encode(file_data).decode()
+            data_url = f"data:{mime};base64,{file_b64}"
+
+            sig1_html = f'<img src="{record.requestee_signature}" style="width:100%;height:100%;object-fit:contain"/>' if record.requestee_signature else ''
+            sig2_html = f'<img src="{record.requester_signature}" style="width:100%;height:100%;object-fit:contain"/>' if record.requester_signature else ''
+
+            html = f"""<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8"/>
+<title>서명된 계약서 — {record.contract_name}</title>
+<style>
+  body{{margin:0;padding:0;background:#f8fafc;font-family:sans-serif}}
+  .container{{max-width:800px;margin:0 auto;padding:20px}}
+  .doc-wrap{{position:relative;display:inline-block;width:100%}}
+  .doc-wrap img.contract{{width:100%;display:block}}
+  .sig-overlay{{position:absolute;pointer-events:none}}
+  @media print{{body{{background:white}}.no-print{{display:none}}}}
+</style></head>
+<body>
+<div class="container">
+  <div class="doc-wrap">
+    <img class="contract" src="{data_url}" alt="계약서"/>
+    <div class="sig-overlay" style="left:{tpl.sig1_x}%;top:{tpl.sig1_y}%;width:{tpl.sig1_w}%;height:{tpl.sig1_h}%">
+      {sig1_html}
+    </div>
+    {f'<div class="sig-overlay" style="left:{tpl.sig2_x}%;top:{tpl.sig2_y}%;width:{tpl.sig2_w}%;height:{tpl.sig2_h}%">{sig2_html}</div>' if tpl.sig2_x is not None else ''}
+  </div>
+  {footer_html}
+</div>
+</body></html>"""
+            return HTMLResponse(content=html)
+
+    # 서명만 있는 인증서 fallback
+    return HTMLResponse(content=_build_certificate_html(record))
 
 
 @router.get("/{record_id}/certificate", response_class=HTMLResponse)

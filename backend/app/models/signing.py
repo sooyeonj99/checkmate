@@ -33,6 +33,7 @@ class SigningRecord(Base):
     requestee_signed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     contract_html: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # 템플릿 계약서 HTML
+    user_template_id: Mapped[Optional[int]] = mapped_column(nullable=True)  # 사용자 업로드 템플릿 참조
 
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)

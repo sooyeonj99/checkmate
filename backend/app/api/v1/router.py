@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from app.api.v1.endpoints import auth, users, contracts, chat, subscriptions, business, signing, templates
+import app.models.user_template  # noqa: F401 — DB 테이블 생성용
 
 api_router = APIRouter(prefix="/api/v1")
 
