@@ -237,14 +237,13 @@ function StartButton({ hasFile, loading, onClick }: { hasFile: boolean; loading:
 interface ContractTypeModalProps {
   contractType: ContractType | null
   onSelect: (t: ContractType) => void
-  onMasking: () => void
-  onDirectAnalyze: () => void
+  onStart: () => void
   onClose: () => void
   loading: boolean
 }
 
 function ContractTypeModal({
-  contractType, onSelect, onMasking, onDirectAnalyze, onClose, loading,
+  contractType, onSelect, onStart, onClose, loading,
 }: ContractTypeModalProps) {
   return (
     <div className="ctype-modal-overlay" onClick={() => { if (!loading) onClose() }}>
@@ -253,7 +252,7 @@ function ContractTypeModal({
         <div className="ctype-modal-header">
           <div>
             <h2 className="ctype-modal-title">계약서 유형 선택</h2>
-            <p className="ctype-modal-sub">분석할 계약서의 유형을 선택하고 분석 방식을 고르세요</p>
+            <p className="ctype-modal-sub">분석할 계약서의 유형을 선택해주세요</p>
           </div>
           <button className="ctype-modal-close" onClick={onClose} disabled={loading}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -281,34 +280,24 @@ function ContractTypeModal({
           ))}
         </div>
 
-        <div className="ctype-modal-divider">
-          <span>분석 방식 선택</span>
-        </div>
-
-        <div className="ctype-modal-actions">
-          <button
-            className={`ctype-action-btn ctype-btn-masking${!contractType || loading ? ' disabled' : ''}`}
-            disabled={!contractType || loading}
-            onClick={onMasking}
-          >
-            <div className="ctype-action-icon">✏️</div>
-            <div className="ctype-action-text">
-              <span className="ctype-action-title">글씨 추출하기</span>
-              <span className="ctype-action-desc">OCR로 텍스트 추출 후 마스킹 선택</span>
-            </div>
-          </button>
-          <button
-            className={`ctype-action-btn ctype-btn-analyze${!contractType || loading ? ' disabled' : ''}`}
-            disabled={!contractType || loading}
-            onClick={onDirectAnalyze}
-          >
-            <div className="ctype-action-icon">🔍</div>
-            <div className="ctype-action-text">
-              <span className="ctype-action-title">업로드 문서 분석하기</span>
-              <span className="ctype-action-desc">바로 AI 위험 조항 분석 시작</span>
-            </div>
-          </button>
-        </div>
+        <button
+          className={`ctype-action-btn ctype-btn-analyze${!contractType || loading ? ' disabled' : ''}`}
+          style={{ width: '100%', justifyContent: 'center', gap: 12, padding: '16px 24px' }}
+          disabled={!contractType || loading}
+          onClick={onStart}
+        >
+          {loading ? (
+            <><div className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }} /> 업로드 중...</>
+          ) : (
+            <>
+              <div className="ctype-action-icon">✏️</div>
+              <div className="ctype-action-text">
+                <span className="ctype-action-title">글씨 추출 후 분석 시작</span>
+                <span className="ctype-action-desc">업로드 → OCR 텍스트 추출 → 마스킹 → AI 분석</span>
+              </div>
+            </>
+          )}
+        </button>
 
         {!contractType && (
           <p className="ctype-modal-helper">먼저 계약서 유형을 선택해주세요</p>
@@ -447,8 +436,7 @@ export default function UploadPage() {
         <ContractTypeModal
           contractType={contractType}
           onSelect={setContractType}
-          onMasking={handleMasking}
-          onDirectAnalyze={handleDirectAnalyze}
+          onStart={handleMasking}
           onClose={() => { if (!analyzing) setShowTypeModal(false) }}
           loading={analyzing}
         />
