@@ -7,6 +7,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
 import { colors } from '../theme/colors'
+import SigningRequestModal from '../components/SigningRequestModal'
 
 interface SavedContract {
   id: number
@@ -43,7 +44,8 @@ export default function DashboardScreen() {
   const [refreshing, setRefreshing] = useState(false)
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const [receivedRecords, setReceivedRecords] = useState<SigningRecord[]>([])
-  const [signingReqEmail, setSigningReqEmail] = useState('')
+  const [signingModalVisible, setSigningModalVisible] = useState(false)
+  const [signingTarget, setSigningTarget] = useState<SavedContract | null>(null)
 
   const empContracts = saved.filter(c => c.contract_type === '근로계약서')
   const leaseContracts = saved.filter(c => c.contract_type === '임대차계약서')
@@ -118,27 +120,8 @@ export default function DashboardScreen() {
   }
 
   const handleSigningRequest = (item: SavedContract) => {
-    Alert.prompt(
-      '서명 요청 보내기',
-      `"${item.filename}"\n\n상대방 이메일을 입력하세요:`,
-      async (email) => {
-        if (!email) return
-        try {
-          await api.post('/signing/request', {
-            contract_id: String(item.id),
-            contract_name: item.filename,
-            requestee_email: email,
-          })
-          Alert.alert('완료', `${email}으로 서명 요청 메일을 발송했습니다.`)
-          fetchReceivedRequests()
-        } catch (e: any) {
-          Alert.alert('오류', e?.response?.data?.detail ?? '서명 요청 중 오류가 발생했습니다.')
-        }
-      },
-      'plain-text',
-      '',
-      'email-address'
-    )
+    setSigningTarget(item)
+    setSigningModalVisible(true)
   }
 
   const handleLogout = () => {
@@ -147,6 +130,20 @@ export default function DashboardScreen() {
 
   return (
     <View style={styles.root}>
+      {signingTarget && (
+        <SigningRequestModal
+          visible={signingModalVisible}
+          contractId={String(signingTarget.id)}
+          contractName={signingTarget.filename}
+          onClose={() => { setSigningModalVisible(false); setSigningTarget(null) }}
+          onDone={(msg) => {
+            setSigningModalVisible(false)
+            setSigningTarget(null)
+            Alert.alert('발송 완료', msg)
+            fetchReceivedRequests()
+          }}
+        />
+      )}
       {/* Header */}
       <View style={styles.header}>
         <View>
