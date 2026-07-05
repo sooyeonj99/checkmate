@@ -27,16 +27,23 @@ Base.metadata.create_all(bind=engine)
 db_path = '/var/www/checkmate/backend/checkmate.db'
 conn = sqlite3.connect(db_path)
 cur = conn.cursor()
-existing = [row[1] for row in cur.execute('PRAGMA table_info(users)').fetchall()]
-if 'password_reset_token' not in existing:
+existing_users = [row[1] for row in cur.execute('PRAGMA table_info(users)').fetchall()]
+if 'password_reset_token' not in existing_users:
     cur.execute('ALTER TABLE users ADD COLUMN password_reset_token VARCHAR(255)')
-    print('Added column: password_reset_token')
-if 'password_reset_token_expires' not in existing:
+    print('Added column: users.password_reset_token')
+if 'password_reset_token_expires' not in existing_users:
     cur.execute('ALTER TABLE users ADD COLUMN password_reset_token_expires DATETIME')
-    print('Added column: password_reset_token_expires')
-if 'user_template_id' not in existing:
+    print('Added column: users.password_reset_token_expires')
+if 'phone_number' not in existing_users:
+    cur.execute('ALTER TABLE users ADD COLUMN phone_number VARCHAR(20)')
+    print('Added column: users.phone_number')
+existing_signing = [row[1] for row in cur.execute('PRAGMA table_info(signing_records)').fetchall()]
+if 'user_template_id' not in existing_signing:
     cur.execute('ALTER TABLE signing_records ADD COLUMN user_template_id INTEGER')
-    print('Added column: user_template_id')
+    print('Added column: signing_records.user_template_id')
+if 'requestee_phone' not in existing_signing:
+    cur.execute('ALTER TABLE signing_records ADD COLUMN requestee_phone VARCHAR(20)')
+    print('Added column: signing_records.requestee_phone')
 conn.commit()
 conn.close()
 print('DB migration OK')

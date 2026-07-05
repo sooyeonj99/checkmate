@@ -21,6 +21,10 @@ from app.services.push_service import (
     send_push_signing_request,
     send_push_signing_complete,
 )
+from app.services.sms_service import (
+    send_signing_request_sms_new_user,
+    send_signing_request_sms_existing_user,
+)
 
 router = APIRouter(prefix="/signing", tags=["전자서명"])
 
@@ -38,7 +42,8 @@ class SelfSignRequest(BaseModel):
 class SigningRequestCreate(BaseModel):
     contract_id: str
     contract_name: str
-    requestee_email: EmailStr
+    requestee_email: Optional[EmailStr] = None
+    requestee_phone: Optional[str] = None
     message: Optional[str] = None
     my_signature: Optional[str] = None
 
@@ -219,8 +224,13 @@ def create_signing_request(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    if not body.requestee_email and not body.requestee_phone:
+        raise HTTPException(400, "이메일 또는 전화번호 중 하나를 입력해주세요.")
     if body.my_signature:
         _check_sig_size(body.my_signature)
+
+    import re as _re
+    normalized_phone = _re.sub(r"\D", "", body.requestee_phone) if body.requestee_phone else None
 
     token = secrets.token_urlsafe(32)
     expires = datetime.now() + timedelta(days=7)
@@ -232,7 +242,8 @@ def create_signing_request(
         requester_id=current_user.id,
         requester_email=current_user.email,
         requester_name=current_user.username,
-        requestee_email=str(body.requestee_email),
+        requestee_email=str(body.requestee_email) if body.requestee_email else None,
+        requestee_phone=normalized_phone,
         message=body.message,
         token=token,
         status="pending",
@@ -244,26 +255,56 @@ def create_signing_request(
     db.commit()
     db.refresh(record)
 
-    # 이메일 발송
-    background_tasks.add_task(
-        send_signing_request_email,
-        str(body.requestee_email),
-        current_user.username,
-        body.contract_name,
-        token,
-        body.message,
-    )
-
-    # 수신자가 앱 사용자라면 푸시 알림
-    requestee_user = db.query(User).filter(User.email == str(body.requestee_email)).first()
-    if requestee_user and requestee_user.push_token:
+    # ── 이메일 경로 ──────────────────────────────────────
+    if body.requestee_email:
         background_tasks.add_task(
-            send_push_signing_request,
-            requestee_user.push_token,
+            send_signing_request_email,
+            str(body.requestee_email),
             current_user.username,
             body.contract_name,
             token,
+            body.message,
         )
+        requestee_user = db.query(User).filter(User.email == str(body.requestee_email)).first()
+        if requestee_user and requestee_user.push_token:
+            background_tasks.add_task(
+                send_push_signing_request,
+                requestee_user.push_token,
+                current_user.username,
+                body.contract_name,
+                token,
+            )
+
+    # ── 전화번호 경로 ─────────────────────────────────────
+    if normalized_phone:
+        phone_user = db.query(User).filter(User.phone_number == normalized_phone).first()
+        if phone_user:
+            # 가입된 사용자: 푸시 알림 or SMS
+            if phone_user.push_token:
+                background_tasks.add_task(
+                    send_push_signing_request,
+                    phone_user.push_token,
+                    current_user.username,
+                    body.contract_name,
+                    token,
+                )
+            else:
+                background_tasks.add_task(
+                    send_signing_request_sms_existing_user,
+                    normalized_phone,
+                    current_user.username,
+                    body.contract_name,
+                    token,
+                )
+        else:
+            # 미가입 사용자: SMS + 앱 다운로드 링크
+            background_tasks.add_task(
+                send_signing_request_sms_new_user,
+                normalized_phone,
+                current_user.username,
+                body.contract_name,
+                token,
+            )
 
     return _to_out(record)
 
@@ -287,10 +328,14 @@ def received_requests(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """내가 서명 요청을 받은 목록"""
+    """내가 서명 요청을 받은 목록 (이메일 또는 전화번호 기준)"""
+    from sqlalchemy import or_
+    conditions = [SigningRecord.requestee_email == current_user.email]
+    if current_user.phone_number:
+        conditions.append(SigningRecord.requestee_phone == current_user.phone_number)
     records = (
         db.query(SigningRecord)
-        .filter(SigningRecord.requestee_email == current_user.email)
+        .filter(or_(*conditions))
         .order_by(SigningRecord.created_at.desc())
         .all()
     )

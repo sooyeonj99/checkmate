@@ -18,6 +18,7 @@ class User(Base):
     verification_token_expires: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     user_type: Mapped[str] = mapped_column(String(20), default='personal', server_default='personal')
     business_number: Mapped[Optional[str]] = mapped_column(String(12), nullable=True)
+    phone_number: Mapped[Optional[str]] = mapped_column(String(20), nullable=True, index=True)
     push_token: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     password_reset_token: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, index=True)
     password_reset_token_expires: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)

@@ -9,6 +9,7 @@ class UserCreate(BaseModel):
     password: str
     user_type: str = 'personal'
     business_number: Optional[str] = None
+    phone_number: Optional[str] = None
 
 
 class UserResponse(BaseModel):
@@ -19,6 +20,7 @@ class UserResponse(BaseModel):
     is_verified: bool
     user_type: str = 'personal'
     business_number: Optional[str] = None
+    phone_number: Optional[str] = None
     created_at: datetime
 
     model_config = {"from_attributes": True}

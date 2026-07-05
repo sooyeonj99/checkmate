@@ -111,10 +111,18 @@ function SignupForm({ onLogin }: { onLogin: (token: string, user: any) => Promis
   const [userType, setUserType] = useState<'personal' | 'enterprise'>('personal')
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
+  const [phoneNumber, setPhoneNumber] = useState('')
   const [password, setPassword] = useState('')
   const [businessNumber, setBusinessNumber] = useState('')
   const [bizStatus, setBizStatus] = useState<'idle' | 'checking' | 'valid' | 'invalid'>('idle')
   const [loading, setLoading] = useState(false)
+
+  const formatPhone = (v: string) => {
+    const d = v.replace(/\D/g, '').slice(0, 11)
+    if (d.length <= 3) return d
+    if (d.length <= 7) return `${d.slice(0, 3)}-${d.slice(3)}`
+    return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}`
+  }
 
   const formatBizNum = (v: string) => {
     const d = v.replace(/\D/g, '').slice(0, 10)
@@ -156,9 +164,11 @@ function SignupForm({ onLogin }: { onLogin: (token: string, user: any) => Promis
     }
     setLoading(true)
     try {
+      const phoneDigits = phoneNumber.replace(/\D/g, '')
       await api.post('/auth/register', {
         username, email, password, user_type: userType,
         business_number: userType === 'enterprise' ? businessNumber.replace(/\D/g, '') : undefined,
+        phone_number: phoneDigits.length >= 10 ? phoneDigits : undefined,
       })
       const { data } = await api.post('/auth/login', { email, password })
       await onLogin(data.access_token, data.user)
@@ -234,6 +244,16 @@ function SignupForm({ onLogin }: { onLogin: (token: string, user: any) => Promis
         onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
+      />
+      <Text style={styles.label}>전화번호 <Text style={{ fontSize: 12, color: colors.textMuted }}>(선택)</Text></Text>
+      <TextInput
+        style={styles.input}
+        placeholder="010-0000-0000"
+        placeholderTextColor={colors.textMuted}
+        value={phoneNumber}
+        onChangeText={(v) => setPhoneNumber(formatPhone(v))}
+        keyboardType="phone-pad"
+        maxLength={13}
       />
       <Text style={styles.label}>비밀번호</Text>
       <TextInput

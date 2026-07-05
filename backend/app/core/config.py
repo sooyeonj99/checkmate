@@ -37,6 +37,16 @@ class Settings(BaseSettings):
     # ── 국세청 사업자등록정보 API ──────────────────────────
     NTS_API_KEY: Optional[str] = None
 
+    # ── NCP SMS (네이버 클라우드 플랫폼) ─────────────────
+    NCP_ACCESS_KEY: Optional[str] = None
+    NCP_SECRET_KEY: Optional[str] = None
+    NCP_SMS_SERVICE_ID: Optional[str] = None
+    NCP_SMS_SENDER: Optional[str] = None  # 등록된 발신 번호 (예: 01012345678)
+
+    # ── 앱 다운로드 링크 ──────────────────────────────────
+    APP_STORE_URL: str = "https://apps.apple.com/app/checkmate"
+    PLAY_STORE_URL: str = "https://play.google.com/store/apps/details?id=com.checkmate"
+
     class Config:
         env_file = ".env"
 

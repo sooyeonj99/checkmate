@@ -20,6 +20,7 @@ class SigningRecord(Base):
     requester_name: Mapped[str] = mapped_column(String(100), nullable=False)
 
     requestee_email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    requestee_phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True, index=True)
     message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     token: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)

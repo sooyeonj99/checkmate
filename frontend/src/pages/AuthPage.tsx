@@ -210,6 +210,7 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
   const [userType, setUserType] = useState<'personal' | 'enterprise'>('personal')
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
+  const [phoneNumber, setPhoneNumber] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [businessNumber, setBusinessNumber] = useState('')
@@ -223,6 +224,13 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
   const [loading, setLoading] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
   const [sentEmail, setSentEmail] = useState('')
+
+  const formatPhone = (val: string) => {
+    const digits = val.replace(/\D/g, '').slice(0, 11)
+    if (digits.length <= 3) return digits
+    if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`
+    return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`
+  }
 
   const formatBusinessNumber = (val: string) => {
     const digits = val.replace(/\D/g, '').slice(0, 10)
@@ -274,6 +282,8 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
     try {
       const body: Record<string, string> = { email, username, password, user_type: userType }
       if (userType === 'enterprise') body.business_number = businessNumber.replace(/\D/g, '')
+      const phoneDigits = phoneNumber.replace(/\D/g, '')
+      if (phoneDigits.length >= 10) body.phone_number = phoneDigits
       const res = await fetch('/api/v1/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -391,6 +401,12 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
         <label className="auth-label">이메일</label>
         <input type="email" className="auth-input" placeholder="example@email.com"
           value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+      </div>
+
+      <div className="auth-field">
+        <label className="auth-label">전화번호 <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 400 }}>(선택 — 전자서명 수신용)</span></label>
+        <input type="tel" className="auth-input" placeholder="010-0000-0000"
+          value={phoneNumber} onChange={(e) => setPhoneNumber(formatPhone(e.target.value))} maxLength={13} autoComplete="tel" />
       </div>
 
       <div className="auth-field">

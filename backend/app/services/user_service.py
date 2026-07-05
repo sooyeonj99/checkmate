@@ -19,7 +19,9 @@ def get_user_by_verification_token(db: Session, token: str) -> User | None:
 
 
 def create_user(db: Session, user_in: UserCreate) -> User:
+    import re as _re
     token = secrets.token_urlsafe(32)
+    normalized_phone = _re.sub(r"\D", "", user_in.phone_number) if user_in.phone_number else None
     user = User(
         email=user_in.email,
         username=user_in.username,
@@ -29,6 +31,7 @@ def create_user(db: Session, user_in: UserCreate) -> User:
         verification_token_expires=datetime.now() + timedelta(hours=24),
         user_type=user_in.user_type,
         business_number=user_in.business_number,
+        phone_number=normalized_phone,
     )
     db.add(user)
     db.commit()
