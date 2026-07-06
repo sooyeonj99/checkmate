@@ -55,6 +55,14 @@ const SECTIONS: SiteSection[] = [
     ],
   },
   {
+    title: '프랜차이즈',
+    icon: '🏪',
+    links: [
+      { label: '프랜차이즈 관리', path: '/franchise', desc: '본사 전용 가맹점 계약 통합 대시보드', auth: true },
+      { label: '가맹점 참여', path: '/franchise/accept', desc: '초대 링크를 통한 가맹점 연결', auth: true },
+    ],
+  },
+  {
     title: '법률 / 정책',
     icon: '📋',
     links: [
