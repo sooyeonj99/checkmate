@@ -1074,7 +1074,9 @@ MaskingPage: 노란 카드 자동 표시
 | 기능 | 웹 | 앱 | 비고 |
 |------|----|----|------|
 | 계정 정보 확인 | ✅ | ✅ | |
+| 내정보 수정 (닉네임/전화번호/비밀번호) | ✅ | - | 비밀번호 확인 2단계 |
 | 로그아웃 | ✅ | ✅ | |
+| 자동 로그아웃 (30분 비활동) | ✅ | - | 웹 전용, 카운트다운 표시 |
 | 푸시 알림 토큰 등록 | - | ✅ | 앱 실행 시 자동 등록 |
 
 ---
@@ -1231,3 +1233,61 @@ SMS (NCP SENS — 환경변수 설정 시 활성)
 ---
 
 *종합 현황 최종 업데이트: 2026-07-06 (6대 기능 전부 구현 완료, 서버 배포 완료)*
+
+---
+
+## 세션 추가 — 2026-07-06 (자동 로그아웃 + 내정보 페이지)
+
+### [완료] JWT 토큰 30일 연장 + 자동 로그아웃 구현
+
+**사용자 요청:**
+- 웹: 로그인 후 30분 미사용 시 자동 로그아웃 + 상단 카운트다운 타이머
+- 앱: 직접 로그아웃 전까지 로그인 유지
+
+**구현 방식:**
+
+| 구분 | 방식 |
+|------|------|
+| 서버 토큰 유효기간 | 30일 (앱 토큰 유지용) |
+| 웹 자동 로그아웃 | 클라이언트 30분 비활동 타이머 (서버 무관) |
+| 앱 로그아웃 | 사용자가 직접 로그아웃 버튼 누를 때만 |
+
+**변경 파일:**
+- `backend/app/core/config.py`: `ACCESS_TOKEN_EXPIRE_MINUTES = 43200` (30일)
+- `frontend/src/context/AuthContext.tsx`: 30분 비활동 타이머 + `secondsLeft` state (1초 인터벌)
+- `frontend/src/utils/apiFetch.ts` (신규): 401 인터셉터 → 자동 로그아웃 + `/auth?reason=token` 리다이렉트
+- `frontend/src/components/common/Navbar.tsx`: 카운트다운 알약 UI (🔒→🟠→🔴 색상 변화)
+- `frontend/src/pages/AuthPage.tsx`: `reason=idle` / `reason=token` 메시지 분기
+
+**로그아웃 메시지:**
+- `reason=idle` → "30분 동안 활동이 없어 자동으로 로그아웃되었습니다."
+- `reason=token` → "보안을 위해 다시 로그인이 필요합니다."
+
+---
+
+### [완료] 내정보 페이지 구현
+
+**사용자 요청:** "드롭다운 → 내정보 → 비밀번호 입력 → 내정보 수정"
+
+**2단계 플로우:**
+```
+Navbar 드롭다운 → [내 정보]
+    ↓
+Step 1: 현재 비밀번호 입력 (POST /users/verify-password)
+    ↓ 인증 성공 시
+Step 2: 닉네임 / 전화번호 / 새 비밀번호 수정 (PUT /users/profile)
+    ↓
+완료 메시지 "정보가 성공적으로 수정되었습니다." + AuthContext user 즉시 반영
+```
+
+**변경 파일:**
+- `backend/app/api/v1/endpoints/users.py`:
+  - `POST /users/verify-password` — bcrypt 비밀번호 검증
+  - `PUT /users/profile` — 닉네임/전화번호/비밀번호 수정 (닉네임 중복 체크 포함)
+- `frontend/src/pages/ProfilePage.tsx` (신규): 2단계 UI 컴포넌트
+- `frontend/src/App.tsx`: `/profile` 라우트 추가 (로그인 필요)
+- `frontend/src/components/common/Navbar.tsx`: 드롭다운에 "내 정보" 링크 추가
+
+**커밋:** `eb07fe2` | **GitHub Push:** ✅ | **서버 배포:** ✅
+
+*마지막 업데이트: 2026-07-06*
