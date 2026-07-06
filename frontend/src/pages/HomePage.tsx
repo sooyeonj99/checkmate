@@ -624,6 +624,7 @@ function Footer() {
             <li><a href="#bm">요금제</a></li>
             <li><a href="#roadmap">성장 로드맵</a></li>
             <li><a href="#">문의하기</a></li>
+            <li><Link to="/sitemap">사이트맵</Link></li>
           </ul>
 
           <p className="footer-copy">© 2026 Checkmate. All rights reserved.</p>

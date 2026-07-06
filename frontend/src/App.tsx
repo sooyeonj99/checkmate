@@ -16,6 +16,7 @@ import SigningPage from './pages/SigningPage'
 import TemplateEditorPage from './pages/TemplateEditorPage'
 import TeamAcceptPage from './pages/TeamAcceptPage'
 import ProfilePage from './pages/ProfilePage'
+import SitemapPage from './pages/SitemapPage'
 import ChatWidget from './components/ChatWidget'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -43,6 +44,7 @@ function AppRoutes() {
         <Route path="/template-editor/:id" element={<ProtectedRoute><TemplateEditorPage /></ProtectedRoute>} />
         <Route path="/team/accept" element={<TeamAcceptPage />} />
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="/sitemap" element={<SitemapPage />} />
         <Route
           path="/dashboard"
           element={
