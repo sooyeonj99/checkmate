@@ -27,7 +27,7 @@ export default function AuthPage() {
   const [tab, setTab] = useState<Tab>('login')
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const isExpired = searchParams.get('expired') === '1'
+  const reason = searchParams.get('reason') ?? (searchParams.get('expired') === '1' ? 'idle' : null)
   const redirectPath = searchParams.get('redirect') || '/dashboard'
 
   const isSubView = tab === 'find-id' || tab === 'forgot-password'
@@ -56,16 +56,20 @@ export default function AuthPage() {
           </div>
         )}
 
-        {/* 세션 만료 안내 배너 */}
-        {isExpired && (
+        {/* 자동 로그아웃 안내 배너 */}
+        {reason && (
           <div style={{
             display: 'flex', alignItems: 'center', gap: 10,
             padding: '12px 16px', borderRadius: 12, marginBottom: 16,
             background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)',
             color: '#b45309', fontSize: 13, fontWeight: 600,
           }}>
-            <span style={{ fontSize: 18 }}>⏰</span>
-            <span>로그인 세션이 만료되었습니다. 다시 로그인해주세요.</span>
+            <span style={{ fontSize: 18 }}>🔒</span>
+            <span>
+              {reason === 'idle'
+                ? '30분 동안 활동이 없어 자동으로 로그아웃되었습니다.'
+                : '보안을 위해 다시 로그인이 필요합니다.'}
+            </span>
           </div>
         )}
 

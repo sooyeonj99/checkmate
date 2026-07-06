@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, useRef, ReactNode } from 'react'
 import { registerLogout } from '../utils/apiFetch'
 
 export interface AuthUser {
@@ -11,26 +11,18 @@ export interface AuthUser {
 interface AuthContextType {
   user: AuthUser | null
   isLoggedIn: boolean
+  secondsLeft: number   // 자동 로그아웃까지 남은 초 (웹 전용)
   login: (token: string, userData: AuthUser) => void
   logout: () => void
 }
 
 const TOKEN_KEY = 'cm_token'
-const USER_KEY = 'cm_user'
-const EXPIRY_KEY = 'cm_token_expiry'
+const USER_KEY  = 'cm_user'
 
-const TOKEN_LIFETIME_MS = 23 * 60 * 60 * 1000 // 23시간 (서버 24시간보다 1시간 일찍)
+const INACTIVITY_MS = 30 * 60 * 1000   // 30분 미사용 시 자동 로그아웃
 
 function readUser(): AuthUser | null {
   try {
-    // 저장된 만료 시간이 지났으면 즉시 클리어
-    const expiry = localStorage.getItem(EXPIRY_KEY)
-    if (expiry && Date.now() > Number(expiry)) {
-      localStorage.removeItem(TOKEN_KEY)
-      localStorage.removeItem(USER_KEY)
-      localStorage.removeItem(EXPIRY_KEY)
-      return null
-    }
     const raw = localStorage.getItem(USER_KEY)
     return raw ? JSON.parse(raw) : null
   } catch {
@@ -42,46 +34,58 @@ const AuthContext = createContext<AuthContextType | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(readUser)
+  const [secondsLeft, setSecondsLeft] = useState(INACTIVITY_MS / 1000)
+  const lastActivityRef = useRef(Date.now())
 
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY)
     localStorage.removeItem(USER_KEY)
-    localStorage.removeItem(EXPIRY_KEY)
     setUser(null)
+    setSecondsLeft(INACTIVITY_MS / 1000)
   }, [])
 
   const login = useCallback((token: string, userData: AuthUser) => {
     localStorage.setItem(TOKEN_KEY, token)
     localStorage.setItem(USER_KEY, JSON.stringify(userData))
-    localStorage.setItem(EXPIRY_KEY, String(Date.now() + TOKEN_LIFETIME_MS))
+    lastActivityRef.current = Date.now()
+    setSecondsLeft(INACTIVITY_MS / 1000)
     setUser(userData)
   }, [])
 
-  // apiFetch 모듈에 logout 함수 등록 (401 자동 로그아웃용)
+  // apiFetch 모듈에 logout 등록 (401 자동 처리용)
   useEffect(() => {
     registerLogout(logout)
   }, [logout])
 
-  // 앱이 포커스될 때마다 토큰 만료 여부 확인
+  // 활동 감지 → 타이머 리셋
+  const resetActivity = useCallback(() => {
+    lastActivityRef.current = Date.now()
+  }, [])
+
   useEffect(() => {
-    const checkExpiry = () => {
-      const expiry = localStorage.getItem(EXPIRY_KEY)
-      if (expiry && Date.now() > Number(expiry)) {
+    if (!user) return
+    const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click']
+    events.forEach(e => window.addEventListener(e, resetActivity, { passive: true }))
+    return () => events.forEach(e => window.removeEventListener(e, resetActivity))
+  }, [user, resetActivity])
+
+  // 1초마다 남은 시간 계산 + 만료 시 로그아웃
+  useEffect(() => {
+    if (!user) return
+    const tick = setInterval(() => {
+      const remaining = Math.max(0, INACTIVITY_MS - (Date.now() - lastActivityRef.current))
+      const secs = Math.floor(remaining / 1000)
+      setSecondsLeft(secs)
+      if (secs === 0) {
         logout()
-        window.location.href = '/checkmate/auth?expired=1'
+        window.location.href = '/checkmate/auth?reason=idle'
       }
-    }
-    window.addEventListener('focus', checkExpiry)
-    // 1분마다 백그라운드 체크
-    const interval = setInterval(checkExpiry, 60_000)
-    return () => {
-      window.removeEventListener('focus', checkExpiry)
-      clearInterval(interval)
-    }
-  }, [logout])
+    }, 1000)
+    return () => clearInterval(tick)
+  }, [user, logout])
 
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn: user !== null, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoggedIn: user !== null, secondsLeft, login, logout }}>
       {children}
     </AuthContext.Provider>
   )

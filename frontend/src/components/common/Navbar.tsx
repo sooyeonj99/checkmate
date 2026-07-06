@@ -2,11 +2,20 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
+function formatTime(secs: number) {
+  const m = Math.floor(secs / 60)
+  const s = secs % 60
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+}
+
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const navigate = useNavigate()
-  const { user, isLoggedIn, logout } = useAuth()
+  const { user, isLoggedIn, logout, secondsLeft } = useAuth()
+
+  const isDanger  = secondsLeft < 60    // 1분 미만 → 빨간색
+  const isWarning = secondsLeft < 300   // 5분 미만 → 주황색
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
@@ -14,7 +23,6 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // 드롭다운 외부 클릭 시 닫기
   useEffect(() => {
     if (!dropdownOpen) return
     const close = () => setDropdownOpen(false)
@@ -56,6 +64,33 @@ export default function Navbar() {
             <span>대시보드</span>
           </Link>
 
+          {isLoggedIn && (
+            <div
+              title="마지막 활동으로부터 30분 후 자동 로그아웃"
+              style={{
+                display: 'flex', alignItems: 'center', gap: 4,
+                padding: '4px 10px', borderRadius: 20,
+                background: isDanger
+                  ? 'rgba(239,68,68,0.12)'
+                  : isWarning
+                  ? 'rgba(245,158,11,0.1)'
+                  : 'rgba(100,116,139,0.08)',
+                border: `1px solid ${isDanger ? 'rgba(239,68,68,0.3)' : isWarning ? 'rgba(245,158,11,0.25)' : 'rgba(100,116,139,0.15)'}`,
+                cursor: 'default',
+              }}
+            >
+              <span style={{ fontSize: 11 }}>{isDanger ? '🔴' : isWarning ? '🟠' : '🔒'}</span>
+              <span style={{
+                fontSize: 12, fontWeight: 700,
+                fontVariantNumeric: 'tabular-nums',
+                color: isDanger ? '#ef4444' : isWarning ? '#f59e0b' : 'var(--text-muted)',
+                letterSpacing: '0.05em',
+              }}>
+                {formatTime(secondsLeft)}
+              </span>
+            </div>
+          )}
+
           {isLoggedIn ? (
             <div className="navbar-user-wrap" onClick={(e) => { e.stopPropagation(); setDropdownOpen((v) => !v) }}>
               <div className="navbar-user-btn">
@@ -68,6 +103,9 @@ export default function Navbar() {
                   <div className="navbar-dropdown-info">
                     <div className="navbar-dropdown-name">{user!.username}</div>
                     <div className="navbar-dropdown-email">{user!.email}</div>
+                    <div style={{ marginTop: 6, fontSize: 11, color: isDanger ? '#ef4444' : isWarning ? '#f59e0b' : 'var(--text-muted)' }}>
+                      {isDanger ? '⚠ 곧 자동 로그아웃됩니다' : isWarning ? `⏳ ${formatTime(secondsLeft)} 후 자동 로그아웃` : `🔒 ${formatTime(secondsLeft)} 후 자동 로그아웃`}
+                    </div>
                   </div>
                   <div className="navbar-dropdown-divider" />
                   <Link to="/dashboard" className="navbar-dropdown-item" onClick={() => setDropdownOpen(false)}>

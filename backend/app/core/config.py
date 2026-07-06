@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     # ── 보안 ─────────────────────────────────────────────
     SECRET_KEY: str = "dev-secret-key-change-in-production"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24시간
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 43200  # 30일 (앱은 수동 로그아웃 전까지 유지, 웹은 30분 미사용 시 프론트에서 자동 로그아웃)
 
     # ── CORS (프론트엔드 연결) ────────────────────────────
     CORS_ORIGINS: list[str] = [

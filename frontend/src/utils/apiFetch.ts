@@ -14,9 +14,8 @@ export async function apiFetch(input: RequestInfo, init: RequestInit = {}): Prom
 
   if (res.status === 401) {
     _logoutFn?.()
-    // 현재 경로를 저장해두고 로그인 후 복귀
     const redirect = encodeURIComponent(window.location.pathname + window.location.search)
-    window.location.href = `/checkmate/auth?expired=1&redirect=${redirect}`
+    window.location.href = `/checkmate/auth?reason=token&redirect=${redirect}`
   }
 
   return res
