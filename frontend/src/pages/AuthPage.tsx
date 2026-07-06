@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 type Tab = 'login' | 'signup' | 'find-id' | 'forgot-password'
@@ -26,6 +26,9 @@ const DEMO_USER = { id: 1, email: DEMO_EMAIL, username: 'test', user_type: 'pers
 export default function AuthPage() {
   const [tab, setTab] = useState<Tab>('login')
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const isExpired = searchParams.get('expired') === '1'
+  const redirectPath = searchParams.get('redirect') || '/dashboard'
 
   const isSubView = tab === 'find-id' || tab === 'forgot-password'
 
@@ -53,6 +56,19 @@ export default function AuthPage() {
           </div>
         )}
 
+        {/* 세션 만료 안내 배너 */}
+        {isExpired && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '12px 16px', borderRadius: 12, marginBottom: 16,
+            background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)',
+            color: '#b45309', fontSize: 13, fontWeight: 600,
+          }}>
+            <span style={{ fontSize: 18 }}>⏰</span>
+            <span>로그인 세션이 만료되었습니다. 다시 로그인해주세요.</span>
+          </div>
+        )}
+
         {/* 서브뷰(아이디찾기/비밀번호찾기)일 때는 탭 숨김 */}
         {!isSubView && (
           <div className="auth-tabs">
@@ -67,7 +83,7 @@ export default function AuthPage() {
 
         {tab === 'login' && (
           <LoginForm
-            onSuccess={() => navigate('/dashboard')}
+            onSuccess={() => navigate(redirectPath)}
             onFindId={() => setTab('find-id')}
             onForgotPassword={() => setTab('forgot-password')}
           />

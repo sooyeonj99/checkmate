@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Navbar from '../components/common/Navbar'
+import { apiFetch } from '../utils/apiFetch'
 
 interface SigBox { x: number; y: number; w: number; h: number }
 
@@ -28,12 +29,11 @@ export default function TemplateEditorPage() {
   // 편집 모드: 기존 템플릿 파일 로드
   useEffect(() => {
     if (!isEdit || !id) return
-    const token = localStorage.getItem('cm_token')
-    fetch(`/api/v1/templates/user/${id}/file`, { headers: { Authorization: `Bearer ${token}` } })
+    apiFetch(`/api/v1/templates/user/${id}/file`)
       .then(r => r.json())
       .then(d => setPreviewUrl(d.data_url))
       .catch(() => {})
-    fetch(`/api/v1/templates/user`, { headers: { Authorization: `Bearer ${token}` } })
+    apiFetch(`/api/v1/templates/user`)
       .then(r => r.json())
       .then((list: any[]) => {
         const tpl = list.find(t => String(t.id) === id)
@@ -114,7 +114,6 @@ export default function TemplateEditorPage() {
     setSaving(true)
     setError('')
     try {
-      const token = localStorage.getItem('cm_token')
       const formData = new FormData()
       formData.append('name', name)
       formData.append('sig1_x', String(sigBox.x))
@@ -123,22 +122,12 @@ export default function TemplateEditorPage() {
       formData.append('sig1_h', String(sigBox.h))
 
       if (isEdit && !file) {
-        // position 업데이트만
-        formData.append('name', name)
-        const res = await fetch(`/api/v1/templates/user/${id}`, {
-          method: 'PUT',
-          headers: { Authorization: `Bearer ${token}` },
-          body: formData,
-        })
+        const res = await apiFetch(`/api/v1/templates/user/${id}`, { method: 'PUT', body: formData })
         if (!res.ok) throw new Error((await res.json()).detail ?? '수정 실패')
       } else {
-        if (!file) { setError('파일을 선택해주세요.'); return }
+        if (!file) { setError('파일을 선택해주세요.'); setSaving(false); return }
         formData.append('file', file)
-        const res = await fetch('/api/v1/templates/user', {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-          body: formData,
-        })
+        const res = await apiFetch('/api/v1/templates/user', { method: 'POST', body: formData })
         if (!res.ok) throw new Error((await res.json()).detail ?? '저장 실패')
       }
       navigate('/dashboard', { state: { tab: 'templates', saved: true } })
