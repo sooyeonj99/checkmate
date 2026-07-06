@@ -514,6 +514,11 @@ export default function DashboardPage() {
                 <Link to="/upload" className="navbar-dropdown-item" onClick={() => setDropdownOpen(false)}>
                   계약서 분석
                 </Link>
+                {user?.user_type === 'franchisor' && (
+                  <Link to="/franchise" className="navbar-dropdown-item" onClick={() => setDropdownOpen(false)}>
+                    프랜차이즈 관리
+                  </Link>
+                )}
                 <Link to="/profile" className="navbar-dropdown-item" onClick={() => setDropdownOpen(false)}>
                   내 정보
                 </Link>
@@ -530,6 +535,33 @@ export default function DashboardPage() {
       <main className="dash-main">
         <div className="dash-container">
 
+          {/* ── 프랜차이즈 본사 배너 ── */}
+          {user?.user_type === 'franchisor' && (
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '14px 20px', borderRadius: 14, marginBottom: 20,
+              background: 'rgba(37,99,235,0.06)', border: '1.5px solid rgba(37,99,235,0.2)',
+            }}>
+              <div>
+                <div style={{ fontWeight: 700, color: 'var(--accent)', marginBottom: 2 }}>🏪 프랜차이즈 본사 계정</div>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>가맹점 계약서 현황을 통합 관리하세요</div>
+              </div>
+              <button className="btn-primary" style={{ padding: '10px 18px', fontSize: 13 }} onClick={() => navigate('/franchise')}>
+                프랜차이즈 관리 →
+              </button>
+            </div>
+          )}
+          {user?.user_type === 'franchisee' && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              padding: '12px 20px', borderRadius: 14, marginBottom: 20,
+              background: 'rgba(22,163,74,0.06)', border: '1.5px solid rgba(22,163,74,0.2)',
+            }}>
+              <span style={{ fontSize: 20 }}>🛒</span>
+              <div style={{ fontSize: 13, color: '#15803d', fontWeight: 600 }}>가맹점주 계정 — 분석한 계약서는 본사에서도 확인할 수 있습니다.</div>
+            </div>
+          )}
+
           {/* ── Page heading ── */}
           <div className="dash-heading">
             <div>
@@ -542,7 +574,7 @@ export default function DashboardPage() {
                   color: user?.user_type === 'enterprise' ? 'var(--accent)' : '#2e8b2e',
                   border: `1px solid ${user?.user_type === 'enterprise' ? 'rgba(37,99,235,0.25)' : 'rgba(46,139,46,0.25)'}`,
                 }}>
-                  {user?.user_type === 'enterprise' ? '🏢 기업/법인' : '👤 개인'}
+                  {user?.user_type === 'enterprise' ? '🏢 기업/법인' : user?.user_type === 'franchisor' ? '🏪 프랜차이즈 본사' : user?.user_type === 'franchisee' ? '🛒 가맹점주' : '👤 개인'}
                 </span>
               </div>
               <p className="dash-subtitle">분석된 계약서를 한눈에 관리하세요</p>

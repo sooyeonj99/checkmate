@@ -5,7 +5,7 @@ export interface AuthUser {
   id: number
   email: string
   username: string
-  user_type: 'personal' | 'enterprise'
+  user_type: 'personal' | 'enterprise' | 'franchisor' | 'franchisee'
 }
 
 interface AuthContextType {

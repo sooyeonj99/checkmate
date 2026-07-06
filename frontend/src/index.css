@@ -5638,3 +5638,152 @@ img, svg {
   .result-clause { page-break-inside: avoid; break-inside: avoid; }
   .score-section { page-break-inside: avoid; break-inside: avoid; }
 }
+
+/* ── Franchise Page ───────────────────────────────── */
+.franchise-page { min-height: 100vh; background: var(--bg); display: flex; flex-direction: column; }
+
+.franchise-loading {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 16px; color: var(--text-muted);
+}
+.franchise-spinner {
+  width: 36px; height: 36px; border: 3px solid var(--border);
+  border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.franchise-header {
+  background: var(--bg-card); border-bottom: 1px solid var(--border);
+  padding: 20px 0; position: sticky; top: 0; z-index: 10;
+}
+.franchise-header-inner {
+  max-width: 1200px; margin: 0 auto; padding: 0 24px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.franchise-back { font-size: 13px; color: var(--text-muted); text-decoration: none; display: block; margin-bottom: 4px; }
+.franchise-back:hover { color: var(--accent); }
+.franchise-title { font-size: 22px; font-weight: 800; color: var(--text); margin: 0; }
+.franchise-subtitle { font-size: 13px; color: var(--text-muted); margin: 2px 0 0; }
+
+.franchise-body { flex: 1; max-width: 1200px; margin: 0 auto; padding: 24px; width: 100%; box-sizing: border-box; }
+
+/* 통계 카드 */
+.franchise-stats {
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 24px;
+}
+.fr-stat-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+  padding: 16px; text-align: center;
+}
+.fr-stat-num { font-size: 28px; font-weight: 800; color: var(--text); line-height: 1; margin-bottom: 4px; }
+.fr-stat-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+
+/* 2열 레이아웃 */
+.franchise-content { display: grid; grid-template-columns: 340px 1fr; gap: 20px; }
+
+/* 패널 공통 */
+.franchise-stores-panel,
+.franchise-contracts-panel {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+  overflow: hidden; display: flex; flex-direction: column; min-height: 500px;
+}
+.fr-panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.fr-panel-title { font-size: 15px; font-weight: 700; color: var(--text); }
+
+/* 필터 탭 */
+.fr-filter-tabs { display: flex; gap: 4px; }
+.fr-filter-tab {
+  font-size: 11px; padding: 4px 10px; border-radius: 8px; border: 1px solid var(--border);
+  background: none; color: var(--text-muted); cursor: pointer; font-weight: 600;
+}
+.fr-filter-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* 가맹점 목록 */
+.fr-store-list { padding: 12px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; flex: 1; }
+.fr-store-card {
+  padding: 14px; border-radius: 12px; border: 1.5px solid var(--border);
+  cursor: pointer; position: relative; transition: border-color 0.15s;
+}
+.fr-store-card:hover { border-color: var(--accent); }
+.fr-store-card.selected { border-color: var(--accent); background: rgba(37,99,235,0.04); }
+.fr-store-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 6px; }
+.fr-store-name { font-size: 14px; font-weight: 700; color: var(--text); }
+.fr-store-region { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.fr-store-info { display: flex; gap: 8px; font-size: 12px; color: var(--text-muted); flex-wrap: wrap; }
+.fr-status-badge {
+  font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px; flex-shrink: 0;
+}
+.fr-status-badge.active { background: rgba(22,163,74,0.12); color: #16a34a; }
+.fr-status-badge.pending { background: rgba(107,114,128,0.12); color: #6b7280; }
+.fr-delete-btn {
+  position: absolute; top: 10px; right: 10px; background: none; border: none;
+  color: var(--text-muted); cursor: pointer; font-size: 12px; padding: 2px 4px;
+  opacity: 0; transition: opacity 0.15s;
+}
+.fr-store-card:hover .fr-delete-btn { opacity: 1; }
+.fr-delete-btn:hover { color: #dc2626; }
+
+/* 계약서 패널 */
+.fr-contract-list { padding: 12px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex: 1; }
+.fr-contract-card {
+  padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg);
+}
+.fr-contract-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.fr-contract-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.fr-grade-badge { font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 8px; }
+.fr-contract-meta { display: flex; gap: 10px; font-size: 12px; color: var(--text-muted); flex-wrap: wrap; margin-bottom: 4px; }
+.fr-contract-date { font-size: 11px; color: var(--text-muted); }
+
+/* 빈 상태 */
+.fr-empty {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 12px; padding: 40px 20px; color: var(--text-muted); text-align: center;
+}
+.fr-empty-contracts { color: var(--text-muted); }
+
+/* 버튼 */
+.fr-btn {
+  padding: 10px 18px; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--bg-card); color: var(--text); font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.fr-btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.fr-btn-primary:hover { opacity: 0.9; }
+.fr-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* 초대 모달 */
+.fr-modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex;
+  align-items: center; justify-content: center; z-index: 1000; padding: 20px;
+}
+.fr-modal {
+  background: var(--bg-card); border-radius: 20px; padding: 28px;
+  width: 100%; max-width: 440px; border: 1px solid var(--border);
+}
+.fr-modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.fr-modal-header h3 { margin: 0; font-size: 18px; font-weight: 800; color: var(--text); }
+.fr-modal-close { background: none; border: none; font-size: 18px; color: var(--text-muted); cursor: pointer; }
+.fr-modal-field { margin-bottom: 14px; }
+.fr-modal-field label { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+.fr-modal-field input {
+  width: 100%; padding: 11px 14px; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--bg-input); color: var(--text); font-size: 14px; box-sizing: border-box;
+}
+.fr-modal-field input:focus { outline: none; border-color: var(--accent); }
+.fr-modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+.fr-modal-actions .fr-btn { flex: 1; text-align: center; }
+.fr-modal-error {
+  background: rgba(220,38,38,0.08); color: #dc2626; border: 1px solid rgba(220,38,38,0.2);
+  border-radius: 10px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px;
+}
+
+@media (max-width: 900px) {
+  .franchise-stats { grid-template-columns: repeat(3, 1fr); }
+  .franchise-content { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .franchise-stats { grid-template-columns: repeat(2, 1fr); }
+  .franchise-header-inner { flex-direction: column; align-items: flex-start; gap: 12px; }
+}

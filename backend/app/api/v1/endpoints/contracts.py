@@ -338,7 +338,55 @@ async def save_contract(
     if os.path.isdir(contract_dir):
         shutil.rmtree(contract_dir)
 
+    # 가맹점주가 위험/주의 계약 저장 시 본사에 이메일 알림
+    if current_user.user_type == "franchisee" and result.grade in ("위험", "주의"):
+        try:
+            from app.models.franchise import FranchiseStore
+            store = db.query(FranchiseStore).filter_by(
+                franchisee_user_id=current_user.id, status="active"
+            ).first()
+            if store:
+                franchisor = db.query(User).filter_by(id=store.franchisor_id).first()
+                if franchisor:
+                    grade_color = "#dc2626" if result.grade == "위험" else "#d97706"
+                    _send_alert_email(
+                        to_email=franchisor.email,
+                        franchisor_name=franchisor.username,
+                        store_name=store.store_name,
+                        franchisee_name=current_user.username,
+                        filename=result.filename,
+                        grade=result.grade,
+                        grade_color=grade_color,
+                        danger_count=result.danger_count,
+                        warn_count=result.warn_count,
+                    )
+        except Exception as e:
+            print(f"[WARN] 프랜차이즈 알림 이메일 실패: {e}")
+
     return {"id": saved.id, "saved_at": saved.saved_at.isoformat()}
+
+
+def _send_alert_email(
+    to_email: str, franchisor_name: str, store_name: str,
+    franchisee_name: str, filename: str, grade: str,
+    grade_color: str, danger_count: int, warn_count: int,
+):
+    from app.services.email_service import _send_smtp
+    _send_smtp(
+        to_email=to_email,
+        subject=f"[CHECKMATE] {store_name} 가맹점 {grade} 계약서 감지",
+        html_body=f"""안녕하세요, {franchisor_name}님!<br><br>
+가맹점에서 <b style="color:{grade_color}">{grade}</b> 등급 계약서가 저장되었습니다.<br><br>
+<table style="border-collapse:collapse; width:100%; max-width:480px;">
+  <tr><td style="padding:8px; background:#f4f4f5; font-weight:700;">가맹점</td><td style="padding:8px;">{store_name} ({franchisee_name})</td></tr>
+  <tr><td style="padding:8px; background:#f4f4f5; font-weight:700;">파일명</td><td style="padding:8px;">{filename}</td></tr>
+  <tr><td style="padding:8px; background:#f4f4f5; font-weight:700;">위험 조항</td><td style="padding:8px; color:#dc2626; font-weight:700;">{danger_count}개</td></tr>
+  <tr><td style="padding:8px; background:#f4f4f5; font-weight:700;">주의 조항</td><td style="padding:8px; color:#d97706; font-weight:700;">{warn_count}개</td></tr>
+</table>
+<br>
+CHECKMATE 대시보드에서 상세 내용을 확인하세요.<br><br>
+감사합니다, CHECKMATE 팀""",
+    )
 
 
 # ── 만료일 설정 ───────────────────────────────────────────────────────

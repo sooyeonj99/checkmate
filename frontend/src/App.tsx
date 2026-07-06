@@ -17,6 +17,7 @@ import TemplateEditorPage from './pages/TemplateEditorPage'
 import TeamAcceptPage from './pages/TeamAcceptPage'
 import ProfilePage from './pages/ProfilePage'
 import SitemapPage from './pages/SitemapPage'
+import FranchisePage from './pages/FranchisePage'
 import ChatWidget from './components/ChatWidget'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -45,6 +46,8 @@ function AppRoutes() {
         <Route path="/team/accept" element={<TeamAcceptPage />} />
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="/sitemap" element={<SitemapPage />} />
+        <Route path="/franchise" element={<ProtectedRoute><FranchisePage /></ProtectedRoute>} />
+        <Route path="/franchise/accept" element={<ProtectedRoute><FranchisePage /></ProtectedRoute>} />
         <Route
           path="/dashboard"
           element={

@@ -1,7 +1,8 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import auth, users, contracts, chat, subscriptions, business, signing, templates, team
+from app.api.v1.endpoints import auth, users, contracts, chat, subscriptions, business, signing, templates, team, franchise
 import app.models.user_template  # noqa: F401
 import app.models.team  # noqa: F401
+import app.models.franchise  # noqa: F401
 
 api_router = APIRouter(prefix="/api/v1")
 
@@ -14,3 +15,4 @@ api_router.include_router(business.router)
 api_router.include_router(signing.router)
 api_router.include_router(templates.router)
 api_router.include_router(team.router)
+api_router.include_router(franchise.router)
