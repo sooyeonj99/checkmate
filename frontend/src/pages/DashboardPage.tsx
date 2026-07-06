@@ -514,6 +514,9 @@ export default function DashboardPage() {
                 <Link to="/upload" className="navbar-dropdown-item" onClick={() => setDropdownOpen(false)}>
                   계약서 분석
                 </Link>
+                <Link to="/profile" className="navbar-dropdown-item" onClick={() => setDropdownOpen(false)}>
+                  내 정보
+                </Link>
                 <div className="navbar-dropdown-divider" />
                 <button className="navbar-dropdown-item logout" onClick={handleLogout}>
                   로그아웃

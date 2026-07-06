@@ -1,6 +1,19 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+
+type FieldStatus = 'idle' | 'checking' | 'available' | 'taken'
+
+function FieldStatusMsg({ status, takenMsg = '이미 사용 중입니다' }: { status: FieldStatus; takenMsg?: string }) {
+  if (status === 'idle') return null
+  const map: Record<Exclude<FieldStatus, 'idle'>, { color: string; text: string }> = {
+    checking: { color: 'var(--text-muted)', text: '확인 중...' },
+    available: { color: '#16a34a', text: '사용 가능합니다' },
+    taken: { color: '#dc2626', text: takenMsg },
+  }
+  const { color, text } = map[status]
+  return <p style={{ fontSize: 12, color, marginTop: 4, fontWeight: 600 }}>{text}</p>
+}
 
 type Tab = 'login' | 'signup' | 'find-id' | 'forgot-password'
 
@@ -245,6 +258,51 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
   const [emailSent, setEmailSent] = useState(false)
   const [sentEmail, setSentEmail] = useState('')
 
+  const [usernameStatus, setUsernameStatus] = useState<FieldStatus>('idle')
+  const [emailStatus, setEmailStatus] = useState<FieldStatus>('idle')
+  const [phoneStatus, setPhoneStatus] = useState<FieldStatus>('idle')
+
+  useEffect(() => {
+    if (!username || username.length < 2) { setUsernameStatus('idle'); return }
+    setUsernameStatus('checking')
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/v1/auth/check-username?value=${encodeURIComponent(username)}`)
+        const data = await res.json()
+        setUsernameStatus(data.available ? 'available' : 'taken')
+      } catch { setUsernameStatus('idle') }
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [username])
+
+  useEffect(() => {
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!email || !emailRe.test(email)) { setEmailStatus('idle'); return }
+    setEmailStatus('checking')
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/v1/auth/check-email?value=${encodeURIComponent(email)}`)
+        const data = await res.json()
+        setEmailStatus(data.available ? 'available' : 'taken')
+      } catch { setEmailStatus('idle') }
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [email])
+
+  useEffect(() => {
+    const digits = phoneNumber.replace(/\D/g, '')
+    if (digits.length < 10) { setPhoneStatus('idle'); return }
+    setPhoneStatus('checking')
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/v1/auth/check-phone?value=${encodeURIComponent(digits)}`)
+        const data = await res.json()
+        setPhoneStatus(data.available ? 'available' : 'taken')
+      } catch { setPhoneStatus('idle') }
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [phoneNumber])
+
   const formatPhone = (val: string) => {
     const digits = val.replace(/\D/g, '').slice(0, 11)
     if (digits.length <= 3) return digits
@@ -413,20 +471,23 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
 
       <div className="auth-field">
         <label className="auth-label">이름 (닉네임)</label>
-        <input type="text" className="auth-input" placeholder="홍길동"
+        <input type="text" className={`auth-input${usernameStatus === 'taken' ? ' auth-input-error' : ''}`} placeholder="홍길동"
           value={username} onChange={(e) => setUsername(e.target.value)} required autoComplete="name" />
+        <FieldStatusMsg status={usernameStatus} takenMsg="이미 사용 중인 닉네임입니다" />
       </div>
 
       <div className="auth-field">
         <label className="auth-label">이메일</label>
-        <input type="email" className="auth-input" placeholder="example@email.com"
+        <input type="email" className={`auth-input${emailStatus === 'taken' ? ' auth-input-error' : ''}`} placeholder="example@email.com"
           value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+        <FieldStatusMsg status={emailStatus} takenMsg="이미 가입된 이메일입니다" />
       </div>
 
       <div className="auth-field">
         <label className="auth-label">전화번호 <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 400 }}>(선택 — 전자서명 수신용)</span></label>
-        <input type="tel" className="auth-input" placeholder="010-0000-0000"
+        <input type="tel" className={`auth-input${phoneStatus === 'taken' ? ' auth-input-error' : ''}`} placeholder="010-0000-0000"
           value={phoneNumber} onChange={(e) => setPhoneNumber(formatPhone(e.target.value))} maxLength={13} autoComplete="tel" />
+        <FieldStatusMsg status={phoneStatus} takenMsg="이미 가입된 전화번호입니다" />
       </div>
 
       <div className="auth-field">
@@ -530,6 +591,9 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
       <button type="submit" className="auth-submit-btn"
         disabled={
           !allAgreed || !pwMatch || loading ||
+          usernameStatus === 'taken' || usernameStatus === 'checking' ||
+          emailStatus === 'taken' || emailStatus === 'checking' ||
+          phoneStatus === 'taken' || phoneStatus === 'checking' ||
           (userType === 'enterprise' && (
             !isBusinessNumberValid ||
             bizChecking ||

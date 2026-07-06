@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
@@ -5,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.security import create_access_token
 from app.db.session import get_db
+from app.models.user import User
 from app.schemas.user import (
     FindIdRequest,
     ForgotPasswordRequest,
@@ -129,6 +131,27 @@ def forgot_password(
         token = create_password_reset_token(db, user)
         background_tasks.add_task(send_password_reset_email, user.email, user.username, token)
     return {"message": "비밀번호 재설정 링크를 이메일로 발송했습니다. 메일함을 확인해 주세요."}
+
+
+@router.get("/check-username")
+def check_username(value: str, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == value).first()
+    return {"available": user is None}
+
+
+@router.get("/check-email")
+def check_email(value: str, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == value).first()
+    return {"available": user is None}
+
+
+@router.get("/check-phone")
+def check_phone(value: str, db: Session = Depends(get_db)):
+    digits = re.sub(r"\D", "", value)
+    if not digits:
+        return {"available": True}
+    user = db.query(User).filter(User.phone_number == digits).first()
+    return {"available": user is None}
 
 
 @router.post("/reset-password")

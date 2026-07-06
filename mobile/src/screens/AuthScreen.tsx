@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, KeyboardAvoidingView, Platform,
@@ -7,6 +7,19 @@ import {
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
 import { colors } from '../theme/colors'
+
+type FieldStatus = 'idle' | 'checking' | 'available' | 'taken'
+
+function StatusMsg({ status, takenMsg = '이미 사용 중입니다' }: { status: FieldStatus; takenMsg?: string }) {
+  if (status === 'idle') return null
+  const map: Record<Exclude<FieldStatus, 'idle'>, { color: string; text: string }> = {
+    checking: { color: colors.textMuted, text: '확인 중...' },
+    available: { color: '#16a34a', text: '사용 가능합니다' },
+    taken: { color: '#dc2626', text: takenMsg },
+  }
+  const { color, text } = map[status]
+  return <Text style={{ fontSize: 12, color, marginTop: 4, fontWeight: '700' }}>{text}</Text>
+}
 
 export default function AuthScreen() {
   const [tab, setTab] = useState<'login' | 'signup'>('login')
@@ -117,6 +130,48 @@ function SignupForm({ onLogin }: { onLogin: (token: string, user: any) => Promis
   const [bizStatus, setBizStatus] = useState<'idle' | 'checking' | 'valid' | 'invalid'>('idle')
   const [loading, setLoading] = useState(false)
 
+  const [usernameStatus, setUsernameStatus] = useState<FieldStatus>('idle')
+  const [emailStatus, setEmailStatus] = useState<FieldStatus>('idle')
+  const [phoneStatus, setPhoneStatus] = useState<FieldStatus>('idle')
+
+  useEffect(() => {
+    if (!username || username.length < 2) { setUsernameStatus('idle'); return }
+    setUsernameStatus('checking')
+    const timer = setTimeout(async () => {
+      try {
+        const res = await api.get(`/auth/check-username?value=${encodeURIComponent(username)}`)
+        setUsernameStatus(res.data.available ? 'available' : 'taken')
+      } catch { setUsernameStatus('idle') }
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [username])
+
+  useEffect(() => {
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!email || !emailRe.test(email)) { setEmailStatus('idle'); return }
+    setEmailStatus('checking')
+    const timer = setTimeout(async () => {
+      try {
+        const res = await api.get(`/auth/check-email?value=${encodeURIComponent(email)}`)
+        setEmailStatus(res.data.available ? 'available' : 'taken')
+      } catch { setEmailStatus('idle') }
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [email])
+
+  useEffect(() => {
+    const digits = phoneNumber.replace(/\D/g, '')
+    if (digits.length < 10) { setPhoneStatus('idle'); return }
+    setPhoneStatus('checking')
+    const timer = setTimeout(async () => {
+      try {
+        const res = await api.get(`/auth/check-phone?value=${encodeURIComponent(digits)}`)
+        setPhoneStatus(res.data.available ? 'available' : 'taken')
+      } catch { setPhoneStatus('idle') }
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [phoneNumber])
+
   const formatPhone = (v: string) => {
     const d = v.replace(/\D/g, '').slice(0, 11)
     if (d.length <= 3) return d
@@ -156,6 +211,18 @@ function SignupForm({ onLogin }: { onLogin: (token: string, user: any) => Promis
     }
     if (password.length < 8) {
       Alert.alert('입력 오류', '비밀번호는 8자 이상이어야 합니다.')
+      return
+    }
+    if (usernameStatus === 'taken') {
+      Alert.alert('입력 오류', '이미 사용 중인 닉네임입니다.')
+      return
+    }
+    if (emailStatus === 'taken') {
+      Alert.alert('입력 오류', '이미 가입된 이메일입니다.')
+      return
+    }
+    if (phoneStatus === 'taken') {
+      Alert.alert('입력 오류', '이미 가입된 전화번호입니다.')
       return
     }
     if (userType === 'enterprise' && bizStatus !== 'valid') {
@@ -228,16 +295,17 @@ function SignupForm({ onLogin }: { onLogin: (token: string, user: any) => Promis
       </TouchableOpacity>
       <Text style={styles.label}>사용자 이름</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, usernameStatus === 'taken' && { borderColor: '#dc2626' }]}
         placeholder="사용자 이름"
         placeholderTextColor={colors.textMuted}
         value={username}
         onChangeText={setUsername}
         autoCapitalize="none"
       />
+      <StatusMsg status={usernameStatus} takenMsg="이미 사용 중인 닉네임입니다" />
       <Text style={styles.label}>이메일</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, emailStatus === 'taken' && { borderColor: '#dc2626' }]}
         placeholder="이메일 주소"
         placeholderTextColor={colors.textMuted}
         value={email}
@@ -245,9 +313,10 @@ function SignupForm({ onLogin }: { onLogin: (token: string, user: any) => Promis
         keyboardType="email-address"
         autoCapitalize="none"
       />
+      <StatusMsg status={emailStatus} takenMsg="이미 가입된 이메일입니다" />
       <Text style={styles.label}>전화번호 <Text style={{ fontSize: 12, color: colors.textMuted }}>(선택)</Text></Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, phoneStatus === 'taken' && { borderColor: '#dc2626' }]}
         placeholder="010-0000-0000"
         placeholderTextColor={colors.textMuted}
         value={phoneNumber}
@@ -255,6 +324,7 @@ function SignupForm({ onLogin }: { onLogin: (token: string, user: any) => Promis
         keyboardType="phone-pad"
         maxLength={13}
       />
+      <StatusMsg status={phoneStatus} takenMsg="이미 가입된 전화번호입니다" />
       <Text style={styles.label}>비밀번호</Text>
       <TextInput
         style={styles.input}
@@ -293,8 +363,14 @@ function SignupForm({ onLogin }: { onLogin: (token: string, user: any) => Promis
         </>
       )}
       <TouchableOpacity style={[styles.submitBtn, {
-        opacity: (userType === 'enterprise' && bizStatus !== 'valid') ? 0.5 : 1,
-      }]} onPress={handleSubmit} disabled={loading || (userType === 'enterprise' && bizStatus !== 'valid')}>
+        opacity: (loading || usernameStatus === 'taken' || usernameStatus === 'checking'
+          || emailStatus === 'taken' || emailStatus === 'checking'
+          || phoneStatus === 'taken' || phoneStatus === 'checking'
+          || (userType === 'enterprise' && bizStatus !== 'valid')) ? 0.5 : 1,
+      }]} onPress={handleSubmit} disabled={loading || usernameStatus === 'taken' || usernameStatus === 'checking'
+        || emailStatus === 'taken' || emailStatus === 'checking'
+        || phoneStatus === 'taken' || phoneStatus === 'checking'
+        || (userType === 'enterprise' && bizStatus !== 'valid')}>
         {loading
           ? <ActivityIndicator color="#fff" />
           : <Text style={styles.submitText}>회원가입</Text>
