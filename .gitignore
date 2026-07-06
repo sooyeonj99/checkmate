@@ -43,3 +43,6 @@ alembic/versions/*.py
 
 # 업로드 파일 (개인정보 보호)
 backend/uploads/
+ssh_fix.py
+checkmate-key.pem
+fix-server.ps1
