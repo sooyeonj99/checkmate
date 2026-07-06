@@ -20,11 +20,18 @@ class InviteRequest(BaseModel):
     role: str = "member"
 
 
+class InviteByPhoneRequest(BaseModel):
+    phone: str           # 010-1234-5678 or 01012345678
+    role: str = "member"
+
+
 class MemberOut(BaseModel):
     id: int
     member_email: str
     role: str
     status: str
+    invite_method: str = "email"
+    member_phone: Optional[str] = None
     invited_at: datetime
     joined_at: Optional[datetime]
     username: Optional[str] = None
@@ -98,6 +105,53 @@ def invite_member(
         print(f"[WARN] 초대 이메일 발송 실패: {e}")
 
     return {"ok": True, "invite_token": token}
+
+
+@router.post("/invite/sms")
+def invite_member_by_phone(
+    body: InviteByPhoneRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.user_type != "enterprise":
+        raise HTTPException(403, "기업 계정만 팀원을 초대할 수 있습니다.")
+
+    import re
+    digits = re.sub(r"\D", "", body.phone)
+    if not re.match(r"^01[016789]\d{7,8}$", digits):
+        raise HTTPException(400, "올바른 핸드폰 번호를 입력해주세요. (예: 010-1234-5678)")
+
+    existing = db.query(TeamMember).filter_by(
+        enterprise_user_id=current_user.id, member_phone=digits
+    ).first()
+    if existing:
+        raise HTTPException(409, "이미 초대된 번호입니다.")
+
+    token = secrets.token_urlsafe(32)
+    member = TeamMember(
+        enterprise_user_id=current_user.id,
+        member_email=f"sms:{digits}",   # 이메일 필드 재사용 (고유값 유지)
+        member_phone=digits,
+        invite_method="sms",
+        role=body.role,
+        status="pending",
+        invite_token=token,
+    )
+    db.add(member)
+    db.commit()
+
+    from app.core.config import settings
+    invite_link = f"{settings.FRONTEND_URL}/team/accept?token={token}"
+
+    from app.services.sms_service import send_team_invite_sms
+    sms_sent = send_team_invite_sms(digits, current_user.username, invite_link)
+
+    return {
+        "ok": True,
+        "invite_token": token,
+        "sms_sent": sms_sent,
+        "invite_link": invite_link,   # SMS 미설정 시 프론트에서 직접 복사 제공
+    }
 
 
 @router.get("/accept")

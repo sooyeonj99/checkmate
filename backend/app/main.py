@@ -15,11 +15,29 @@ from app.db.session import engine
 from app.db.base import Base
 
 
+def _migrate_db():
+    """기존 테이블에 누락된 컬럼 추가 (SQLite ALTER TABLE)"""
+    from sqlalchemy import text
+    migrations = [
+        "ALTER TABLE team_members ADD COLUMN invite_method VARCHAR(10) DEFAULT 'email'",
+        "ALTER TABLE team_members ADD COLUMN member_phone VARCHAR(20)",
+    ]
+    with engine.connect() as conn:
+        for sql in migrations:
+            try:
+                conn.execute(text(sql))
+                conn.commit()
+            except Exception:
+                pass  # 이미 존재하면 무시
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """서버 시작/종료 시 실행되는 작업"""
-    # DB 테이블 자동 생성 (SQLite 개발용)
+    # DB 테이블 자동 생성
     Base.metadata.create_all(bind=engine)
+    # 기존 테이블 컬럼 마이그레이션 (SQLite ALTER TABLE)
+    _migrate_db()
     # 업로드 디렉토리 생성
     os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
     print(f"[OK] 서버 시작 | 업로드 폴더: {settings.UPLOAD_DIR}")

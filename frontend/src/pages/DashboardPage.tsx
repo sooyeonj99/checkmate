@@ -176,12 +176,17 @@ export default function DashboardPage() {
   }
 
   /* 팀 관리 */
-  interface TeamMemberItem { id: number; member_email: string; role: string; status: string; invited_at: string; joined_at: string | null; username: string | null }
+  interface TeamMemberItem { id: number; member_email: string; role: string; status: string; invite_method?: string; member_phone?: string | null; invited_at: string; joined_at: string | null; username: string | null }
   const [teamMembers, setTeamMembers] = useState<TeamMemberItem[]>([])
+  const [inviteMethod, setInviteMethod] = useState<'email' | 'sms'>('email')
   const [inviteEmail, setInviteEmail] = useState('')
+  const [invitePhone, setInvitePhone] = useState('')
   const [inviteRole, setInviteRole] = useState('member')
   const [inviting, setInviting] = useState(false)
   const [inviteMsg, setInviteMsg] = useState('')
+  const [inviteMsgType, setInviteMsgType] = useState<'success' | 'error'>('success')
+  const [copiedLink, setCopiedLink] = useState('')
+
   const fetchTeamMembers = useCallback(async () => {
     const token = localStorage.getItem('cm_token')
     if (!token) return
@@ -190,22 +195,43 @@ export default function DashboardPage() {
       if (res.ok) setTeamMembers(await res.json())
     } catch {}
   }, [])
+
   const handleInvite = async () => {
-    if (!inviteEmail) return
+    const value = inviteMethod === 'email' ? inviteEmail : invitePhone
+    if (!value) return
     setInviting(true)
+    setCopiedLink('')
     const token = localStorage.getItem('cm_token')
     try {
-      const res = await fetch('/api/v1/team/invite', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: inviteEmail, role: inviteRole }),
-      })
-      const data = await res.json()
-      if (res.ok) { setInviteMsg('초대 메일이 발송되었습니다.'); setInviteEmail(''); fetchTeamMembers() }
-      else setInviteMsg(data.detail || '오류가 발생했습니다.')
-    } catch { setInviteMsg('오류가 발생했습니다.') }
+      if (inviteMethod === 'email') {
+        const res = await fetch('/api/v1/team/invite', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: inviteEmail, role: inviteRole }),
+        })
+        const data = await res.json()
+        if (res.ok) { setInviteMsg('초대 메일이 발송되었습니다.'); setInviteMsgType('success'); setInviteEmail(''); fetchTeamMembers() }
+        else { setInviteMsg(data.detail || '오류가 발생했습니다.'); setInviteMsgType('error') }
+      } else {
+        const res = await fetch('/api/v1/team/invite/sms', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: invitePhone, role: inviteRole }),
+        })
+        const data = await res.json()
+        if (res.ok) {
+          if (data.sms_sent) {
+            setInviteMsg('초대 문자가 발송되었습니다.'); setInviteMsgType('success')
+          } else {
+            setInviteMsg('SMS 미설정 — 아래 링크를 복사해서 직접 공유하세요.'); setInviteMsgType('success')
+            setCopiedLink(data.invite_link)
+          }
+          setInvitePhone(''); fetchTeamMembers()
+        } else { setInviteMsg(data.detail || '오류가 발생했습니다.'); setInviteMsgType('error') }
+      }
+    } catch { setInviteMsg('오류가 발생했습니다.'); setInviteMsgType('error') }
     setInviting(false)
-    setTimeout(() => setInviteMsg(''), 4000)
+    if (!copiedLink) setTimeout(() => setInviteMsg(''), 4000)
   }
   const handleRemoveMember = async (id: number) => {
     if (!confirm('이 팀원을 삭제할까요?')) return
@@ -860,25 +886,56 @@ export default function DashboardPage() {
               {/* 초대 폼 */}
               <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 14, padding: '18px 20px', marginBottom: 20 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 14 }}>새 팀원 초대</div>
+                {/* 초대 방법 탭 */}
+                <div style={{ display: 'flex', gap: 0, marginBottom: 14, border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden', width: 'fit-content' }}>
+                  {(['email', 'sms'] as const).map(m => (
+                    <button key={m} onClick={() => { setInviteMethod(m); setInviteMsg(''); setCopiedLink('') }}
+                      style={{ padding: '8px 20px', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer',
+                        background: inviteMethod === m ? 'var(--accent)' : 'var(--bg-input)',
+                        color: inviteMethod === m ? '#fff' : 'var(--text-muted)' }}>
+                      {m === 'email' ? '이메일' : '핸드폰 번호'}
+                    </button>
+                  ))}
+                </div>
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                  <input
-                    type="email"
-                    placeholder="초대할 이메일 주소"
-                    value={inviteEmail}
-                    onChange={e => setInviteEmail(e.target.value)}
-                    style={{ flex: '1 1 220px', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-input)', color: 'var(--text)', fontSize: 14 }}
-                  />
+                  {inviteMethod === 'email' ? (
+                    <input type="email" placeholder="초대할 이메일 주소"
+                      value={inviteEmail} onChange={e => setInviteEmail(e.target.value)}
+                      style={{ flex: '1 1 220px', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-input)', color: 'var(--text)', fontSize: 14 }} />
+                  ) : (
+                    <input type="tel" placeholder="010-1234-5678"
+                      value={invitePhone} onChange={e => setInvitePhone(e.target.value)}
+                      style={{ flex: '1 1 220px', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-input)', color: 'var(--text)', fontSize: 14 }} />
+                  )}
                   <select value={inviteRole} onChange={e => setInviteRole(e.target.value)}
                     style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-input)', color: 'var(--text)', fontSize: 14 }}>
                     <option value="member">멤버</option>
                     <option value="admin">관리자</option>
                   </select>
-                  <button onClick={handleInvite} disabled={inviting || !inviteEmail}
-                    style={{ padding: '10px 20px', borderRadius: 10, background: inviteEmail ? 'var(--accent)' : 'var(--border)', color: '#fff', border: 'none', fontWeight: 700, fontSize: 14, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                    {inviting ? '발송 중...' : '초대 메일 보내기'}
+                  <button onClick={handleInvite}
+                    disabled={inviting || (inviteMethod === 'email' ? !inviteEmail : !invitePhone)}
+                    style={{ padding: '10px 20px', borderRadius: 10, border: 'none', fontWeight: 700, fontSize: 14, cursor: 'pointer', whiteSpace: 'nowrap',
+                      background: (inviteMethod === 'email' ? inviteEmail : invitePhone) ? 'var(--accent)' : 'var(--border)', color: '#fff' }}>
+                    {inviting ? '발송 중...' : inviteMethod === 'email' ? '초대 메일 보내기' : '초대 문자 보내기'}
                   </button>
                 </div>
-                {inviteMsg && <div style={{ marginTop: 10, fontSize: 13, color: inviteMsg.includes('발송') ? '#16a34a' : 'var(--risk-high)', fontWeight: 600 }}>{inviteMsg}</div>}
+                {inviteMsg && (
+                  <div style={{ marginTop: 10, fontSize: 13, color: inviteMsgType === 'success' ? '#16a34a' : 'var(--risk-high)', fontWeight: 600 }}>
+                    {inviteMsg}
+                  </div>
+                )}
+                {copiedLink && (
+                  <div style={{ marginTop: 10, background: 'rgba(37,99,235,0.06)', border: '1px solid rgba(37,99,235,0.2)', borderRadius: 10, padding: '10px 14px' }}>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }}>초대 링크 — 직접 복사해서 문자/카카오로 공유하세요</div>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <span style={{ fontSize: 12, color: 'var(--accent)', wordBreak: 'break-all', flex: 1 }}>{copiedLink}</span>
+                      <button onClick={() => { navigator.clipboard.writeText(copiedLink); setInviteMsg('링크가 복사되었습니다.') }}
+                        style={{ padding: '5px 12px', borderRadius: 7, background: 'var(--accent)', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                        복사
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
               {/* 팀원 목록 */}
               {teamMembers.length === 0 ? (
@@ -900,10 +957,13 @@ export default function DashboardPage() {
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {m.username || m.member_email}
+                          {m.username || (m.invite_method === 'sms' ? m.member_phone : m.member_email)}
                         </div>
                         <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                          {m.member_email} · {m.role === 'admin' ? '관리자' : '멤버'} · {m.status === 'active' ? '활성' : '초대 대기중'}
+                          {m.invite_method === 'sms'
+                            ? `📱 ${m.member_phone}`
+                            : `✉️ ${m.member_email}`
+                          } · {m.role === 'admin' ? '관리자' : '멤버'} · {m.status === 'active' ? '활성' : '초대 대기중'}
                         </div>
                       </div>
                       <span style={{

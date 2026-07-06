@@ -15,5 +15,7 @@ class TeamMember(Base):
     role: Mapped[str] = mapped_column(String(20), default="member")  # owner / admin / member
     status: Mapped[str] = mapped_column(String(20), default="pending")  # pending / active
     invite_token: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, unique=True, index=True)
+    invite_method: Mapped[str] = mapped_column(String(10), default="email")   # email | sms
+    member_phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     invited_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     joined_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
