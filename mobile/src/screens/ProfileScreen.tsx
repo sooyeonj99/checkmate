@@ -33,7 +33,7 @@ export default function ProfileScreen() {
           <Text style={styles.email}>{user?.email}</Text>
           <View style={[styles.typeBadge, isEnterprise && styles.typeBadgeEnterprise]}>
             <Text style={[styles.typeBadgeText, isEnterprise && styles.typeBadgeTextEnterprise]}>
-              {isEnterprise ? '🏢 기업/법인' : '👤 개인 사용자'}
+              {isEnterprise ? '기업/법인' : '개인 사용자'}
             </Text>
           </View>
         </View>
@@ -52,7 +52,6 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>현재 플랜</Text>
           <View style={[styles.planCard, isEnterprise && styles.planCardEnterprise]}>
-            <Text style={styles.planIcon}>{isEnterprise ? '🏢' : '👤'}</Text>
             <View style={styles.planInfo}>
               <Text style={styles.planName}>{isEnterprise ? '기업 플랜' : '개인 플랜'}</Text>
               <Text style={styles.planDesc}>
@@ -99,33 +98,33 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   )
 }
 
-function FeatureRow({ icon, title, desc, available }: {
-  icon: string; title: string; desc: string; available: boolean
+function FeatureRow({ title, desc, available }: {
+  title: string; desc: string; available: boolean
 }) {
   return (
     <View style={[styles.featureRow, !available && styles.featureRowDisabled]}>
-      <Text style={styles.featureIcon}>{icon}</Text>
+      <View style={[styles.featureDot, { backgroundColor: available ? colors.safe : colors.textMuted }]} />
       <View style={styles.featureContent}>
         <Text style={[styles.featureTitle, !available && styles.featureTitleDisabled]}>{title}</Text>
         <Text style={styles.featureDesc}>{desc}</Text>
       </View>
       <Text style={available ? styles.featureCheck : styles.featureLock}>
-        {available ? '✓' : '🔒'}
+        {available ? '✓' : '잠금'}
       </Text>
     </View>
   )
 }
 
 const FEATURES_PERSONAL = [
-  { icon: '📄', title: 'AI 계약서 분석', desc: 'Gemini AI 위험 조항 탐지' },
-  { icon: '💾', title: '분석 결과 저장', desc: '대시보드에서 이력 관리' },
-  { icon: '🤖', title: 'AI 챗봇', desc: '계약 관련 질문 답변' },
+  { title: 'AI 계약서 분석', desc: 'Gemini AI 위험 조항 탐지' },
+  { title: '분석 결과 저장', desc: '대시보드에서 이력 관리' },
+  { title: 'AI 챗봇', desc: '계약 관련 질문 답변' },
 ]
 
 const FEATURES_ENTERPRISE = [
-  { icon: '👥', title: '팀 관리', desc: '멤버 초대 및 권한 설정' },
-  { icon: '📊', title: '대량 분석', desc: '여러 계약서 일괄 분석' },
-  { icon: '📑', title: '리포트 다운로드', desc: 'PDF 형식 분석 리포트 출력' },
+  { title: '팀 관리', desc: '멤버 초대 및 권한 설정' },
+  { title: '대량 분석', desc: '여러 계약서 일괄 분석' },
+  { title: '리포트 다운로드', desc: 'PDF 형식 분석 리포트 출력' },
 ]
 
 const styles = StyleSheet.create({
@@ -206,13 +205,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     padding: 16,
-    gap: 14,
   },
   planCardEnterprise: {
     backgroundColor: 'rgba(37,99,235,0.04)',
     borderColor: colors.borderAccent,
   },
-  planIcon: { fontSize: 32 },
   planInfo: { flex: 1 },
   planName: { color: colors.text, fontSize: 15, fontWeight: '700', marginBottom: 3 },
   planDesc: { color: colors.textMuted, fontSize: 12, lineHeight: 17 },
@@ -229,13 +226,13 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   featureRowDisabled: { opacity: 0.45 },
-  featureIcon: { fontSize: 22 },
+  featureDot: { width: 8, height: 8, borderRadius: 4 },
   featureContent: { flex: 1 },
   featureTitle: { color: colors.text, fontSize: 14, fontWeight: '600', marginBottom: 2 },
   featureTitleDisabled: { color: colors.textMuted },
   featureDesc: { color: colors.textMuted, fontSize: 12 },
   featureCheck: { color: colors.safe, fontSize: 16, fontWeight: '700' },
-  featureLock: { fontSize: 14 },
+  featureLock: { color: colors.textMuted, fontSize: 11, fontWeight: '600' },
 
   logoutBtn: {
     borderWidth: 1,
