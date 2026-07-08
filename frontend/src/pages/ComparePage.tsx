@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
 
 interface SavedItem {
   id: number
@@ -33,7 +32,6 @@ interface CompareResult {
 }
 
 export default function ComparePage() {
-  const { user } = useAuth()
   const [contracts, setContracts] = useState<SavedItem[]>([])
   const [selectedA, setSelectedA] = useState<number | null>(null)
   const [selectedB, setSelectedB] = useState<number | null>(null)

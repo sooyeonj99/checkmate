@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 interface UserItem {
@@ -35,7 +35,6 @@ interface ApiKeyItem {
 const ADMIN_EMAIL = 'ghdiehddl@gmail.com'
 
 export default function AdminPage() {
-  const navigate = useNavigate()
   const { user } = useAuth()
   const [tab, setTab] = useState<'stats' | 'users' | 'keys'>('stats')
   const [stats, setStats] = useState<AdminStats | null>(null)
