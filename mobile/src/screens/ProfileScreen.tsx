@@ -7,6 +7,7 @@ import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { RootStackParamList } from '../../App'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 import { colors } from '../theme/colors'
 import api from '../services/api'
 
@@ -15,6 +16,7 @@ type ModalType = 'none' | 'editProfile' | 'changePassword'
 export default function ProfileScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const { user, token, login, logout } = useAuth()
+  const { theme, setTheme, isDark } = useTheme()
   const isEnterprise = user?.user_type === 'enterprise'
 
   const [modalType, setModalType] = useState<ModalType>('none')
@@ -228,6 +230,32 @@ export default function ProfileScreen() {
             {isEnterprise && (
               <MenuRow label="프랜차이즈 관리" desc="가맹점 현황 및 계약 관리" onPress={() => navigation.navigate('Franchise')} last />
             )}
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>화면 설정</Text>
+          <View style={styles.menuCard}>
+            {(['system', 'light', 'dark'] as const).map((t, i, arr) => (
+              <TouchableOpacity
+                key={t}
+                style={[styles.menuRow, i === arr.length - 1 && { borderBottomWidth: 0 }]}
+                onPress={() => setTheme(t)}
+                activeOpacity={0.7}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.menuLabel}>
+                    {t === 'system' ? '시스템 설정 따르기' : t === 'light' ? '라이트 모드' : '다크 모드'}
+                  </Text>
+                  <Text style={styles.menuDesc}>
+                    {t === 'system' ? '기기 설정에 따라 자동 전환' : t === 'light' ? '항상 밝은 화면' : '항상 어두운 화면'}
+                  </Text>
+                </View>
+                {theme === t && (
+                  <Text style={{ color: colors.primary, fontWeight: '700', fontSize: 15 }}>✓</Text>
+                )}
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
 

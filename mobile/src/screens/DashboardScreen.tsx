@@ -65,6 +65,19 @@ export default function DashboardScreen() {
   const [expiryInput, setExpiryInput] = useState('')
   const [expirySaving, setExpirySaving] = useState(false)
 
+  // 검색
+  const [searchQ, setSearchQ] = useState('')
+
+  // 통계 요약
+  const [stats, setStats] = useState<{ total_analyzed: number; avg_score: number; grade_breakdown: Record<string, number> } | null>(null)
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const { data } = await api.get('/stats/me?months=6')
+      setStats(data)
+    } catch {}
+  }, [])
+
   const fetchSaved = useCallback(async () => {
     try {
       const { data } = await api.get('/contracts/saved')
@@ -91,7 +104,8 @@ export default function DashboardScreen() {
     setLoading(true)
     fetchSaved()
     fetchSigningRecords()
-  }, [fetchSaved, fetchSigningRecords]))
+    fetchStats()
+  }, [fetchSaved, fetchSigningRecords, fetchStats]))
 
   const handleRefresh = () => {
     setRefreshing(true)
@@ -151,9 +165,10 @@ export default function DashboardScreen() {
     }
   }
 
-  // 필터 + 정렬 적용
+  // 필터 + 검색 + 정렬 적용
   const filteredSaved = saved
     .filter(c => filter === 'all' || c.grade === filter)
+    .filter(c => !searchQ || c.filename.toLowerCase().includes(searchQ.toLowerCase()) || c.contract_type.toLowerCase().includes(searchQ.toLowerCase()))
     .sort((a, b) => {
       if (sortKey === 'score') return b.score - a.score
       if (sortKey === 'expiry') {
@@ -364,6 +379,42 @@ export default function DashboardScreen() {
           <Text style={styles.avatarText}>{user?.username?.charAt(0).toUpperCase() ?? '?'}</Text>
         </TouchableOpacity>
       </View>
+
+      {/* 검색 바 */}
+      <View style={{ paddingHorizontal: 20, paddingBottom: 12 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.bgInput, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, borderWidth: 1, borderColor: colors.border }}>
+          <Text style={{ color: colors.textMuted, fontSize: 15, marginRight: 8 }}>🔍</Text>
+          <TextInput
+            value={searchQ}
+            onChangeText={setSearchQ}
+            placeholder="계약서 검색..."
+            placeholderTextColor={colors.textMuted}
+            style={{ flex: 1, fontSize: 14, color: colors.text, padding: 0 }}
+          />
+          {searchQ.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQ('')}>
+              <Text style={{ color: colors.textMuted, fontSize: 18 }}>✕</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      {/* 통계 요약 (검색 중이 아닐 때만) */}
+      {!searchQ && stats && (
+        <View style={{ flexDirection: 'row', paddingHorizontal: 20, gap: 10, marginBottom: 16 }}>
+          {[
+            { label: '총 분석', value: stats.total_analyzed, color: colors.primary },
+            { label: '위험', value: stats.grade_breakdown?.['위험'] ?? 0, color: colors.danger },
+            { label: '주의', value: stats.grade_breakdown?.['주의'] ?? 0, color: colors.warn },
+            { label: '안전', value: stats.grade_breakdown?.['안전'] ?? 0, color: colors.safe },
+          ].map(s => (
+            <View key={s.label} style={{ flex: 1, backgroundColor: colors.bgCard, borderRadius: 10, padding: 10, alignItems: 'center', borderWidth: 1, borderColor: colors.border }}>
+              <Text style={{ fontSize: 18, fontWeight: '800', color: s.color }}>{s.value}</Text>
+              <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 2 }}>{s.label}</Text>
+            </View>
+          ))}
+        </View>
+      )}
 
       {/* 대시보드 탭 */}
       <View style={styles.dashTabRow}>

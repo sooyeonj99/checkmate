@@ -44,7 +44,7 @@ export default function FranchiseScreen() {
     if (!newName.trim()) { Alert.alert('오류', '가맹점 이름을 입력해주세요.'); return }
     setSaving(true)
     try {
-      await api.post('/franchise/stores', { name: newName.trim(), location: newLocation.trim() })
+      await api.post('/franchise/stores', { store_name: newName.trim(), region: newLocation.trim() })
       setAddVisible(false)
       setNewName(''); setNewLocation('')
       loadStores()

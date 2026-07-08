@@ -218,6 +218,52 @@ def accept_invite(
     return {"ok": True, "store_name": store.store_name, "franchisor_id": store.franchisor_id}
 
 
+# ── 가맹점 직접 생성 (enterprise 계정 + franchisor 계정 공통) ─────────
+
+class CreateStoreRequest(BaseModel):
+    store_name: str
+    region: Optional[str] = None
+
+
+@router.post("/stores", response_model=StoreOut)
+def create_store(
+    body: CreateStoreRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.user_type not in ("franchisor", "enterprise"):
+        raise HTTPException(403, "기업/프랜차이즈 본사 계정만 사용할 수 있습니다.")
+    store = FranchiseStore(
+        franchisor_id=current_user.id,
+        franchisee_email="",
+        store_name=body.store_name,
+        region=body.region,
+        status="active",
+    )
+    db.add(store)
+    db.commit()
+    db.refresh(store)
+    return _build_store_out(store, db)
+
+
+# ── 가맹점 상태 토글 ─────────────────────────────────────
+
+@router.patch("/stores/{store_id}")
+def toggle_store_status(
+    store_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.user_type not in ("franchisor", "enterprise"):
+        raise HTTPException(403, "기업/프랜차이즈 본사 계정만 사용할 수 있습니다.")
+    store = db.query(FranchiseStore).filter_by(id=store_id, franchisor_id=current_user.id).first()
+    if not store:
+        raise HTTPException(404, "가맹점을 찾을 수 없습니다.")
+    store.status = "inactive" if store.status == "active" else "active"
+    db.commit()
+    return _build_store_out(store, db)
+
+
 # ── 가맹점 목록 ──────────────────────────────────────────
 
 @router.get("/stores", response_model=list[StoreOut])
@@ -225,7 +271,8 @@ def list_stores(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    _require_franchisor(current_user)
+    if current_user.user_type not in ("franchisor", "enterprise"):
+        raise HTTPException(403, "기업/프랜차이즈 본사 계정만 사용할 수 있습니다.")
     stores = db.query(FranchiseStore).filter_by(franchisor_id=current_user.id).all()
     return [_build_store_out(s, db) for s in stores]
 

@@ -1,4 +1,4 @@
-export const colors = {
+export const lightColors = {
   bg: '#f7f6f3',
   bgCard: '#ffffff',
   bgCardHover: '#f0ede8',
@@ -22,3 +22,31 @@ export const colors = {
   gradient1: '#2563eb',
   gradient2: '#06b6d4',
 }
+
+export const darkColors = {
+  bg: '#0f1117',
+  bgCard: '#1a1f2e',
+  bgCardHover: '#232940',
+  bgInput: '#232940',
+  border: 'rgba(255,255,255,0.09)',
+  borderAccent: 'rgba(99,149,255,0.3)',
+  primary: '#4f8aff',
+  primaryBright: '#6395ff',
+  primaryGlow: 'rgba(79,138,255,0.25)',
+  primaryDark: '#3b6fd4',
+  navBg: '#090c12',
+  text: '#e8e6e1',
+  textSecondary: '#9b9890',
+  textMuted: '#6b6860',
+  danger: '#f87171',
+  dangerBg: 'rgba(239,68,68,0.12)',
+  warn: '#fbbf24',
+  warnBg: 'rgba(245,158,11,0.12)',
+  safe: '#4ade80',
+  safeBg: 'rgba(34,197,94,0.12)',
+  gradient1: '#4f8aff',
+  gradient2: '#22d3ee',
+}
+
+// Default export — screens that don't use dark mode yet use this
+export const colors = lightColors

@@ -18,6 +18,11 @@ import TeamAcceptPage from './pages/TeamAcceptPage'
 import ProfilePage from './pages/ProfilePage'
 import SitemapPage from './pages/SitemapPage'
 import FranchisePage from './pages/FranchisePage'
+import AdminPage from './pages/AdminPage'
+import ComparePage from './pages/ComparePage'
+import GeneratePage from './pages/GeneratePage'
+import BulkPage from './pages/BulkPage'
+import StatsPage from './pages/StatsPage'
 import ChatWidget from './components/ChatWidget'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -48,6 +53,11 @@ function AppRoutes() {
         <Route path="/sitemap" element={<SitemapPage />} />
         <Route path="/franchise" element={<ProtectedRoute><FranchisePage /></ProtectedRoute>} />
         <Route path="/franchise/accept" element={<ProtectedRoute><FranchisePage /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
+        <Route path="/compare" element={<ProtectedRoute><ComparePage /></ProtectedRoute>} />
+        <Route path="/generate" element={<ProtectedRoute><GeneratePage /></ProtectedRoute>} />
+        <Route path="/bulk" element={<ProtectedRoute><BulkPage /></ProtectedRoute>} />
+        <Route path="/stats" element={<ProtectedRoute><StatsPage /></ProtectedRoute>} />
         <Route
           path="/dashboard"
           element={

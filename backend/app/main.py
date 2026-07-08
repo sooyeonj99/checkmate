@@ -13,6 +13,7 @@ from app.api.v1.router import api_router
 from app.core.config import settings
 from app.db.session import engine
 from app.db.base import Base
+from app.services.scheduler import start_scheduler, stop_scheduler
 import app.models.franchise       # noqa: F401
 import app.models.franchise_legal  # noqa: F401
 
@@ -44,7 +45,9 @@ async def lifespan(app: FastAPI):
     os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
     print(f"[OK] 서버 시작 | 업로드 폴더: {settings.UPLOAD_DIR}")
     print(f"[OK] CORS 허용 출처: {settings.CORS_ORIGINS}")
+    start_scheduler()
     yield
+    stop_scheduler()
     print("[--] 서버 종료")
 
 

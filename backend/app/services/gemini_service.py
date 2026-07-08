@@ -483,3 +483,66 @@ async def analyze_with_gemini(
     result.contract_text = merged_text or None
 
     return result
+
+
+# ── 계약서 비교 AI 판단 ──────────────────────────────────────────────────────
+
+async def compare_summaries(
+    filename_a: str, summary_a: str, score_a: int, grade_a: str,
+    filename_b: str, summary_b: str, score_b: int, grade_b: str,
+) -> str:
+    """두 계약서 요약을 기반으로 AI 종합 비교 판단"""
+    model = _init_model()
+    prompt = f"""당신은 한국 법률 계약서 비교 전문가입니다.
+두 계약서를 비교하고 어느 쪽이 더 유리한지, 주요 차이점이 무엇인지 3~4문장으로 간결하게 설명하세요.
+반드시 한국어로, 순수 텍스트만 반환하세요 (JSON/마크다운 금지).
+
+[계약서 A] {filename_a} — 위험도 {score_a}점 ({grade_a})
+{summary_a}
+
+[계약서 B] {filename_b} — 위험도 {score_b}점 ({grade_b})
+{summary_b}
+
+두 계약서의 핵심 차이점과 어느 쪽이 계약자에게 더 유리한지 판단해주세요."""
+
+    try:
+        response = model.generate_content(prompt)
+        return response.text.strip()
+    except Exception as e:
+        logger.error(f"비교 AI 오류: {e}")
+        return f"AI 비교 분석 중 오류가 발생했습니다. 점수 기준으로는 {'A' if score_a < score_b else 'B'}가 더 유리합니다."
+
+
+# ── AI 계약서 생성 ─────────────────────────────────────────────────────────
+
+async def generate_contract(description: str, contract_type: str | None = None) -> dict:
+    """설명을 기반으로 계약서 초안 생성"""
+    model = _init_model()
+    type_hint = f"\n계약서 유형: {contract_type}" if contract_type else ""
+    prompt = f"""당신은 한국 법률 계약서 작성 전문가입니다.
+아래 설명을 바탕으로 한국 법률에 맞는 계약서 초안을 작성하세요.{type_hint}
+
+[계약 설명]
+{description}
+
+[출력 형식 — 반드시 순수 JSON만, 마크다운/코드블록 금지]
+{{
+  "contract_type": "계약서 유형 (예: 근로계약서, 용역계약서, 임대차계약서 등)",
+  "suggested_title": "계약서 제목 (예: 소프트웨어 개발 용역계약서)",
+  "contract_text": "계약서 전문 텍스트 (제1조, 제2조... 형식으로 조항 구성. 빈칸은 [  ]로 표시)"
+}}
+
+작성 원칙:
+- 한국 법률(민법, 근로기준법, 상법 등)에 부합하는 조항 포함
+- 양 당사자가 균형있게 보호받는 공정한 조항 작성
+- 최소 6개 이상의 조항 포함 (당사자, 목적, 기간, 대금/임금, 의무, 해지, 분쟁해결)
+- 빈칸([  ])은 실제 계약 시 채워야 할 부분"""
+
+    response = model.generate_content(prompt)
+    raw = re.sub(r"```(?:json)?\s*|\s*```", "", response.text).strip()
+    data = json.loads(raw)
+    return {
+        "contract_text": data.get("contract_text", ""),
+        "contract_type": data.get("contract_type", "기타 계약서"),
+        "suggested_title": data.get("suggested_title", "계약서"),
+    }

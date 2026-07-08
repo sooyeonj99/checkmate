@@ -523,3 +523,75 @@ def get_certificate(
     if record.status != "signed":
         raise HTTPException(status_code=400, detail="서명이 완료되지 않은 문서입니다.")
     return HTMLResponse(content=_build_certificate_html(record))
+
+
+# ── 서명 필드 템플릿 CRUD (모바일 TemplateEditorScreen용) ────────────
+# 간단한 인메모리 저장소 (DB 모델 없이 빠르게 구현)
+# 서버 재시작 시 초기화됨 — 실제 운영에서는 DB 모델로 교체 필요
+
+from typing import Any
+
+_sign_tpls: dict[int, dict[str, Any]] = {}  # id → template dict
+_sign_tpl_seq = {"val": 0}
+
+
+class SigningTemplateField(BaseModel):
+    id: str
+    label: str
+    type: str
+    required: bool
+
+
+class SigningTemplateIn(BaseModel):
+    name: str
+    description: str = ""
+    fields: list[SigningTemplateField]
+
+
+class SigningTemplateOut(BaseModel):
+    id: int
+    name: str
+    description: str
+    fields: list[SigningTemplateField]
+    created_at: str
+
+
+@router.get("/templates", response_model=list[SigningTemplateOut])
+def list_signing_templates(current_user: User = Depends(get_current_user)):
+    user_tpls = [v for v in _sign_tpls.values() if v["user_id"] == current_user.id]
+    user_tpls.sort(key=lambda x: x["created_at"], reverse=True)
+    return [SigningTemplateOut(**{k: v for k, v in t.items() if k != "user_id"}) for t in user_tpls]
+
+
+@router.post("/templates", response_model=SigningTemplateOut)
+def create_signing_template(body: SigningTemplateIn, current_user: User = Depends(get_current_user)):
+    _sign_tpl_seq["val"] += 1
+    tpl_id = _sign_tpl_seq["val"]
+    tpl = {
+        "id": tpl_id,
+        "name": body.name,
+        "description": body.description,
+        "fields": [f.model_dump() for f in body.fields],
+        "created_at": datetime.now().isoformat(),
+        "user_id": current_user.id,
+    }
+    _sign_tpls[tpl_id] = tpl
+    return SigningTemplateOut(**{k: v for k, v in tpl.items() if k != "user_id"})
+
+
+@router.put("/templates/{tpl_id}", response_model=SigningTemplateOut)
+def update_signing_template(tpl_id: int, body: SigningTemplateIn, current_user: User = Depends(get_current_user)):
+    tpl = _sign_tpls.get(tpl_id)
+    if not tpl or tpl["user_id"] != current_user.id:
+        raise HTTPException(status_code=404, detail="템플릿을 찾을 수 없습니다.")
+    tpl.update({"name": body.name, "description": body.description, "fields": [f.model_dump() for f in body.fields]})
+    return SigningTemplateOut(**{k: v for k, v in tpl.items() if k != "user_id"})
+
+
+@router.delete("/templates/{tpl_id}")
+def delete_signing_template(tpl_id: int, current_user: User = Depends(get_current_user)):
+    tpl = _sign_tpls.get(tpl_id)
+    if not tpl or tpl["user_id"] != current_user.id:
+        raise HTTPException(status_code=404, detail="템플릿을 찾을 수 없습니다.")
+    del _sign_tpls[tpl_id]
+    return {"ok": True}

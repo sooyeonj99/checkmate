@@ -267,6 +267,58 @@ def send_signing_request_email(
     _send_smtp(to_email, subject, html)
 
 
+def send_expiry_alert_email(
+    to_email: str,
+    username: str,
+    filename: str,
+    expiry_date: str,
+    days_left: int,
+) -> None:
+    urgency_color = "#dc2626" if days_left <= 3 else "#d97706" if days_left <= 7 else "#2563eb"
+    urgency_label = "오늘 만료" if days_left == 0 else f"{days_left}일 후 만료"
+    subject = f"[CHECKMATE] ⚠️ '{filename}' 계약 만료 {days_left}일 전"
+    html = f"""<!DOCTYPE html>
+<html lang="ko">
+<head><meta charset="utf-8"/></head>
+<body style="margin:0;padding:0;background:#f0f4ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+    <div style="background:{urgency_color};padding:28px 40px;text-align:center;">
+      <span style="color:#fff;font-size:20px;font-weight:800;letter-spacing:1.5px;">CHECKMATE</span>
+      <p style="color:rgba(255,255,255,0.85);font-size:13px;margin:8px 0 0;">계약 만료 알림</p>
+    </div>
+    <div style="padding:40px;">
+      <h2 style="margin:0 0 16px;font-size:22px;color:#0f172a;font-weight:700;">안녕하세요, {username}님!</h2>
+      <div style="background:#fef9ec;border:1px solid #fcd34d;border-radius:12px;padding:20px 24px;margin-bottom:28px;">
+        <div style="font-size:13px;color:#92400e;font-weight:700;margin-bottom:8px;">⏰ {urgency_label}</div>
+        <div style="font-size:17px;font-weight:700;color:#0f172a;margin-bottom:4px;">📄 {filename}</div>
+        <div style="font-size:14px;color:#64748b;">만료일: {expiry_date}</div>
+      </div>
+      <p style="color:#475569;font-size:14px;line-height:1.75;margin:0 0 24px;">
+        위 계약의 만료일이 다가오고 있습니다.<br/>
+        계약 갱신 또는 연장 여부를 확인해 주세요.
+      </p>
+      <div style="text-align:center;margin-bottom:28px;">
+        <a href="{settings.FRONTEND_URL}/dashboard"
+           style="display:inline-block;padding:14px 36px;background:{urgency_color};
+                  color:#fff;text-decoration:none;border-radius:12px;font-weight:700;font-size:15px;">
+          대시보드에서 확인하기 →
+        </a>
+      </div>
+      <div style="border-top:1px solid #e2e8f0;padding-top:18px;">
+        <p style="color:#94a3b8;font-size:12px;line-height:1.6;margin:0;">
+          📧 문의: support@checkmate.kr · 수신 거부는 마이페이지에서 설정하실 수 있습니다.
+        </p>
+      </div>
+    </div>
+    <div style="background:#f8faff;padding:20px 40px;text-align:center;border-top:1px solid #e2e8f0;">
+      <p style="margin:0;font-size:12px;color:#94a3b8;">ⓒ 2026 CHECKMATE · AI 계약서 분석 서비스</p>
+    </div>
+  </div>
+</body>
+</html>"""
+    _send_smtp(to_email, subject, html)
+
+
 def send_signing_complete_email(
     to_email: str,
     requester_name: str,

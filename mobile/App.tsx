@@ -10,6 +10,7 @@ import * as Device from 'expo-device'
 import * as Notifications from 'expo-notifications'
 
 import { AuthProvider, useAuth } from './src/context/AuthContext'
+import { ThemeProvider, useTheme } from './src/context/ThemeContext'
 
 const navigationRef = createNavigationContainerRef()
 import AuthScreen from './src/screens/AuthScreen'
@@ -264,10 +265,12 @@ function Navigation() {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <StatusBar style="dark" />
-        <Navigation />
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <StatusBar style="auto" />
+          <Navigation />
+        </AuthProvider>
+      </ThemeProvider>
     </SafeAreaProvider>
   )
 }

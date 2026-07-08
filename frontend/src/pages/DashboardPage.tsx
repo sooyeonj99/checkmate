@@ -1,9 +1,19 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { MOCK_RESULT_MAP } from '../data/mockResults'
 import SigningModal from '../components/SigningModal'
 import TemplateModal from '../components/TemplateModal'
+
+interface SearchResult {
+  id: number
+  filename: string
+  contract_type: string
+  score: number
+  grade: string
+  saved_at: string
+  match_snippet: string
+}
 
 /* ── Saved contract types (API) ─────────────────────── */
 interface SavedContractItem {
@@ -272,6 +282,40 @@ export default function DashboardPage() {
 
   /* 계약서 템플릿 */
   const [showTemplateModal, setShowTemplateModal] = useState(false)
+
+  /* 검색 */
+  const [searchQ, setSearchQ] = useState('')
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([])
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchLoading, setSearchLoading] = useState(false)
+  const searchRef = useRef<HTMLDivElement>(null)
+
+  const doSearch = useCallback(async (q: string) => {
+    if (!q.trim()) { setSearchResults([]); return }
+    setSearchLoading(true)
+    const token = localStorage.getItem('cm_token')
+    try {
+      const res = await fetch(`/api/v1/search/contracts?q=${encodeURIComponent(q)}&limit=10`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (res.ok) setSearchResults(await res.json())
+    } catch {}
+    setSearchLoading(false)
+  }, [])
+
+  useEffect(() => {
+    const t = setTimeout(() => doSearch(searchQ), 350)
+    return () => clearTimeout(t)
+  }, [searchQ, doSearch])
+
+  useEffect(() => {
+    if (!searchOpen) return
+    const close = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) setSearchOpen(false)
+    }
+    window.addEventListener('click', close)
+    return () => window.removeEventListener('click', close)
+  }, [searchOpen])
 
   /* 커스텀 템플릿 */
   interface UserTemplateItem { id: number; name: string; content_type: string; file_ext: string | null; created_at: string }
@@ -585,6 +629,66 @@ export default function DashboardPage() {
               </svg>
               새 계약서 분석하기
             </button>
+          </div>
+
+          {/* ── 검색 바 ── */}
+          <div ref={searchRef} style={{ position: 'relative', marginBottom: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: '10px 16px' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round">
+                <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+              </svg>
+              <input
+                value={searchQ}
+                onChange={e => { setSearchQ(e.target.value); setSearchOpen(true) }}
+                onFocus={() => setSearchOpen(true)}
+                placeholder="계약서 검색... (파일명, 유형, 조항 내용)"
+                style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', color: 'var(--text)', fontSize: 14 }}
+              />
+              {searchLoading && <div style={{ width: 16, height: 16, border: '2px solid var(--border)', borderTopColor: 'var(--accent)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />}
+            </div>
+            {searchOpen && searchQ && (
+              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', marginTop: 4, maxHeight: 360, overflowY: 'auto' }}>
+                {searchResults.length === 0 ? (
+                  <div style={{ padding: '20px', textAlign: 'center', fontSize: 13, color: 'var(--text-muted)' }}>
+                    {searchLoading ? '검색 중...' : '검색 결과가 없습니다.'}
+                  </div>
+                ) : searchResults.map(r => {
+                  const gc = r.grade === '위험' ? '#ef4444' : r.grade === '주의' ? '#f59e0b' : '#22c55e'
+                  return (
+                    <div key={r.id} onClick={() => { handleViewSaved({ id: r.id, contract_id: '', filename: r.filename, contract_type: r.contract_type, score: r.score, grade: r.grade, danger_count: 0, warn_count: 0, safe_count: 0, analysis_time: '', saved_at: r.saved_at }); setSearchOpen(false); setSearchQ('') }}
+                      style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', cursor: 'pointer', display: 'flex', gap: 12, alignItems: 'center' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.filename}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.match_snippet}</div>
+                      </div>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: gc, flexShrink: 0 }}>{r.grade}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* ── 퀵 액션 ── */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 24 }}>
+            {[
+              { icon: '📊', label: '분석 통계', to: '/stats', color: '#8b5cf6' },
+              { icon: '⚖️', label: '계약서 비교', to: '/compare', color: '#3b82f6' },
+              { icon: '✨', label: 'AI 생성기', to: '/generate', color: '#f59e0b' },
+              { icon: '📦', label: '일괄 분석', to: '/bulk', color: '#10b981' },
+              ...(user?.email === 'ghdiehddl@gmail.com' ? [{ icon: '🛡️', label: '어드민', to: '/admin', color: '#ef4444' }] : []),
+            ].map(a => (
+              <Link key={a.to} to={a.to} style={{ textDecoration: 'none' }}>
+                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', transition: 'border-color 0.15s' }}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor = a.color)}
+                  onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}>
+                  <span style={{ fontSize: 22 }}>{a.icon}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{a.label}</span>
+                </div>
+              </Link>
+            ))}
           </div>
 
           {/* ── Summary cards ── */}
