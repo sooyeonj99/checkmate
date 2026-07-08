@@ -27,6 +27,10 @@ import TemplateEditorScreen from './src/screens/TemplateEditorScreen'
 import SigningScreen from './src/screens/SigningScreen'
 import SignedDocScreen from './src/screens/SignedDocScreen'
 import ReportDocScreen from './src/screens/ReportDocScreen'
+import GenerateScreen from './src/screens/GenerateScreen'
+import CompareScreen from './src/screens/CompareScreen'
+import BulkScreen from './src/screens/BulkScreen'
+import AdminScreen from './src/screens/AdminScreen'
 import { colors } from './src/theme/colors'
 import api from './src/services/api'
 
@@ -69,6 +73,10 @@ export type RootStackParamList = {
   ReportDoc: { savedId: number; filename: string }
   Franchise: undefined
   TemplateEditor: undefined
+  Generate: undefined
+  Compare: undefined
+  Bulk: undefined
+  Admin: undefined
 }
 
 export type TabParamList = {
@@ -250,6 +258,10 @@ function Navigation() {
             <RootStack.Screen name="ReportDoc" component={ReportDocScreen} />
             <RootStack.Screen name="Franchise" component={FranchiseScreen} />
             <RootStack.Screen name="TemplateEditor" component={TemplateEditorScreen} />
+            <RootStack.Screen name="Generate" component={GenerateScreen} />
+            <RootStack.Screen name="Compare" component={CompareScreen} />
+            <RootStack.Screen name="Bulk" component={BulkScreen} />
+            <RootStack.Screen name="Admin" component={AdminScreen} />
           </>
         ) : (
           <>

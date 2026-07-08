@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { ThemeProvider } from './context/ThemeContext'
 import HomePage from './pages/HomePage'
 import UploadPage from './pages/UploadPage'
 import LoadingPage from './pages/LoadingPage'
@@ -75,9 +76,11 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter basename="/checkmate">
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   )
 }

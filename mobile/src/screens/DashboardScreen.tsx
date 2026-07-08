@@ -416,6 +416,30 @@ export default function DashboardScreen() {
         </View>
       )}
 
+      {/* 빠른 기능 */}
+      {!searchQ && (
+        <View style={{ paddingHorizontal: 20, marginBottom: 14 }}>
+          <Text style={{ fontSize: 12, fontWeight: '700', color: colors.textMuted, marginBottom: 8, letterSpacing: 0.5 }}>AI 기능</Text>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            {[
+              { label: 'AI 생성', icon: '✨', screen: 'Generate' },
+              { label: '비교 분석', icon: '⚖️', screen: 'Compare' },
+              { label: '일괄 분석', icon: '📦', screen: 'Bulk' },
+              ...(user?.email === 'ghdiehddl@gmail.com' ? [{ label: '어드민', icon: '🛡️', screen: 'Admin' }] : []),
+            ].map(btn => (
+              <TouchableOpacity
+                key={btn.screen}
+                onPress={() => navigation.navigate(btn.screen as any)}
+                style={{ flex: 1, backgroundColor: colors.bgCard, borderRadius: 12, paddingVertical: 12, alignItems: 'center', borderWidth: 1, borderColor: colors.border }}
+              >
+                <Text style={{ fontSize: 20, marginBottom: 4 }}>{btn.icon}</Text>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: colors.text }}>{btn.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      )}
+
       {/* 대시보드 탭 */}
       <View style={styles.dashTabRow}>
         {(['contracts', 'signing'] as DashTab[]).map((tab) => (

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { useTheme } from '../../context/ThemeContext'
 
 function formatTime(secs: number) {
   const m = Math.floor(secs / 60)
@@ -14,8 +15,14 @@ export default function Navbar() {
   const navigate = useNavigate()
   const { user, isLoggedIn, logout, secondsLeft } = useAuth()
 
-  const isDanger  = secondsLeft < 60    // 1분 미만 → 빨간색
-  const isWarning = secondsLeft < 300   // 5분 미만 → 주황색
+  const { theme, setTheme, isDark } = useTheme()
+  const isDanger  = secondsLeft < 60
+  const isWarning = secondsLeft < 300
+  const themeIcon = theme === 'system' ? '🖥️' : isDark ? '🌙' : '☀️'
+  const nextTheme = () => {
+    const cycle: Record<string, 'dark' | 'light' | 'system'> = { system: 'dark', dark: 'light', light: 'system' }
+    setTheme(cycle[theme])
+  }
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
@@ -56,6 +63,18 @@ export default function Navbar() {
         </ul>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button
+            onClick={nextTheme}
+            title={`테마: ${theme === 'system' ? '시스템' : theme === 'dark' ? '다크' : '라이트'} (클릭해서 변경)`}
+            style={{
+              width: 34, height: 34, borderRadius: 10, border: '1px solid var(--border)',
+              background: 'var(--bg-card)', cursor: 'pointer', fontSize: 16,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'background 0.2s',
+            }}
+          >
+            {themeIcon}
+          </button>
           <Link to="/dashboard" className="navbar-dashboard-btn">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>

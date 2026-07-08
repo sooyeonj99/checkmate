@@ -1,9 +1,16 @@
 :root {
+  /* 라이트 테마 */
+  --bg: #f7f6f3;
   --bg-base: #f7f6f3;
   --bg-surface: #ffffff;
   --bg-card: #ffffff;
   --bg-card-hover: #f0ede8;
   --bg-input: #f0ede8;
+
+  --text: #1a1917;
+  --text-primary: #1a1917;
+  --text-secondary: #6b6860;
+  --text-muted: #a09e99;
 
   --accent: #2563eb;
   --accent-bright: #3b82f6;
@@ -17,10 +24,6 @@
   --risk-safe: #2e8b2e;
   --risk-safe-bg: #edf7ed;
 
-  --text-primary: #1a1917;
-  --text-secondary: #6b6860;
-  --text-muted: #a09e99;
-
   --border: rgba(0, 0, 0, 0.09);
   --border-accent: rgba(37, 99, 235, 0.25);
 
@@ -31,6 +34,80 @@
 
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.06);
   --shadow-glow: 0 4px 20px rgba(37, 99, 235, 0.12);
+}
+
+/* 다크 테마 — 시스템 설정 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1117;
+    --bg-base: #0f1117;
+    --bg-surface: #1a1d27;
+    --bg-card: #1a1d27;
+    --bg-card-hover: #222638;
+    --bg-input: #1e2130;
+
+    --text: #e8e6e1;
+    --text-primary: #e8e6e1;
+    --text-secondary: #9b9994;
+    --text-muted: #6b6860;
+
+    --border: rgba(255, 255, 255, 0.08);
+    --border-accent: rgba(59, 130, 246, 0.3);
+
+    --risk-high-bg: rgba(217, 64, 64, 0.12);
+    --risk-mid-bg: rgba(196, 132, 10, 0.12);
+    --risk-safe-bg: rgba(46, 139, 46, 0.12);
+
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* 다크 테마 — 수동 */
+[data-theme="dark"] {
+  --bg: #0f1117;
+  --bg-base: #0f1117;
+  --bg-surface: #1a1d27;
+  --bg-card: #1a1d27;
+  --bg-card-hover: #222638;
+  --bg-input: #1e2130;
+
+  --text: #e8e6e1;
+  --text-primary: #e8e6e1;
+  --text-secondary: #9b9994;
+  --text-muted: #6b6860;
+
+  --border: rgba(255, 255, 255, 0.08);
+  --border-accent: rgba(59, 130, 246, 0.3);
+
+  --risk-high-bg: rgba(217, 64, 64, 0.12);
+  --risk-mid-bg: rgba(196, 132, 10, 0.12);
+  --risk-safe-bg: rgba(46, 139, 46, 0.12);
+
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* 라이트 테마 — 수동 오버라이드 */
+[data-theme="light"] {
+  --bg: #f7f6f3;
+  --bg-base: #f7f6f3;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f0ede8;
+  --bg-input: #f0ede8;
+
+  --text: #1a1917;
+  --text-primary: #1a1917;
+  --text-secondary: #6b6860;
+  --text-muted: #a09e99;
+
+  --border: rgba(0, 0, 0, 0.09);
+  --border-accent: rgba(37, 99, 235, 0.25);
+
+  --risk-high-bg: #fef0f0;
+  --risk-mid-bg: #fef8ec;
+  --risk-safe-bg: #edf7ed;
+
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 *, *::before, *::after {

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Animated, Alert } from 'react-native'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import api from '../services/api'
 import { colors } from '../theme/colors'
+import { useAuth } from '../context/AuthContext'
 
 const STEPS = [
   { label: '업로드 완료', sub: '파일을 수신했습니다', duration: 2000 },
@@ -15,6 +16,7 @@ export default function LoadingScreen() {
   const navigation = useNavigation<any>()
   const route = useRoute<any>()
   const { contractId, selectedIds, userType } = route.params ?? {}
+  const { user } = useAuth()
 
   const [stepIndex, setStepIndex] = useState(0)
   const [elapsed, setElapsed] = useState(0)
@@ -79,6 +81,23 @@ export default function LoadingScreen() {
     }, 2000)
     return () => clearTimeout(timer)
   }, [])
+
+  // WebSocket — 분석 완료 실시간 수신
+  useEffect(() => {
+    if (!user?.id || !contractId) return
+    const WS_BASE = 'ws://101.79.25.139/api/v1/ws'
+    const ws = new WebSocket(`${WS_BASE}/${user.id}`)
+    ws.onmessage = (e: WebSocketMessageEvent) => {
+      try {
+        const msg = JSON.parse(e.data)
+        if (msg.type === 'analysis_done' && msg.contract_id === contractId) {
+          apiDone.current = true
+          tryNavigate()
+        }
+      } catch {}
+    }
+    return () => ws.close()
+  }, [user?.id, contractId])
 
   useEffect(() => {
     if (!contractId) {

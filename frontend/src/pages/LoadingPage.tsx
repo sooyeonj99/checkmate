@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import api from '../services/api'
+import { useAuth } from '../context/AuthContext'
 
 /* ── Step definitions ──────────────────────────────── */
 interface Step {
@@ -301,6 +302,7 @@ function MsgArea({ step, stepIndex, msgKey }: MsgAreaProps) {
 export default function LoadingPage() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { user } = useAuth()
   const { contractId, useMock, selectedIds, customMasks, userType, ocrTextOverride } = (location.state as any) || {}
 
   const [stepIndex, setStepIndex] = useState(0)
@@ -324,6 +326,25 @@ export default function LoadingPage() {
       })
     }
   }, [navigate, useMock])
+
+  // WebSocket — 분석 완료 실시간 수신
+  useEffect(() => {
+    if (!user?.id || useMock) return
+    const wsBase = (import.meta as any).env?.VITE_WS_URL
+      ?? (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host
+    const ws = new WebSocket(`${wsBase}/api/v1/ws/${user.id}`)
+    ws.onmessage = (e) => {
+      try {
+        const msg = JSON.parse(e.data)
+        if (msg.type === 'analysis_done' && msg.contract_id === contractId) {
+          // API 폴링 결과를 기다리는 대신 즉시 표시 가능 상태로 전환
+          apiDoneRef.current = true
+          tryNavigate()
+        }
+      } catch {}
+    }
+    return () => ws.close()
+  }, [user?.id, contractId, useMock, tryNavigate])
 
   // 분석 API 호출
   useEffect(() => {

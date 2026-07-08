@@ -23,7 +23,25 @@ from app.db.session import get_db
 from app.models.saved_contract import SavedContract
 from app.models.user import User
 from app.schemas.contract import AnalysisResult, ClauseResult, ContractUploadResponse
+from fastapi.security import OAuth2PasswordBearer
 from app.api.v1.endpoints.users import get_current_user
+from app.api.v1.endpoints import ws as ws_module
+from app.core.security import decode_token
+from jose import JWTError
+from app.services.user_service import get_user_by_id
+
+_optional_bearer = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
+
+
+def _get_optional_user(token: Optional[str] = Depends(_optional_bearer), db: Session = Depends(get_db)) -> Optional[User]:
+    if not token:
+        return None
+    try:
+        payload = decode_token(token)
+        user_id = int(payload.get("sub"))
+        return get_user_by_id(db, user_id)
+    except (JWTError, TypeError, ValueError, Exception):
+        return None
 
 router = APIRouter(prefix="/contracts", tags=["계약서"])
 
@@ -227,7 +245,12 @@ async def preview_contract(contract_id: str):
     response_model=AnalysisResult,
     summary="계약서 AI 분석",
 )
-async def analyze_contract(contract_id: str, body: AnalyzeRequest | None = None):
+async def analyze_contract(
+    contract_id: str,
+    body: AnalyzeRequest | None = None,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(_get_optional_user),
+):
     contract_dir, meta, file_paths = _load_contract_dir(contract_id)
     original_filename = meta.get("original_filename", os.path.basename(file_paths[0]))
     selected_ids = body.selected_ids if body else None
@@ -257,11 +280,29 @@ async def analyze_contract(contract_id: str, body: AnalyzeRequest | None = None)
             # meta의 유형(사용자 선택)은 Gemini가 반환하지 못한 경우에만 폴백
             if not result.contract_type and meta.get("contract_type"):
                 result.contract_type = meta["contract_type"]
+            # 로그인 유저에게 WS 실시간 알림
+            if current_user:
+                await ws_module.manager.send(current_user.id, {
+                    "type": "analysis_done",
+                    "contract_id": contract_id,
+                    "grade": result.grade,
+                    "score": result.score,
+                    "filename": original_filename,
+                })
             return result
         except Exception as e:
             print(f"[WARN] Gemini 분석 오류 (목업으로 대체): {e}")
 
-    return _mock_analysis(contract_id, original_filename, meta.get("contract_type", "기타 계약서"))
+    mock = _mock_analysis(contract_id, original_filename, meta.get("contract_type", "기타 계약서"))
+    if current_user:
+        await ws_module.manager.send(current_user.id, {
+            "type": "analysis_done",
+            "contract_id": contract_id,
+            "grade": mock.grade,
+            "score": mock.score,
+            "filename": original_filename,
+        })
+    return mock
 
 
 @router.delete(
