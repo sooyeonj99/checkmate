@@ -264,7 +264,30 @@
 
 ---
 
-*마지막 업데이트: 2026-07-01 | 다음 작업: 업로드 화면에 유형 선택 UI 추가*
+### [작업] 팀 초대 핸드폰 번호 지원
+
+**변경 내용:**
+- `TeamMember` 모델: `member_phone`, `invite_method` 컬럼 추가
+- `main.py`: 서버 시작 시 SQLite ALTER TABLE 자동 마이그레이션
+- `sms_service.py`: `send_team_invite_sms()` 함수 추가
+- `team.py`: `POST /team/invite/sms` 엔드포인트 추가
+  - 번호 유효성 검사 (010/011/016/019)
+  - NCP SENS SMS 발송 → 미설정 시 초대 링크 반환
+- `DashboardPage.tsx`: 이메일/핸드폰 탭 전환 UI + SMS 미설정 시 링크 복사 버튼
+
+**NCP SMS 설정 방법 (선택):** `.env`에 추가
+```
+NCP_SMS_SERVICE_ID=...
+NCP_ACCESS_KEY=...
+NCP_SECRET_KEY=...
+NCP_SMS_SENDER=01012345678
+```
+
+**커밋:** `e6911b1` | **Push/배포:** ✅
+
+---
+
+*마지막 업데이트: 2026-07-07*
 
 ---
 
@@ -1291,3 +1314,151 @@ Step 2: 닉네임 / 전화번호 / 새 비밀번호 수정 (PUT /users/profile)
 **커밋:** `eb07fe2` | **GitHub Push:** ✅ | **서버 배포:** ✅
 
 *마지막 업데이트: 2026-07-06*
+
+---
+
+## 세션 7 — 2026-07-07
+
+### 회원가입 실시간 중복 체크 + 드롭다운 내정보 메뉴
+
+**사용자 요청:**
+1. 회원가입 시 닉네임/이메일/전화번호 중복 자동 검사
+2. 로그인 후 오른쪽 상단 드롭다운에 "내정보" 메뉴 없음 → 추가
+
+**드롭다운 내정보 확인 결과:**
+- `Navbar.tsx` (공통 컴포넌트): 이미 `<Link to="/profile">내 정보</Link>` 존재 (이전 세션에서 추가됨)
+- `DashboardPage.tsx`: 자체 인라인 드롭다운에 누락 → "내 정보" 링크 추가
+
+**백엔드 — 중복 체크 엔드포인트 3개 추가 (`auth.py`)**
+```
+GET /api/v1/auth/check-username?value=홍길동
+GET /api/v1/auth/check-email?value=test@test.com
+GET /api/v1/auth/check-phone?value=01012345678
+응답: { "available": true | false }
+```
+
+**웹 프론트 (AuthPage.tsx)**
+- `FieldStatusMsg` 컴포넌트: idle/checking/available/taken 상태 표시
+- `useEffect` + 500ms debounce로 닉네임/이메일/전화번호 실시간 체크
+- 중복(taken) 또는 확인중(checking) 상태면 가입 버튼 비활성화
+- 각 입력 필드 아래 초록(가능) / 빨강(중복) 상태 메시지 표시
+
+**앱 (AuthScreen.tsx)**
+- 동일한 `StatusMsg` 컴포넌트 + `useEffect` debounce 추가
+- 중복 상태 시 입력 필드 빨간 테두리 표시
+- submit 버튼 disabled 조건 추가
+
+**변경 파일:**
+- `backend/app/api/v1/endpoints/auth.py`: 3개 check 엔드포인트 추가
+- `frontend/src/pages/AuthPage.tsx`: FieldStatusMsg + useEffect debounce 추가
+- `frontend/src/pages/DashboardPage.tsx`: 드롭다운에 "내 정보" 링크 추가
+- `mobile/src/screens/AuthScreen.tsx`: StatusMsg + useEffect debounce 추가
+
+**커밋:** `d93e9a3` | **GitHub Push:** ✅ | **서버 배포:** 미완료 (git pull + restart 필요)
+
+*마지막 업데이트: 2026-07-07*
+
+---
+
+## 세션 7 추가 — 2026-07-07
+
+### 에뮬레이터 문제 + 사이트맵 + 보안 조치
+
+**에뮬레이터 "Cannot connect to Expo CLI" 해결:**
+```
+① npx expo start (mobile 폴더)
+② adb reverse tcp:8081 tcp:8081
+③ 에뮬레이터 R키 또는 Shake → Reload
+```
+
+**보안 조치:**
+- `ssh_fix.py` (root 비밀번호 평문 포함) git 추적 제거
+- `.gitignore`에 ssh_fix.py, checkmate-key.pem, fix-server.ps1 등록
+- 커밋: `9f80b13` | GitHub Push: ✅
+- **서버 비밀번호 변경 필요** (히스토리에 잔존)
+
+**사이트맵 구현:**
+- `SitemapPage.tsx` 신규: 6개 카테고리 전체 페이지 목록 (로그인 필요 배지 포함)
+- 홈페이지 푸터에 "사이트맵" 링크 추가 → /sitemap
+- App.tsx: /sitemap 라우트 등록
+- 커밋: `7a93538` | GitHub Push: ✅
+
+*마지막 업데이트: 2026-07-07*
+
+---
+
+## 세션 8 — 2026-07-08
+
+### 에뮬레이터 ADB 연결 문제 해결
+
+**증상:** `adb devices` → `emulator-5554 offline` / `Cannot connect to Expo CLI`
+
+**원인 및 해결:**
+- `adb kill-server` 실행 중 에뮬레이터가 켜져 있어 ADB-에뮬레이터 연결 꼬임
+- Android Studio AVD Manager → **Wipe Data** → 에뮬레이터 재부팅으로 해결
+- 올바른 순서: 에뮬레이터 부팅 완료 → `adb reverse tcp:8081 tcp:8081` → `npx expo start --clear`
+
+**실서버 API 연결:**
+- `mobile/src/services/api.ts` API_BASE_URL → `http://101.79.25.139:8000` (실서버)
+- 핸드폰 테스트 시 실서버 사용, 로컬 테스트 시 `http://10.0.2.2:8000`
+
+### 마이페이지 이모지 제거 + 업로드 사진촬영
+
+**ProfileScreen.tsx:**
+- 기능 목록 이모지(📄💾🤖👥📊📑) 제거 → 컬러 점(●) 표시로 교체
+- 플랜 카드 이모지(🏢👤) 제거
+- 계정 유형 배지 이모지 제거
+
+**UploadScreen.tsx:**
+- 초기 화면: "파일 업로드" / "사진 촬영" 2개 버튼으로 분리
+- `expo-image-picker` 설치 → `takePicture()` 함수 구현
+- 촬영 후 "추가 촬영?" Alert → 여러 장 연속 촬영 가능
+- 파일 추가 시 "파일 선택" / "사진 촬영" 선택 ActionSheet
+- 커밋: `8e77a8c` | GitHub Push: ✅
+
+### 사이트맵 프랜차이즈 섹션 추가
+
+- `SitemapPage.tsx`에 프랜차이즈 섹션 추가 (프랜차이즈 관리, 가맹점 참여)
+- 커밋: `6cddfb5` | GitHub Push: ✅
+
+### Android APK 빌드
+
+**과정:**
+- `npx expo prebuild --platform android` → android 폴더 생성
+- `.\gradlew.bat assembleDebug` (Kotlin 컴파일 오류 → android 폴더 삭제 후 재생성 → 성공)
+- APK 위치: `mobile/android/app/build/outputs/apk/debug/app-debug.apk` (154.7MB)
+- 핸드폰 설치: 카카오톡/USB 전송 → 알 수 없는 앱 설치 허용
+
+### 프랜차이즈 법적 안전 설계 구현
+
+**원칙:** 개인정보보호법·가맹사업법·노동법 리스크 최소화 (5대 원칙)
+
+**신규 모델 (`models/franchise_legal.py`):**
+- `ContractRiskSummary` — 본사 열람 전용 익명화 위험도 요약 (파일명·원문 없음)
+- `WorkerConsent` — 근로자 동의 요청/응답 추적
+- `FranchiseAuditLog` — 감사 로그 (누가 언제 무엇을 조회)
+
+**franchise.py API 변경:**
+- 본사 store_contracts → `ContractRiskSummary`만 반환 (SavedContract 직접 접근 제거)
+- `ContractRiskOut` 스키마: 파일명·result_json 완전 제거, 위험 조항 유형명만 포함
+- 대시보드/계약서 조회 시 감사 로그 자동 기록
+- 신규: `POST /franchise/send-support` — 지원 안내 이메일
+- 신규: `POST /franchise/request-consent` — 근로자 동의 요청
+- 신규: `GET /franchise/consent/respond` — 근로자 동의/거절 처리 (인증 불필요)
+
+**contracts.py API 변경:**
+- 가맹점주 저장 시 `ContractRiskSummary` 자동 생성
+- 근로계약서 → `consent_status="pending"`, 기타 → `"exempt"`
+- 본사 알림 이메일: 파일명 제거, "지원형" 톤으로 변경
+
+- 커밋: `420f430` | GitHub Push: ✅ | 서버 배포: 완료
+
+### 미완료 항목 (2026-07-08 기준)
+
+- 서버 root 비밀번호 변경 (git 히스토리에 이전 비밀번호 잔존 — 네이버 클라우드 콘솔에서 변경 필요)
+- checkmate-key.pem SSH 키 교체
+- NCP SMS 설정 (`.env` 4개 항목)
+- google.generativeai → google.genai 패키지 교체 (FutureWarning)
+- 프론트엔드 FranchisePage: 지원 안내 발송 버튼 UI 추가 필요
+
+*마지막 업데이트: 2026-07-08*

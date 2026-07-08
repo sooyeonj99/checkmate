@@ -1,9 +1,9 @@
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
-// 안드로이드 에뮬레이터: 10.0.2.2 = PC의 localhost
-// 실제 기기(Expo Go)로 전환 시 'http://192.168.35.178:8000' 으로 변경
-export const API_BASE_URL = 'http://10.0.2.2:8000'
+// 실서버 (핸드폰 테스트 / 에뮬레이터 모두 사용 가능)
+// 로컬 에뮬레이터 테스트 시: 'http://10.0.2.2:8000'
+export const API_BASE_URL = 'http://101.79.25.139:8000'
 
 const api = axios.create({
   baseURL: `${API_BASE_URL}/api/v1`,

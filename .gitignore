@@ -46,3 +46,5 @@ backend/uploads/
 ssh_fix.py
 checkmate-key.pem
 fix-server.ps1
+create_test_accounts.py
+checkmate-server.JPG
