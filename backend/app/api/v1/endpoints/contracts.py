@@ -338,53 +338,82 @@ async def save_contract(
     if os.path.isdir(contract_dir):
         shutil.rmtree(contract_dir)
 
-    # 가맹점주가 위험/주의 계약 저장 시 본사에 이메일 알림
-    if current_user.user_type == "franchisee" and result.grade in ("위험", "주의"):
+    # 가맹점주: 익명화 위험도 요약 생성 + 본사 지원 안내 이메일
+    if current_user.user_type == "franchisee":
         try:
             from app.models.franchise import FranchiseStore
+            from app.models.franchise_legal import ContractRiskSummary
+
             store = db.query(FranchiseStore).filter_by(
                 franchisee_user_id=current_user.id, status="active"
             ).first()
             if store:
-                franchisor = db.query(User).filter_by(id=store.franchisor_id).first()
-                if franchisor:
-                    grade_color = "#dc2626" if result.grade == "위험" else "#d97706"
-                    _send_alert_email(
-                        to_email=franchisor.email,
-                        franchisor_name=franchisor.username,
-                        store_name=store.store_name,
-                        franchisee_name=current_user.username,
-                        filename=result.filename,
-                        grade=result.grade,
-                        grade_color=grade_color,
-                        danger_count=result.danger_count,
-                        warn_count=result.warn_count,
-                    )
+                # 위험 조항 유형명만 추출 (원문·금액 제외)
+                risk_categories = list({
+                    clause.title for clause in result.clauses
+                    if clause.risk in ("danger", "warn") and clause.title
+                })[:10]
+
+                # 근로계약서 여부 — 동의 필요
+                is_labor = "근로" in result.contract_type
+                consent_status = "pending" if is_labor else "exempt"
+
+                summary = ContractRiskSummary(
+                    saved_contract_id=saved.id,
+                    store_id=store.id,
+                    grade=result.grade,
+                    score=result.score,
+                    contract_type=result.contract_type,
+                    risk_categories=risk_categories,
+                    danger_count=result.danger_count,
+                    warn_count=result.warn_count,
+                    consent_status=consent_status,
+                )
+                db.add(summary)
+                db.commit()
+
+                # 위험/주의 시 본사에 지원 안내 이메일 (파일명·원문 미포함)
+                if result.grade in ("위험", "주의"):
+                    franchisor = db.query(User).filter_by(id=store.franchisor_id).first()
+                    if franchisor:
+                        _send_support_alert(
+                            to_email=franchisor.email,
+                            franchisor_name=franchisor.username,
+                            store_name=store.store_name,
+                            grade=result.grade,
+                            risk_categories=risk_categories,
+                        )
         except Exception as e:
-            print(f"[WARN] 프랜차이즈 알림 이메일 실패: {e}")
+            print(f"[WARN] 프랜차이즈 위험도 요약 생성 실패: {e}")
 
     return {"id": saved.id, "saved_at": saved.saved_at.isoformat()}
 
 
-def _send_alert_email(
+def _send_support_alert(
     to_email: str, franchisor_name: str, store_name: str,
-    franchisee_name: str, filename: str, grade: str,
-    grade_color: str, danger_count: int, warn_count: int,
+    grade: str, risk_categories: list,
 ):
+    """
+    본사에 보내는 지원 안내 이메일.
+    파일명·원문·근로자 개인정보 일절 미포함.
+    """
     from app.services.email_service import _send_smtp
+    grade_color = "#dc2626" if grade == "위험" else "#d97706"
+    categories_html = "".join(
+        f'<li style="margin:4px 0;">{cat}</li>' for cat in risk_categories
+    ) if risk_categories else "<li>분석 결과 확인 필요</li>"
+
     _send_smtp(
         to_email=to_email,
-        subject=f"[CHECKMATE] {store_name} 가맹점 {grade} 계약서 감지",
+        subject=f"[CHECKMATE] {store_name} 가맹점 계약서 개선 안내",
         html_body=f"""안녕하세요, {franchisor_name}님!<br><br>
-가맹점에서 <b style="color:{grade_color}">{grade}</b> 등급 계약서가 저장되었습니다.<br><br>
-<table style="border-collapse:collapse; width:100%; max-width:480px;">
-  <tr><td style="padding:8px; background:#f4f4f5; font-weight:700;">가맹점</td><td style="padding:8px;">{store_name} ({franchisee_name})</td></tr>
-  <tr><td style="padding:8px; background:#f4f4f5; font-weight:700;">파일명</td><td style="padding:8px;">{filename}</td></tr>
-  <tr><td style="padding:8px; background:#f4f4f5; font-weight:700;">위험 조항</td><td style="padding:8px; color:#dc2626; font-weight:700;">{danger_count}개</td></tr>
-  <tr><td style="padding:8px; background:#f4f4f5; font-weight:700;">주의 조항</td><td style="padding:8px; color:#d97706; font-weight:700;">{warn_count}개</td></tr>
-</table>
+<b>{store_name}</b> 가맹점에서 <b style="color:{grade_color}">{grade}</b> 등급 계약서가 분석되었습니다.<br><br>
+<b>발견된 위험 조항 유형:</b>
+<ul style="margin:8px 0; padding-left:20px;">{categories_html}</ul>
 <br>
-CHECKMATE 대시보드에서 상세 내용을 확인하세요.<br><br>
+<b>※ 계약서 원문 및 근로자 개인정보는 본사에 공유되지 않습니다.</b><br><br>
+가맹점에 개선 안내가 필요하시면 CHECKMATE 대시보드의
+<b>[지원 안내 발송]</b> 기능을 활용해 주세요.<br><br>
 감사합니다, CHECKMATE 팀""",
     )
 

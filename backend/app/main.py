@@ -13,7 +13,8 @@ from app.api.v1.router import api_router
 from app.core.config import settings
 from app.db.session import engine
 from app.db.base import Base
-import app.models.franchise  # noqa: F401
+import app.models.franchise       # noqa: F401
+import app.models.franchise_legal  # noqa: F401
 
 
 def _migrate_db():
