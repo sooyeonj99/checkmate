@@ -24,6 +24,13 @@ def _migrate_db():
     migrations = [
         "ALTER TABLE team_members ADD COLUMN invite_method VARCHAR(10) DEFAULT 'email'",
         "ALTER TABLE team_members ADD COLUMN member_phone VARCHAR(20)",
+        "ALTER TABLE users ADD COLUMN phone_number VARCHAR(20)",
+        "ALTER TABLE users ADD COLUMN push_token VARCHAR(500)",
+        "ALTER TABLE users ADD COLUMN business_number VARCHAR(12)",
+        "ALTER TABLE users ADD COLUMN password_reset_token VARCHAR(255)",
+        "ALTER TABLE users ADD COLUMN password_reset_token_expires DATETIME",
+        "ALTER TABLE users ADD COLUMN verification_token_expires DATETIME",
+        "ALTER TABLE users ADD COLUMN updated_at DATETIME",
     ]
     with engine.connect() as conn:
         for sql in migrations:
