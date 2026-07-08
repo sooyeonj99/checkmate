@@ -1497,3 +1497,106 @@ GET /api/v1/auth/check-phone?value=01012345678
 - 크기: 76MB | BUILD SUCCESSFUL (10분 28초)
 
 *마지막 업데이트: 2026-07-08*
+
+---
+
+## 세션 10 (2026-07-08) — 18개 기능 전면 구현
+
+### 작업 개요
+이전 세션에서 이어서 18개 기능 목록 전체 구현. 웹+앱 연동 기준으로 각 기능을 양쪽 플랫폼에 배치.
+
+---
+
+### [백엔드] 신규 API 엔드포인트
+
+| 파일 | 기능 | 엔드포인트 |
+|------|------|-----------|
+| `search.py` | 계약서 전문 검색 | `GET /search/contracts?q=` |
+| `stats.py` | 통계/분석 대시보드 | `GET /stats/me?months=6` |
+| `compare.py` | 계약서 비교 | `POST /contracts/compare` |
+| `compare.py` | AI 계약서 생성 | `POST /contracts/generate` |
+| `compare.py` | 일괄 분석 업로드 | `POST /contracts/bulk-upload` |
+| `admin.py` | 어드민 패널 | `GET/PATCH /admin/*` |
+| `admin.py` | B2B API 키 관리 | `GET/POST/DELETE /admin/api-keys` |
+| `scheduler.py` | 만료 알림 스케줄러 | APScheduler 매일 09:00 |
+
+### [백엔드] 기존 파일 수정
+
+- `signing.py` — `/signing/templates` CRUD 추가 (모바일 TemplateEditorScreen용)
+- `franchise.py` — `POST /franchise/stores` (직접 생성), `PATCH /franchise/stores/{id}` (상태 토글), enterprise 계정 지원
+- `gemini_service.py` — `compare_summaries()`, `generate_contract()` 추가
+- `email_service.py` — `send_expiry_alert_email()` 추가 (HTML 이메일)
+- `router.py` — search/stats/compare/admin 라우터 등록
+- `main.py` — `start_scheduler()`/`stop_scheduler()` lifespan 연동
+- `requirements.txt` — `apscheduler==3.10.4` 추가
+
+---
+
+### [웹] 신규 페이지 5개
+
+| 페이지 | 경로 | 기능 |
+|--------|------|------|
+| AdminPage.tsx | `/admin` | 어드민 전용 (ghdiehddl@gmail.com) |
+| ComparePage.tsx | `/compare` | 계약서 VS 비교 + 조항별 diff |
+| GeneratePage.tsx | `/generate` | AI 계약서 생성기 (설명 → 초안) |
+| BulkPage.tsx | `/bulk` | 드래그앤드롭 일괄 업로드·분석 |
+| StatsPage.tsx | `/stats` | 월별 바차트·위험도 분포·만료 임박 |
+
+### [웹] DashboardPage.tsx 수정
+
+- **검색바**: 파일명/유형/조항 내용 실시간 검색 (350ms 디바운스)
+- **퀵액션 섹션**: 분석통계·계약서비교·AI생성기·일괄분석·어드민 링크 카드
+
+---
+
+### [모바일] 신규/수정 파일
+
+| 파일 | 변경 내용 |
+|------|----------|
+| `ThemeContext.tsx` | 다크모드 컨텍스트 (light/dark/system) |
+| `colors.ts` | lightColors + darkColors 분리 |
+| `App.tsx` | ThemeProvider + `StatusBar style="auto"` |
+| `ProfileScreen.tsx` | 화면 설정 섹션 (다크모드 3가지 선택) |
+| `DashboardScreen.tsx` | 검색바 + 통계 요약 카드 (위험·주의·안전·총분석) |
+| `FranchiseScreen.tsx` | POST body 필드명 수정 `store_name`/`region` |
+
+---
+
+### 앱에서 구현 불가 항목 (웹 전용)
+
+- **어드민 패널** — 모바일에서는 미구현 (보안상 웹 전용)
+- **계약서 비교 뷰** — 사이드바이사이드 UI가 모바일에 부적합, 웹 전용
+- **통계 차트 (풀버전)** — 모바일은 요약 카드만 제공
+
+### 카메라 OCR — 미구현 (추후 필요)
+
+ML Kit (react-native-mlkit-ocr) 설치 필요. 현재 미포함 이유:
+- `npm install react-native-mlkit-ocr`은 네이티브 빌드 필요 (Expo Go 미지원)
+- APK 재빌드 후 테스트 필요
+- 패키지 설치·빌드는 별도 세션에서 진행 권장
+
+---
+
+### 배포 준비 사항
+
+서버 배포를 위해 아래 설정 필요:
+
+```bash
+# 서버 SSH 접속 후
+cd /var/www/checkmate/backend
+source venv/bin/activate
+pip install apscheduler==3.10.4
+
+# .env에 추가 (사용자가 직접 입력)
+SMTP_USER=ghdiehddl@gmail.com
+SMTP_PASS=<Gmail 앱 비밀번호>
+```
+
+---
+
+### GitHub 백업
+- 커밋: `57d3b76` — feat: 18개 기능 구현
+- 브랜치: main
+- 업로드 완료: 2026-07-08
+
+*마지막 업데이트: 2026-07-08*
