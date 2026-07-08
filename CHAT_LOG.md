@@ -1628,4 +1628,128 @@ SMTP_PASS=<Gmail 앱 비밀번호>
 - 커밋: 사이트맵 전면 업데이트
 - 브랜치: main
 
+---
+
+## 세션 12 (2026-07-09) — B2B DB 저장 + 테스트 계정 + 문서 정리
+
+### 작업 내역
+
+**1. B2B API 키 DB 저장 업그레이드**
+- `backend/app/models/api_key.py` 신규 생성 (ApiKey 테이블: key, name, calls, is_active, created_at)
+- `backend/app/db/base.py` — api_key 모델 import 추가 (create_all 자동 감지)
+- `backend/app/api/v1/endpoints/admin.py` — 인메모리 `_api_keys` 딕셔너리 → DB 쿼리로 전면 교체
+- API 키 토글(활성/비활성) 엔드포인트 추가: `PATCH /admin/api-keys/{key}/toggle`
+- AdminStats에 franchisor/franchisee 사용자 수 + total_api_keys 필드 추가
+
+**2. 테스트 계정 4종 추가**
+- `create_test_accounts.py` 업데이트 (서버에서 생성)
+- `franchisor@checkmate.com` / `test1234` (프랜차이즈 본사)
+- `franchisee@checkmate.com` / `test1234` (가맹점주)
+
+**3. START.md 전면 리뉴얼**
+- 테스트 계정 4종 + 관리자 계정 정리
+- 계정 유형별 접근 권한 상세 설명
+- 계정 유형별 실제 사용 흐름 (개인 → 기업 → 프랜차이즈본사 → 가맹점주 → 관리자)
+- B2B 사용 흐름 추가
+- 웹 vs 모바일 앱 기능 비교표
+- 서버 배포 명령어 정리
+
+---
+
+## 현재까지 구현 완료 기능 전체 목록
+
+### 백엔드 API (FastAPI)
+| 카테고리 | 엔드포인트 | 설명 |
+|----------|-----------|------|
+| 인증 | POST /auth/register | 회원가입 (이메일 인증 발송) |
+| 인증 | POST /auth/login | 로그인 (JWT 발급) |
+| 인증 | GET /auth/verify-email | 이메일 인증 |
+| 인증 | POST /auth/forgot-password | 비밀번호 찾기 (임시비밀번호 이메일) |
+| 인증 | POST /auth/reset-password | 비밀번호 재설정 |
+| 계약서 | POST /contracts/upload | 파일 업로드 (PDF/이미지/Word) |
+| 계약서 | POST /contracts/{id}/analyze | AI 분석 (Gemini) |
+| 계약서 | GET /contracts/saved | 저장된 계약서 목록 |
+| 계약서 | POST /contracts/compare | 두 계약서 AI 비교 |
+| 계약서 | POST /contracts/generate | AI 계약서 초안 생성 |
+| 계약서 | POST /contracts/bulk-upload | 최대 10개 일괄 업로드 |
+| 검색 | GET /search/contracts | 계약서 전문 검색 |
+| 통계 | GET /stats/me | 내 분석 통계 (월별 추이) |
+| 전자서명 | POST /signing/request | 서명 요청 (이메일/SMS) |
+| 전자서명 | POST /signing/sign | 서명 완료 |
+| 서명템플릿 | GET/POST/PUT/DELETE /signing/templates | 템플릿 CRUD |
+| 팀 | POST /team/invite | 팀원 초대 |
+| 팀 | POST /team/join | 팀 가입 |
+| 프랜차이즈 | GET/POST /franchise/stores | 가맹점 관리 |
+| 프랜차이즈 | PATCH /franchise/stores/{id} | 가맹점 상태 변경 |
+| 프랜차이즈 | POST /franchise/invite | 가맹점 초대 |
+| 어드민 | GET /admin/users | 전체 사용자 목록 |
+| 어드민 | GET /admin/stats | 서비스 전체 통계 |
+| 어드민 | PATCH /admin/users/{id}/toggle-active | 사용자 활성/비활성 |
+| 어드민 | GET/POST/DELETE /admin/api-keys | B2B API 키 관리 (DB 저장) |
+| 어드민 | PATCH /admin/api-keys/{key}/toggle | API 키 활성/비활성 |
+| B2B | GET /admin/b2b/health | B2B API 키 유효성 확인 |
+| 알림 | 스케줄러 (APScheduler) | 매일 09:00 KST 만료 임박 이메일 + 푸시 |
+
+### 웹 프론트엔드 (React + TypeScript)
+| 페이지 | 경로 | 설명 |
+|--------|------|------|
+| 홈 | / | 서비스 소개 랜딩 |
+| 인증 | /auth | 로그인 / 회원가입 / 비밀번호 찾기 |
+| 이메일 인증 | /verify-email | 인증 링크 처리 |
+| 업로드 | /upload | 계약서 파일 업로드 |
+| 마스킹 | /masking | 개인정보 검토 · 마스킹 선택 |
+| 분석 중 | /loading | AI 분석 로딩 화면 |
+| 분석 결과 | /result | 위험조항 · 등급 · 요약 |
+| 대시보드 | /dashboard | 계약서 목록 · 검색 · 퀵액션 |
+| 내 정보 | /profile | 닉네임·비밀번호 수정 |
+| 전자서명 | /sign/:token | 서명 화면 (비로그인 가능) |
+| 템플릿 편집 | /template-editor | 서명 위치 지정 · 필드 설정 |
+| 팀 가입 | /team/accept | 초대 링크 가입 |
+| 프랜차이즈 | /franchise | 가맹점 통합 관리 |
+| 프랜차이즈 가입 | /franchise/accept | 초대 링크 가입 |
+| 분석 통계 | /stats | 월별 추이 · 등급 분포 · 만료 임박 |
+| 계약서 비교 | /compare | 두 계약서 나란히 비교 |
+| AI 생성기 | /generate | 설명 → 계약서 초안 자동 생성 |
+| 일괄 분석 | /bulk | 최대 10개 드래그앤드롭 분석 |
+| 어드민 | /admin | 사용자 관리 · B2B 키 관리 |
+| 이용약관 | /terms | 서비스 약관 |
+| 개인정보 | /privacy | 개인정보처리방침 |
+| 사이트맵 | /sitemap | 전체 페이지 구조 |
+
+### 모바일 앱 (React Native / Expo)
+| 화면 | 설명 |
+|------|------|
+| AuthScreen | 로그인 / 회원가입 |
+| DashboardScreen | 계약서 목록 · 검색 · 통계 카드 |
+| UploadScreen | 파일 업로드 + 카메라 촬영 |
+| MaskingReviewScreen | 개인정보 마스킹 검토 |
+| ResultScreen | 분석 결과 |
+| ChatScreen | AI 챗봇 |
+| ProfileScreen | 내 정보 · 다크모드 설정 |
+| FranchiseScreen | 프랜차이즈 관리 |
+| TemplateEditorScreen | 서명 템플릿 편집 |
+| SigningScreen | 전자서명 |
+| TeamScreen | 팀원 관리 |
+
+---
+
+## 미구현 / 향후 개발 예정 기능
+
+| 기능 | 우선순위 | 설명 |
+|------|---------|------|
+| 카메라 OCR (모바일) | 높음 | react-native-mlkit-ocr 네이티브 빌드 필요 |
+| 계약서 비교 (모바일) | 중간 | 웹 CompareScreen 앱 버전 |
+| AI 생성기 (모바일) | 중간 | 웹 GeneratePage 앱 버전 |
+| 일괄 분석 (모바일) | 낮음 | 모바일에서 다중 파일 선택 |
+| 웹 다크 모드 | 중간 | 모바일은 구현됨, 웹 미구현 |
+| 법령 변경 추적 | 낮음 | 외부 법령 API 연동 |
+| 결제 시스템 | 높음 | 구독 플랜 실결제 (포트원 등) |
+| 관리자 앱 화면 | 낮음 | 모바일 어드민 패널 |
+| Push FCM 연동 | 중간 | Firebase Cloud Messaging 실 연동 |
+| 소셜 로그인 | 낮음 | 카카오 · 네이버 OAuth |
+
+---
+
+*마지막 업데이트: 2026-07-09*
+
 *마지막 업데이트: 2026-07-09*
