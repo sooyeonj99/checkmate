@@ -1,10 +1,34 @@
-import React from 'react'
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native'
+import React, { useState } from 'react'
+import {
+  View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView,
+  Modal, TextInput, ActivityIndicator,
+} from 'react-native'
+import { useNavigation } from '@react-navigation/native'
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import type { RootStackParamList } from '../../App'
 import { useAuth } from '../context/AuthContext'
 import { colors } from '../theme/colors'
+import api from '../services/api'
+
+type ModalType = 'none' | 'editProfile' | 'changePassword'
 
 export default function ProfileScreen() {
-  const { user, logout } = useAuth()
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
+  const { user, token, login, logout } = useAuth()
+  const isEnterprise = user?.user_type === 'enterprise'
+
+  const [modalType, setModalType] = useState<ModalType>('none')
+  const [saving, setSaving] = useState(false)
+
+  // 프로필 수정
+  const [editName, setEditName] = useState(user?.username ?? '')
+  const [editPhone, setEditPhone] = useState('')
+
+  // 비밀번호 변경
+  const [currentPw, setCurrentPw] = useState('')
+  const [newPw, setNewPw] = useState('')
+  const [newPwConfirm, setNewPwConfirm] = useState('')
+  const [pwStep, setPwStep] = useState<'verify' | 'change'>('verify')
 
   const handleLogout = () => {
     Alert.alert('로그아웃', '로그아웃 하시겠습니까?', [
@@ -13,10 +37,161 @@ export default function ProfileScreen() {
     ])
   }
 
-  const isEnterprise = user?.user_type === 'enterprise'
+  const openEditProfile = () => {
+    setEditName(user?.username ?? '')
+    setEditPhone('')
+    setModalType('editProfile')
+  }
+
+  const handleSaveProfile = async () => {
+    if (!editName.trim()) { Alert.alert('오류', '이름을 입력해주세요.'); return }
+    setSaving(true)
+    try {
+      const body: any = { username: editName.trim() }
+      if (editPhone.trim()) body.phone_number = editPhone.trim()
+      await api.put('/users/profile', body)
+      const { data: updatedUser } = await api.get('/users/me')
+      if (token) await login(token, updatedUser)
+      setModalType('none')
+      Alert.alert('저장 완료', '프로필이 업데이트되었습니다.')
+    } catch (e: any) {
+      Alert.alert('오류', e?.response?.data?.detail ?? '저장 중 오류가 발생했습니다.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const openChangePassword = () => {
+    setCurrentPw(''); setNewPw(''); setNewPwConfirm('')
+    setPwStep('verify')
+    setModalType('changePassword')
+  }
+
+  const handleVerifyPassword = async () => {
+    if (!currentPw) { Alert.alert('오류', '현재 비밀번호를 입력해주세요.'); return }
+    setSaving(true)
+    try {
+      await api.post('/users/verify-password', { password: currentPw })
+      setPwStep('change')
+    } catch {
+      Alert.alert('오류', '현재 비밀번호가 올바르지 않습니다.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleChangePassword = async () => {
+    if (newPw.length < 8) { Alert.alert('오류', '비밀번호는 8자 이상이어야 합니다.'); return }
+    if (newPw !== newPwConfirm) { Alert.alert('오류', '새 비밀번호가 일치하지 않습니다.'); return }
+    setSaving(true)
+    try {
+      await api.put('/users/profile', { new_password: newPw })
+      setModalType('none')
+      Alert.alert('변경 완료', '비밀번호가 성공적으로 변경되었습니다.')
+    } catch (e: any) {
+      Alert.alert('오류', e?.response?.data?.detail ?? '변경 중 오류가 발생했습니다.')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <View style={styles.root}>
+      {/* 프로필 수정 모달 */}
+      <Modal visible={modalType === 'editProfile'} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>프로필 수정</Text>
+            <Text style={styles.inputLabel}>이름</Text>
+            <TextInput
+              style={styles.input}
+              value={editName}
+              onChangeText={setEditName}
+              placeholder="이름을 입력하세요"
+              placeholderTextColor={colors.textMuted}
+            />
+            <Text style={styles.inputLabel}>전화번호 (선택)</Text>
+            <TextInput
+              style={styles.input}
+              value={editPhone}
+              onChangeText={setEditPhone}
+              placeholder="010-0000-0000"
+              placeholderTextColor={colors.textMuted}
+              keyboardType="phone-pad"
+            />
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalType('none')}>
+                <Text style={styles.cancelText}>취소</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.saveBtn} onPress={handleSaveProfile} disabled={saving}>
+                {saving ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.saveText}>저장</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* 비밀번호 변경 모달 */}
+      <Modal visible={modalType === 'changePassword'} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>
+              {pwStep === 'verify' ? '비밀번호 확인' : '새 비밀번호 설정'}
+            </Text>
+            {pwStep === 'verify' ? (
+              <>
+                <Text style={styles.modalSub}>현재 비밀번호를 입력해주세요</Text>
+                <TextInput
+                  style={styles.input}
+                  value={currentPw}
+                  onChangeText={setCurrentPw}
+                  placeholder="현재 비밀번호"
+                  placeholderTextColor={colors.textMuted}
+                  secureTextEntry
+                />
+                <View style={styles.modalActions}>
+                  <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalType('none')}>
+                    <Text style={styles.cancelText}>취소</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.saveBtn} onPress={handleVerifyPassword} disabled={saving}>
+                    {saving ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.saveText}>확인</Text>}
+                  </TouchableOpacity>
+                </View>
+              </>
+            ) : (
+              <>
+                <Text style={styles.inputLabel}>새 비밀번호 (8자 이상)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={newPw}
+                  onChangeText={setNewPw}
+                  placeholder="새 비밀번호"
+                  placeholderTextColor={colors.textMuted}
+                  secureTextEntry
+                />
+                <Text style={styles.inputLabel}>새 비밀번호 확인</Text>
+                <TextInput
+                  style={styles.input}
+                  value={newPwConfirm}
+                  onChangeText={setNewPwConfirm}
+                  placeholder="새 비밀번호 재입력"
+                  placeholderTextColor={colors.textMuted}
+                  secureTextEntry
+                />
+                <View style={styles.modalActions}>
+                  <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalType('none')}>
+                    <Text style={styles.cancelText}>취소</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.saveBtn} onPress={handleChangePassword} disabled={saving}>
+                    {saving ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.saveText}>변경</Text>}
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
+
       <View style={styles.header}>
         <Text style={styles.headerTitle}>마이페이지</Text>
       </View>
@@ -25,9 +200,7 @@ export default function ProfileScreen() {
         {/* 프로필 카드 */}
         <View style={styles.profileCard}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {user?.username?.charAt(0).toUpperCase() ?? '?'}
-            </Text>
+            <Text style={styles.avatarText}>{user?.username?.charAt(0).toUpperCase() ?? '?'}</Text>
           </View>
           <Text style={styles.username}>{user?.username}</Text>
           <Text style={styles.email}>{user?.email}</Text>
@@ -38,28 +211,46 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        {/* 계정 관리 */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>계정 관리</Text>
+          <View style={styles.menuCard}>
+            <MenuRow label="프로필 수정" desc="이름 · 전화번호 변경" onPress={openEditProfile} />
+            <MenuRow label="비밀번호 변경" desc="현재 비밀번호 확인 후 변경" onPress={openChangePassword} last />
+          </View>
+        </View>
+
+        {/* 서비스 기능 */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>서비스 기능</Text>
+          <View style={styles.menuCard}>
+            <MenuRow label="서명 템플릿 편집" desc="전자서명 서식 관리" onPress={() => navigation.navigate('TemplateEditor')} />
+            {isEnterprise && (
+              <MenuRow label="프랜차이즈 관리" desc="가맹점 현황 및 계약 관리" onPress={() => navigation.navigate('Franchise')} last />
+            )}
+          </View>
+        </View>
+
         {/* 계정 정보 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>계정 정보</Text>
           <View style={styles.infoCard}>
             <InfoRow label="이메일" value={user?.email ?? '-'} />
             <InfoRow label="사용자명" value={user?.username ?? '-'} />
-            <InfoRow label="계정 유형" value={isEnterprise ? '기업/법인' : '개인 사용자'} />
+            <InfoRow label="계정 유형" value={isEnterprise ? '기업/법인' : '개인 사용자'} last />
           </View>
         </View>
 
-        {/* 플랜 정보 */}
+        {/* 플랜 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>현재 플랜</Text>
           <View style={[styles.planCard, isEnterprise && styles.planCardEnterprise]}>
-            <View style={styles.planInfo}>
-              <Text style={styles.planName}>{isEnterprise ? '기업 플랜' : '개인 플랜'}</Text>
-              <Text style={styles.planDesc}>
-                {isEnterprise
-                  ? '계약서 분석 · 팀 관리 · 대량 분석 · 리포트 다운로드'
-                  : '계약서 분석 · 저장 관리 · AI 챗봇'}
-              </Text>
-            </View>
+            <Text style={styles.planName}>{isEnterprise ? '기업 플랜' : '개인 플랜'}</Text>
+            <Text style={styles.planDesc}>
+              {isEnterprise
+                ? '계약서 분석 · 팀 관리 · 대량 분석 · 리포트 다운로드'
+                : '계약서 분석 · 저장 관리 · AI 챗봇'}
+            </Text>
           </View>
         </View>
 
@@ -89,18 +280,28 @@ export default function ProfileScreen() {
   )
 }
 
-function InfoRow({ label, value }: { label: string; value: string }) {
+function MenuRow({ label, desc, onPress, last }: { label: string; desc: string; onPress: () => void; last?: boolean }) {
   return (
-    <View style={styles.infoRow}>
+    <TouchableOpacity style={[styles.menuRow, last && { borderBottomWidth: 0 }]} onPress={onPress} activeOpacity={0.7}>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.menuLabel}>{label}</Text>
+        <Text style={styles.menuDesc}>{desc}</Text>
+      </View>
+      <Text style={styles.menuArrow}>›</Text>
+    </TouchableOpacity>
+  )
+}
+
+function InfoRow({ label, value, last }: { label: string; value: string; last?: boolean }) {
+  return (
+    <View style={[styles.infoRow, last && { borderBottomWidth: 0 }]}>
       <Text style={styles.infoLabel}>{label}</Text>
       <Text style={styles.infoValue}>{value}</Text>
     </View>
   )
 }
 
-function FeatureRow({ title, desc, available }: {
-  title: string; desc: string; available: boolean
-}) {
+function FeatureRow({ title, desc, available }: { title: string; desc: string; available: boolean }) {
   return (
     <View style={[styles.featureRow, !available && styles.featureRowDisabled]}>
       <View style={[styles.featureDot, { backgroundColor: available ? colors.safe : colors.textMuted }]} />
@@ -130,100 +331,65 @@ const FEATURES_ENTERPRISE = [
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 56,
-    paddingBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    paddingHorizontal: 20, paddingTop: 56, paddingBottom: 20,
+    borderBottomWidth: 1, borderBottomColor: colors.border,
     backgroundColor: colors.navBg,
   },
   headerTitle: { color: '#fff', fontSize: 18, fontWeight: '700' },
   content: { padding: 20 },
-
   profileCard: {
-    backgroundColor: colors.bgCard,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 28,
-    alignItems: 'center',
-    marginBottom: 24,
+    backgroundColor: colors.bgCard, borderRadius: 20, borderWidth: 1,
+    borderColor: colors.border, padding: 28, alignItems: 'center', marginBottom: 24,
   },
   avatar: {
-    width: 72, height: 72, borderRadius: 36,
-    backgroundColor: colors.primary,
+    width: 72, height: 72, borderRadius: 36, backgroundColor: colors.primary,
     alignItems: 'center', justifyContent: 'center', marginBottom: 14,
   },
   avatarText: { color: '#fff', fontSize: 30, fontWeight: '800' },
   username: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 4 },
   email: { color: colors.textMuted, fontSize: 13, marginBottom: 12 },
   typeBadge: {
-    backgroundColor: colors.bgInput,
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 5,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.bgInput, borderRadius: 20,
+    paddingHorizontal: 14, paddingVertical: 5,
+    borderWidth: 1, borderColor: colors.border,
   },
-  typeBadgeEnterprise: {
-    backgroundColor: 'rgba(37,99,235,0.08)',
-    borderColor: colors.borderAccent,
-  },
+  typeBadgeEnterprise: { backgroundColor: 'rgba(37,99,235,0.08)', borderColor: colors.borderAccent },
   typeBadgeText: { color: colors.textSecondary, fontSize: 13, fontWeight: '600' },
   typeBadgeTextEnterprise: { color: colors.primary },
-
   section: { marginBottom: 24 },
   sectionTitle: {
     color: colors.textMuted, fontSize: 11, fontWeight: '700',
     letterSpacing: 1, marginBottom: 10, textTransform: 'uppercase',
   },
-
-  infoCard: {
-    backgroundColor: colors.bgCard,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: colors.border,
-    overflow: 'hidden',
+  menuCard: { backgroundColor: colors.bgCard, borderRadius: 14, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' },
+  menuRow: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: 14, paddingHorizontal: 16,
+    borderBottomWidth: 1, borderBottomColor: colors.border,
   },
+  menuLabel: { color: colors.text, fontSize: 14, fontWeight: '600', marginBottom: 2 },
+  menuDesc: { color: colors.textMuted, fontSize: 12 },
+  menuArrow: { color: colors.textMuted, fontSize: 22, fontWeight: '300' },
+  infoCard: { backgroundColor: colors.bgCard, borderRadius: 14, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' },
   infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingVertical: 14, paddingHorizontal: 16,
+    borderBottomWidth: 1, borderBottomColor: colors.border,
   },
   infoLabel: { color: colors.textSecondary, fontSize: 14 },
   infoValue: { color: colors.text, fontSize: 14, fontWeight: '600' },
-
   planCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.bgCard,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 16,
+    backgroundColor: colors.bgCard, borderRadius: 14,
+    borderWidth: 1, borderColor: colors.border, padding: 16,
   },
-  planCardEnterprise: {
-    backgroundColor: 'rgba(37,99,235,0.04)',
-    borderColor: colors.borderAccent,
-  },
-  planInfo: { flex: 1 },
-  planName: { color: colors.text, fontSize: 15, fontWeight: '700', marginBottom: 3 },
+  planCardEnterprise: { backgroundColor: 'rgba(37,99,235,0.04)', borderColor: colors.borderAccent },
+  planName: { color: colors.text, fontSize: 15, fontWeight: '700', marginBottom: 4 },
   planDesc: { color: colors.textMuted, fontSize: 12, lineHeight: 17 },
-
   featureRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.bgCard,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 14,
-    marginBottom: 8,
-    gap: 12,
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: colors.bgCard, borderRadius: 12,
+    borderWidth: 1, borderColor: colors.border,
+    padding: 14, marginBottom: 8, gap: 12,
   },
   featureRowDisabled: { opacity: 0.45 },
   featureDot: { width: 8, height: 8, borderRadius: 4 },
@@ -233,15 +399,30 @@ const styles = StyleSheet.create({
   featureDesc: { color: colors.textMuted, fontSize: 12 },
   featureCheck: { color: colors.safe, fontSize: 16, fontWeight: '700' },
   featureLock: { color: colors.textMuted, fontSize: 11, fontWeight: '600' },
-
   logoutBtn: {
-    borderWidth: 1,
-    borderColor: 'rgba(217,64,64,0.3)',
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginBottom: 16,
+    borderWidth: 1, borderColor: 'rgba(217,64,64,0.3)',
+    borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 16,
   },
   logoutText: { color: colors.danger, fontSize: 15, fontWeight: '600' },
   version: { textAlign: 'center', color: colors.textMuted, fontSize: 12 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
+  modalBox: {
+    backgroundColor: colors.bgCard, borderTopLeftRadius: 20, borderTopRightRadius: 20,
+    padding: 24, borderWidth: 1, borderColor: colors.border,
+  },
+  modalTitle: { color: colors.text, fontSize: 18, fontWeight: '700', marginBottom: 4 },
+  modalSub: { color: colors.textMuted, fontSize: 13, marginBottom: 16 },
+  inputLabel: { color: colors.textSecondary, fontSize: 13, fontWeight: '600', marginBottom: 6, marginTop: 12 },
+  input: {
+    borderWidth: 1, borderColor: colors.border, borderRadius: 10,
+    padding: 14, color: colors.text, fontSize: 15, backgroundColor: colors.bgInput,
+  },
+  modalActions: { flexDirection: 'row', gap: 10, marginTop: 20 },
+  cancelBtn: {
+    flex: 1, borderWidth: 1, borderColor: colors.border,
+    borderRadius: 12, paddingVertical: 14, alignItems: 'center',
+  },
+  cancelText: { color: colors.textMuted, fontWeight: '600', fontSize: 15 },
+  saveBtn: { flex: 1, backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  saveText: { color: '#fff', fontWeight: '700', fontSize: 15 },
 })

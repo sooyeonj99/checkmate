@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, KeyboardAvoidingView, Platform,
-  ActivityIndicator, Alert, ScrollView,
+  ActivityIndicator, Alert, ScrollView, Modal,
 } from 'react-native'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
@@ -69,6 +69,9 @@ function LoginForm({ onLogin }: { onLogin: (token: string, user: any) => Promise
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [forgotVisible, setForgotVisible] = useState(false)
+  const [forgotEmail, setForgotEmail] = useState('')
+  const [forgotLoading, setForgotLoading] = useState(false)
 
   const handleSubmit = async () => {
     if (!email || !password) {
@@ -87,8 +90,48 @@ function LoginForm({ onLogin }: { onLogin: (token: string, user: any) => Promise
     }
   }
 
+  const handleForgotPassword = async () => {
+    if (!forgotEmail.trim()) { Alert.alert('오류', '이메일을 입력해주세요.'); return }
+    setForgotLoading(true)
+    try {
+      await api.post('/auth/forgot-password', { email: forgotEmail.trim() })
+      setForgotVisible(false)
+      Alert.alert('발송 완료', '비밀번호 재설정 링크를 이메일로 보냈습니다.\n이메일을 확인해주세요.')
+    } catch (e: any) {
+      Alert.alert('오류', e?.response?.data?.detail ?? '이메일 발송에 실패했습니다.')
+    } finally {
+      setForgotLoading(false)
+    }
+  }
+
   return (
     <View style={styles.form}>
+      <Modal visible={forgotVisible} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>비밀번호 찾기</Text>
+            <Text style={styles.modalSub}>가입한 이메일로 재설정 링크를 보내드립니다</Text>
+            <TextInput
+              style={styles.input}
+              value={forgotEmail}
+              onChangeText={setForgotEmail}
+              placeholder="이메일 주소"
+              placeholderTextColor={colors.textMuted}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setForgotVisible(false)}>
+                <Text style={styles.modalCancelText}>취소</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalSaveBtn} onPress={handleForgotPassword} disabled={forgotLoading}>
+                {forgotLoading ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.modalSaveText}>발송</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       <Text style={styles.label}>이메일</Text>
       <TextInput
         style={styles.input}
@@ -108,6 +151,12 @@ function LoginForm({ onLogin }: { onLogin: (token: string, user: any) => Promise
         onChangeText={setPassword}
         secureTextEntry
       />
+      <TouchableOpacity
+        style={styles.forgotBtn}
+        onPress={() => { setForgotEmail(''); setForgotVisible(true) }}
+      >
+        <Text style={styles.forgotText}>비밀번호를 잊으셨나요?</Text>
+      </TouchableOpacity>
       <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} disabled={loading}>
         {loading
           ? <ActivityIndicator color="#fff" />
@@ -532,4 +581,23 @@ const styles = StyleSheet.create({
   comingSoonPillText: { color: '#3C1E1E', fontSize: 10, fontWeight: '700' },
   comingSoonPillGoogle: { backgroundColor: 'rgba(37,99,235,0.1)' },
   comingSoonPillTextGoogle: { color: colors.primary },
+
+  forgotBtn: { alignSelf: 'flex-end', marginTop: 8 },
+  forgotText: { color: colors.primary, fontSize: 13, fontWeight: '600' },
+
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
+  modalBox: {
+    backgroundColor: colors.bgCard, borderTopLeftRadius: 20, borderTopRightRadius: 20,
+    padding: 24, borderWidth: 1, borderColor: colors.border,
+  },
+  modalTitle: { color: colors.text, fontSize: 18, fontWeight: '700', marginBottom: 4 },
+  modalSub: { color: colors.textMuted, fontSize: 13, marginBottom: 16 },
+  modalActions: { flexDirection: 'row', gap: 10, marginTop: 20 },
+  modalCancelBtn: {
+    flex: 1, borderWidth: 1, borderColor: colors.border,
+    borderRadius: 12, paddingVertical: 14, alignItems: 'center',
+  },
+  modalCancelText: { color: colors.textMuted, fontWeight: '600', fontSize: 15 },
+  modalSaveBtn: { flex: 1, backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  modalSaveText: { color: '#fff', fontWeight: '700', fontSize: 15 },
 })

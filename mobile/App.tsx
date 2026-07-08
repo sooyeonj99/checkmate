@@ -5,6 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { StatusBar } from 'expo-status-bar'
 import { View, ActivityIndicator, Platform } from 'react-native'
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as Device from 'expo-device'
 import * as Notifications from 'expo-notifications'
 
@@ -19,6 +20,9 @@ import MaskingReviewScreen from './src/screens/MaskingReviewScreen'
 import LoadingScreen from './src/screens/LoadingScreen'
 import ResultScreen from './src/screens/ResultScreen'
 import ProfileScreen from './src/screens/ProfileScreen'
+import ChatScreen from './src/screens/ChatScreen'
+import FranchiseScreen from './src/screens/FranchiseScreen'
+import TemplateEditorScreen from './src/screens/TemplateEditorScreen'
 import SigningScreen from './src/screens/SigningScreen'
 import SignedDocScreen from './src/screens/SignedDocScreen'
 import ReportDocScreen from './src/screens/ReportDocScreen'
@@ -62,12 +66,15 @@ export type RootStackParamList = {
   Signing: { token: string }
   SignedDoc: { recordId: number; contractName: string }
   ReportDoc: { savedId: number; filename: string }
+  Franchise: undefined
+  TemplateEditor: undefined
 }
 
 export type TabParamList = {
   홈: undefined
   대시보드: undefined
   분석하기: undefined
+  챗봇: undefined
   마이페이지: undefined
 }
 
@@ -98,6 +105,8 @@ function AnalyzeNavigator() {
 // ── 메인 탭 네비게이터 ──────────────────────────────────────────────────────────
 
 function MainTabs() {
+  const insets = useSafeAreaInsets()
+  const bottomPad = insets.bottom > 0 ? insets.bottom : 8
   return (
     <Tab.Navigator
       screenOptions={{
@@ -106,9 +115,9 @@ function MainTabs() {
           backgroundColor: colors.bgCard,
           borderTopColor: colors.border,
           borderTopWidth: 1,
-          paddingBottom: 8,
+          paddingBottom: bottomPad,
           paddingTop: 6,
-          height: 62,
+          height: 56 + bottomPad,
         },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
@@ -139,6 +148,15 @@ function MainTabs() {
         options={{
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'document-text' : 'document-text-outline'} size={23} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="챗봇"
+        component={ChatScreen}
+        options={{
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'chatbubble-ellipses' : 'chatbubble-ellipses-outline'} size={23} color={color} />
           ),
         }}
       />
@@ -229,6 +247,8 @@ function Navigation() {
             <RootStack.Screen name="Signing" component={SigningScreen} />
             <RootStack.Screen name="SignedDoc" component={SignedDocScreen} />
             <RootStack.Screen name="ReportDoc" component={ReportDocScreen} />
+            <RootStack.Screen name="Franchise" component={FranchiseScreen} />
+            <RootStack.Screen name="TemplateEditor" component={TemplateEditorScreen} />
           </>
         ) : (
           <>
@@ -243,9 +263,11 @@ function Navigation() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <StatusBar style="dark" />
-      <Navigation />
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <StatusBar style="dark" />
+        <Navigation />
+      </AuthProvider>
+    </SafeAreaProvider>
   )
 }

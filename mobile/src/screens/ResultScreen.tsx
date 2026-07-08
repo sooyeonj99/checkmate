@@ -8,6 +8,7 @@ import { useNavigation, useRoute } from '@react-navigation/native'
 import api from '../services/api'
 import { colors } from '../theme/colors'
 import { useAuth } from '../context/AuthContext'
+import SigningRequestModal from '../components/SigningRequestModal'
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true)
@@ -87,6 +88,9 @@ export default function ResultScreen() {
     (isMock || isSavedParam) ? 'saved' : 'pending'
   )
   const [saving, setSaving] = useState(false)
+  const [resultTab, setResultTab] = useState<'analysis' | 'fulltext'>('analysis')
+  const [signingModalVisible, setSigningModalVisible] = useState(false)
+  const savedContractId = isSavedParam && rawResult?.id ? String(rawResult.id) : null
 
   const scoreColor = result.score >= 61 ? colors.danger : result.score >= 31 ? colors.warn : colors.safe
   const gradeLabel = result.grade === 'danger' ? '⚠ 위험' : result.grade === 'warn' ? '⚡ 주의' : '✓ 안전'
@@ -156,17 +160,70 @@ export default function ResultScreen() {
 
   return (
     <View style={styles.root}>
+      {/* 서명 모달 */}
+      {savedContractId && (
+        <SigningRequestModal
+          visible={signingModalVisible}
+          contractId={savedContractId}
+          contractName={result.contractName}
+          onClose={() => setSigningModalVisible(false)}
+          onDone={(msg) => { setSigningModalVisible(false); Alert.alert('발송 완료', msg) }}
+        />
+      )}
+
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.getParent()?.navigate('대시보드')} style={styles.backBtn}>
           <Text style={styles.backText}>대시보드</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>분석 결과</Text>
-        <TouchableOpacity onPress={() => navigation.replace('Upload' as any)} style={styles.newBtn}>
-          <Text style={styles.newText}>새 분석</Text>
-        </TouchableOpacity>
+        {saveState === 'saved' && savedContractId ? (
+          <TouchableOpacity onPress={() => setSigningModalVisible(true)} style={styles.newBtn}>
+            <Text style={[styles.newText, { color: colors.primary }]}>전자서명</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity onPress={() => navigation.replace('Upload' as any)} style={styles.newBtn}>
+            <Text style={styles.newText}>새 분석</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
+      {/* 탭 */}
+      <View style={styles.tabRow}>
+        {(['analysis', 'fulltext'] as const).map((tab) => (
+          <TouchableOpacity
+            key={tab}
+            style={[styles.tabBtn, resultTab === tab && styles.tabBtnActive]}
+            onPress={() => setResultTab(tab)}
+          >
+            <Text style={[styles.tabBtnText, resultTab === tab && styles.tabBtnTextActive]}>
+              {tab === 'analysis' ? '분석 결과' : '계약서 원문'}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {resultTab === 'fulltext' ? (
+        <ScrollView contentContainerStyle={styles.content}>
+          {result.contractText ? (
+            <View style={styles.fullTextCard}>
+              {result.contractType ? (
+                <View style={styles.contractTypeBadge}>
+                  <Text style={styles.contractTypeText}>{result.contractType}</Text>
+                </View>
+              ) : null}
+              <Text style={styles.fullTextBody}>{result.contractText}</Text>
+              <Text style={styles.maskingNote}>🔒 개인정보는 분석 전 자동 마스킹 처리되었습니다</Text>
+            </View>
+          ) : (
+            <View style={styles.noClauseBox}>
+              <Text style={styles.noClauseTitle}>원문 텍스트가 없습니다</Text>
+              <Text style={styles.noClauseSub}>이미지 분석의 경우 원문이 저장되지 않을 수 있습니다</Text>
+            </View>
+          )}
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      ) : (
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.eyebrow}>분석 완료</Text>
         <Text style={styles.contractName} numberOfLines={2}>{result.contractName}</Text>
@@ -284,6 +341,7 @@ export default function ResultScreen() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+      )}
     </View>
   )
 }
@@ -611,7 +669,19 @@ const styles = StyleSheet.create({
   backText: { color: colors.primary, fontSize: 13 },
   headerTitle: { color: colors.text, fontSize: 16, fontWeight: '700' },
   newBtn: { width: 64, alignItems: 'flex-end' },
-  newText: { color: colors.primary, fontSize: 13 },
+  newText: { color: colors.textMuted, fontSize: 13 },
+  tabRow: {
+    flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: colors.border,
+  },
+  tabBtn: { flex: 1, paddingVertical: 12, alignItems: 'center' },
+  tabBtnActive: { borderBottomWidth: 2, borderBottomColor: colors.primary },
+  tabBtnText: { color: colors.textMuted, fontSize: 13, fontWeight: '600' },
+  tabBtnTextActive: { color: colors.primary },
+  fullTextCard: {
+    backgroundColor: colors.bgCard, borderRadius: 12, borderWidth: 1,
+    borderColor: colors.border, padding: 16, marginBottom: 16,
+  },
+  fullTextBody: { color: colors.textSecondary, fontSize: 13, lineHeight: 22 },
   content: { padding: 16 },
   eyebrow: { color: colors.primary, fontSize: 11, fontWeight: '700', letterSpacing: 1, marginBottom: 4 },
   contractName: { color: colors.text, fontSize: 18, fontWeight: '800', marginBottom: 16 },

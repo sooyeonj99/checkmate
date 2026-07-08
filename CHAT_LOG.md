@@ -1462,3 +1462,38 @@ GET /api/v1/auth/check-phone?value=01012345678
 - 프론트엔드 FranchisePage: 지원 안내 발송 버튼 UI 추가 필요
 
 *마지막 업데이트: 2026-07-08*
+
+## 세션 9 (2026-07-08) — 모바일 앱 기능 동기화 완료
+
+### 작업 내용
+
+**구현된 신규 기능 (웹 → 모바일 동기화):**
+
+1. **ProfileScreen 전면 개편** (`mobile/src/screens/ProfileScreen.tsx`)
+   - 프로필 수정 모달: 이름/전화번호 변경 (`PUT /api/v1/users/profile`)
+   - 비밀번호 변경 2단계 플로우: 현재 비밀번호 확인 후 새 비밀번호 설정
+   - 서비스 기능 섹션: 서명 템플릿 편집 / 프랜차이즈 관리 네비게이션 버튼
+
+2. **AuthScreen 비밀번호 찾기** (`mobile/src/screens/AuthScreen.tsx`)
+   - 로그인 폼에 "비밀번호를 잊으셨나요?" 링크 추가
+   - 이메일 입력 모달 → `POST /api/v1/auth/forgot-password`
+
+3. **ChatScreen 신규 생성** (`mobile/src/screens/ChatScreen.tsx`)
+   - AI 챗봇 전용 화면, 하단 탭에 추가
+   - `POST /api/v1/chat` API 연동, 빠른 질문 칩 4개
+
+4. **FranchiseScreen 신규 생성** (`mobile/src/screens/FranchiseScreen.tsx`)
+   - 기업 계정 전용 가맹점 관리 화면 (추가/상태변경)
+
+5. **TemplateEditorScreen 신규 생성** (`mobile/src/screens/TemplateEditorScreen.tsx`)
+   - 전자서명 템플릿 CRUD, 필드 타입: 텍스트/날짜/서명
+
+6. **App.tsx 탭 구조 확장**
+   - 챗봇 탭 추가 (총 5개 탭: 홈/대시보드/분석하기/챗봇/마이페이지)
+   - RootStack에 Franchise, TemplateEditor 화면 추가
+
+### APK 빌드
+- `E:\checkmate\mobile\android\app\build\outputs\apk\release\app-release.apk`
+- 크기: 76MB | BUILD SUCCESSFUL (10분 28초)
+
+*마지막 업데이트: 2026-07-08*

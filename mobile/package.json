@@ -15,6 +15,7 @@
     "expo-document-picker": "^56.0.4",
     "expo-image-picker": "~56.0.20",
     "expo-modules-core": "~56.0.20",
+    "expo-navigation-bar": "~56.0.3",
     "expo-notifications": "~56.0.20",
     "expo-status-bar": "~56.0.4",
     "react": "19.2.3",
