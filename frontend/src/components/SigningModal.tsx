@@ -4,6 +4,7 @@ import SignaturePad from './SignaturePad'
 interface Props {
   contractId: string
   contractName: string
+  contractHtml?: string
   defaultTab?: 'self' | 'request'
   onClose: () => void
   onDone: (msg: string) => void
@@ -11,7 +12,7 @@ interface Props {
 
 type Tab = 'self' | 'request'
 
-export default function SigningModal({ contractId, contractName, defaultTab, onClose, onDone }: Props) {
+export default function SigningModal({ contractId, contractName, contractHtml, defaultTab, onClose, onDone }: Props) {
   const [tab, setTab] = useState<Tab>(defaultTab ?? 'self')
 
   // 내가 서명
@@ -65,6 +66,7 @@ export default function SigningModal({ contractId, contractName, defaultTab, onC
         contract_name: contractName,
         message: reqMsg || null,
         my_signature: reqSig || null,
+        contract_html: contractHtml || null,
       }
       if (reqContactType === 'email') body.requestee_email = reqEmail
       else body.requestee_phone = reqPhone.replace(/\D/g, '')

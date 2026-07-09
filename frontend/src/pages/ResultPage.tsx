@@ -890,6 +890,7 @@ export default function ResultPage() {
   const [saveError, setSaveError] = useState('')
   const [showSignModal, setShowSignModal] = useState(false)
   const [signDoneMsg, setSignDoneMsg] = useState('')
+  const [signContractHtml, setSignContractHtml] = useState<string | null>(null)
 
   /* 결과 저장 */
   const handleSave = useCallback(async () => {
@@ -972,12 +973,24 @@ export default function ResultPage() {
       <ResultNav
         date={result.analysisDate}
         onPdf={saveState === 'saved' ? handlePdf : undefined}
-        onSign={saveState === 'saved' ? () => setShowSignModal(true) : undefined}
+        onSign={saveState === 'saved' ? async () => {
+          if (savedNumericId) {
+            try {
+              const tok = localStorage.getItem('cm_token')
+              const res = await fetch(`/api/v1/contracts/saved/${savedNumericId}/report`, {
+                headers: { Authorization: `Bearer ${tok}` },
+              })
+              if (res.ok) setSignContractHtml(await res.text())
+            } catch {}
+          }
+          setShowSignModal(true)
+        } : undefined}
       />
       {showSignModal && (
         <SigningModal
           contractId={contractId ?? result.contractName}
           contractName={result.contractName}
+          contractHtml={signContractHtml ?? undefined}
           onClose={() => setShowSignModal(false)}
           onDone={(msg) => { setShowSignModal(false); setSignDoneMsg(msg) }}
         />

@@ -46,6 +46,7 @@ class SigningRequestCreate(BaseModel):
     requestee_phone: Optional[str] = None
     message: Optional[str] = None
     my_signature: Optional[str] = None
+    contract_html: Optional[str] = None
 
 
 class SigningSubmit(BaseModel):
@@ -134,7 +135,7 @@ def _build_certificate_html(record: SigningRecord) -> str:
   .header {{ text-align:center; border-bottom:2px solid #e2e8f0; padding-bottom:28px; margin-bottom:28px; }}
   .badge {{ display:inline-block; background:#dcfce7; color:#16a34a; border-radius:20px; padding:6px 18px; font-size:13px; font-weight:700; margin-bottom:14px; }}
   h1 {{ margin:0 0 8px; font-size:22px; color:#1e3a8a; }}
-  .contract-name {{ font-size:17px; font-weight:700; color:#1e293b; background:#eff6ff; border-radius:10px; padding:12px 20px; margin:20px 0; text-align:center; }}
+  .contract-name {{ font-size:17px; font-weight:700; color:#1e293b; background:#eff6ff; border-radius:10px; padding:12px 20px; margin:20px 0; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }}
   .sig-grid {{ display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:24px; }}
   .sig-box {{ border:1.5px solid #e2e8f0; border-radius:12px; padding:20px; }}
   .sig-label {{ font-size:12px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }}
@@ -250,6 +251,7 @@ def create_signing_request(
         requester_signature=body.my_signature,
         requester_signed_at=datetime.now() if body.my_signature else None,
         expires_at=expires,
+        contract_html=body.contract_html,
     )
     db.add(record)
     db.commit()
@@ -460,7 +462,31 @@ def get_signed_document(
         html = record.contract_html
         html = html.replace("{{SIG_REQUESTER}}", req_sig_html)
         html = html.replace("{{SIG_REQUESTEE}}", rec_sig_html)
-        html = html.replace("</body>", footer_html + "</body>")
+        req_signed_at = record.requester_signed_at.strftime('%Y-%m-%d %H:%M') if record.requester_signed_at else '-'
+        rec_signed_at = record.requestee_signed_at.strftime('%Y-%m-%d %H:%M') if record.requestee_signed_at else '-'
+        sig_section = f"""
+<div style="margin-top:48px;padding:32px 40px;border-top:2px solid #e2e8f0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,sans-serif">
+  <p style="color:#16a34a;font-weight:700;font-size:15px;margin:0 0 20px;text-align:center">✓ 전자서명 완료 문서</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:600px;margin:0 auto">
+    <div style="text-align:center;border:1px solid #e2e8f0;border-radius:12px;padding:16px;background:#fff">
+      <div style="font-size:11px;color:#64748b;font-weight:700;letter-spacing:1px;margin-bottom:8px">요청자 서명</div>
+      <div style="font-size:14px;font-weight:700;color:#1e293b;margin-bottom:2px">{record.requester_name}</div>
+      <div style="font-size:11px;color:#94a3b8;margin-bottom:10px">{record.requester_email} · {req_signed_at}</div>
+      <div style="border:1px solid #e2e8f0;border-radius:8px;padding:8px;min-height:80px;display:flex;align-items:center;justify-content:center;background:#f8fafc">{req_sig_html}</div>
+    </div>
+    <div style="text-align:center;border:1px solid #e2e8f0;border-radius:12px;padding:16px;background:#fff">
+      <div style="font-size:11px;color:#64748b;font-weight:700;letter-spacing:1px;margin-bottom:8px">서명자 서명</div>
+      <div style="font-size:14px;font-weight:700;color:#1e293b;margin-bottom:2px">{record.requestee_name or '서명자'}</div>
+      <div style="font-size:11px;color:#94a3b8;margin-bottom:10px">{record.requestee_email or ''} · {rec_signed_at}</div>
+      <div style="border:1px solid #e2e8f0;border-radius:8px;padding:8px;min-height:80px;display:flex;align-items:center;justify-content:center;background:#f8fafc">{rec_sig_html}</div>
+    </div>
+  </div>
+  <p style="text-align:center;font-size:11px;color:#94a3b8;margin:16px 0 0">문서 ID: {record.token[:24]}... · ⓒ 2026 CHECKMATE</p>
+  <div style="text-align:center;margin-top:16px">
+    <button onclick="window.print()" style="padding:10px 28px;background:#1e3a8a;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600">PDF로 저장 (인쇄)</button>
+  </div>
+</div>"""
+        html = html.replace("</body>", sig_section + "</body>")
         return HTMLResponse(content=html)
 
     # 사용자 업로드 이미지 템플릿
