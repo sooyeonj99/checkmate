@@ -11,3 +11,5 @@ from app.models import saved_contract  # noqa: F401, E402
 from app.models import subscription  # noqa: F401, E402
 from app.models import signing  # noqa: F401, E402
 from app.models import api_key  # noqa: F401, E402
+from app.models import user_template  # noqa: F401, E402
+from app.models import team  # noqa: F401, E402

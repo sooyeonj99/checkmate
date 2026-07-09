@@ -22,6 +22,7 @@ def _migrate_db():
     """기존 테이블에 누락된 컬럼 추가 (SQLite ALTER TABLE)"""
     from sqlalchemy import text
     migrations = [
+        # users 테이블 누락 컬럼
         "ALTER TABLE team_members ADD COLUMN invite_method VARCHAR(10) DEFAULT 'email'",
         "ALTER TABLE team_members ADD COLUMN member_phone VARCHAR(20)",
         "ALTER TABLE users ADD COLUMN phone_number VARCHAR(20)",
@@ -31,6 +32,19 @@ def _migrate_db():
         "ALTER TABLE users ADD COLUMN password_reset_token_expires DATETIME",
         "ALTER TABLE users ADD COLUMN verification_token_expires DATETIME",
         "ALTER TABLE users ADD COLUMN updated_at DATETIME",
+        # saved_contracts 테이블 누락 컬럼
+        "ALTER TABLE saved_contracts ADD COLUMN expiry_date DATETIME",
+        "ALTER TABLE saved_contracts ADD COLUMN expiry_notice_days INTEGER DEFAULT 7",
+        # signing_records 테이블 누락 컬럼 (이미 테이블이 있는 경우)
+        "ALTER TABLE signing_records ADD COLUMN requestee_phone VARCHAR(20)",
+        "ALTER TABLE signing_records ADD COLUMN contract_html TEXT",
+        "ALTER TABLE signing_records ADD COLUMN user_template_id INTEGER",
+        "ALTER TABLE signing_records ADD COLUMN requester_signature TEXT",
+        "ALTER TABLE signing_records ADD COLUMN requestee_signature TEXT",
+        "ALTER TABLE signing_records ADD COLUMN requestee_name VARCHAR(100)",
+        "ALTER TABLE signing_records ADD COLUMN requester_signed_at DATETIME",
+        "ALTER TABLE signing_records ADD COLUMN requestee_signed_at DATETIME",
+        "ALTER TABLE signing_records ADD COLUMN expires_at DATETIME",
     ]
     with engine.connect() as conn:
         for sql in migrations:
