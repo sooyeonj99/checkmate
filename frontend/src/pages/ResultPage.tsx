@@ -6,194 +6,194 @@ import SigningModal from '../components/SigningModal'
 type RiskLevel = 'danger' | 'warn' | 'safe'
 
 interface ProblemTag {
- text: string
- level: 'danger' | 'warn'
+  text: string
+  level: 'danger' | 'warn'
 }
 
 interface Clause {
- id: number
- level: 'danger' | 'warn'
- title: string
- article: string
- desc: string
- original: string
- simpleExplanation?: string
- problem?: string
- suggestion: string
- lawRef: string
+  id: number
+  level: 'danger' | 'warn'
+  title: string
+  article: string
+  desc: string
+  original: string
+  simpleExplanation?: string
+  problem?: string
+  suggestion: string
+  lawRef: string
 }
 
 interface AnalysisResult {
- contractName: string
- contractMeta: string
- contract_type?: string
- analysisDate: string
- totalClauses: number
- score: number
- grade: RiskLevel
- dangerCount: number
- warnCount: number
- safeCount: number
- analysisTime: string
- problemTags: ProblemTag[]
- clauses: Clause[]
- contractHtml?: string
- summary?: string
+  contractName: string
+  contractMeta: string
+  contract_type?: string
+  analysisDate: string
+  totalClauses: number
+  score: number
+  grade: RiskLevel
+  dangerCount: number
+  warnCount: number
+  safeCount: number
+  analysisTime: string
+  problemTags: ProblemTag[]
+  clauses: Clause[]
+  contractHtml?: string
+  summary?: string
 }
 
 /* ── 계약서 원문 텍스트 → 하이라이트 HTML 변환 ────────── */
 function buildContractHtml(rawText: string, clauses: any[]): string {
- if (!rawText) return ''
+  if (!rawText) return ''
 
- // HTML 이스케이프
- let html = rawText
- .replace(/&/g, '&amp;')
- .replace(/</g, '&lt;')
- .replace(/>/g, '&gt;')
+  // HTML 이스케이프
+  let html = rawText
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
 
- // 각 조항 원문을 위험도에 맞게 하이라이트
- for (const c of clauses) {
- const orig: string = (c.original ?? '').trim()
- if (orig.length < 6) continue
- const escaped = orig
- .replace(/&/g, '&amp;')
- .replace(/</g, '&lt;')
- .replace(/>/g, '&gt;')
- .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
- const cls = c.risk === 'danger' ? 'ct-hl-danger' : c.risk === 'warn' ? 'ct-hl-warn' : ''
- if (!cls) continue
- try {
- html = html.replace(
- new RegExp(escaped.replace(/\s+/g, '\\s+'), 'g'),
- `<mark class="${cls}">$&</mark>`,
- )
- } catch { /* 정규식 오류 무시 */ }
- }
+  // 각 조항 원문을 위험도에 맞게 하이라이트
+  for (const c of clauses) {
+    const orig: string = (c.original ?? '').trim()
+    if (orig.length < 6) continue
+    const escaped = orig
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const cls = c.risk === 'danger' ? 'ct-hl-danger' : c.risk === 'warn' ? 'ct-hl-warn' : ''
+    if (!cls) continue
+    try {
+      html = html.replace(
+        new RegExp(escaped.replace(/\s+/g, '\\s+'), 'g'),
+        `<mark class="${cls}">$&</mark>`,
+      )
+    } catch { /* 정규식 오류 무시 */ }
+  }
 
- // 빈 줄로 단락 분리
- return html
- .split(/\n{2,}/)
- .filter(Boolean)
- .map((p) => `<p>${p.replace(/\n/g, '<br/>')}</p>`)
- .join('\n')
+  // 빈 줄로 단락 분리
+  return html
+    .split(/\n{2,}/)
+    .filter(Boolean)
+    .map((p) => `<p>${p.replace(/\n/g, '<br/>')}</p>`)
+    .join('\n')
 }
 
 /* ── 백엔드 응답 → 프론트 형식 변환 ─────────────────── */
 function gradeFromKorean(grade: string): RiskLevel {
- if (grade === '위험') return 'danger'
- if (grade === '주의') return 'warn'
- return 'safe'
+  if (grade === '위험') return 'danger'
+  if (grade === '주의') return 'warn'
+  return 'safe'
 }
 
 function transformApiResult(data: any): AnalysisResult {
- const filtered = (data.clauses ?? []).filter(
- (c: any) => c.risk === 'danger' || c.risk === 'warn'
- )
- const clauses: Clause[] = filtered.map((c: any, i: number) => ({
- id: i + 1,
- level: c.risk as 'danger' | 'warn',
- title: c.title ?? '',
- article: c.article ?? '',
- desc: c.description ?? '',
- original: c.original ?? '',
- simpleExplanation: c.simple_explanation ?? undefined,
- suggestion: c.suggestion ?? '',
- lawRef: c.law_ref ?? '',
- }))
+  const filtered = (data.clauses ?? []).filter(
+    (c: any) => c.risk === 'danger' || c.risk === 'warn'
+  )
+  const clauses: Clause[] = filtered.map((c: any, i: number) => ({
+    id: i + 1,
+    level: c.risk as 'danger' | 'warn',
+    title: c.title ?? '',
+    article: c.article ?? '',
+    desc: c.description ?? '',
+    original: c.original ?? '',
+    simpleExplanation: c.simple_explanation ?? undefined,
+    suggestion: c.suggestion ?? '',
+    lawRef: c.law_ref ?? '',
+  }))
 
- const problemTags: ProblemTag[] = clauses.map((c) => ({
- text: c.title,
- level: c.level,
- }))
+  const problemTags: ProblemTag[] = clauses.map((c) => ({
+    text: c.title,
+    level: c.level,
+  }))
 
- const grade = gradeFromKorean(data.grade ?? '')
+  const grade = gradeFromKorean(data.grade ?? '')
 
- return {
- contractName: data.filename ?? '계약서',
- contractMeta: data.contract_type ?? '',
- analysisDate: (data.analyzed_at ?? '').slice(0, 10).replace(/-/g, '. '),
- totalClauses: (data.clauses ?? []).length,
- score: data.score ?? 0,
- grade,
- dangerCount: data.danger_count ?? 0,
- warnCount: data.warn_count ?? 0,
- safeCount: data.safe_count ?? 0,
- analysisTime: data.analysis_time ?? '',
- problemTags,
- clauses,
- contractHtml: buildContractHtml(data.contract_text ?? '', data.clauses ?? []),
- summary: data.summary ?? undefined,
- }
+  return {
+    contractName: data.filename ?? '계약서',
+    contractMeta: data.contract_type ?? '',
+    analysisDate: (data.analyzed_at ?? '').slice(0, 10).replace(/-/g, '. '),
+    totalClauses: (data.clauses ?? []).length,
+    score: data.score ?? 0,
+    grade,
+    dangerCount: data.danger_count ?? 0,
+    warnCount: data.warn_count ?? 0,
+    safeCount: data.safe_count ?? 0,
+    analysisTime: data.analysis_time ?? '',
+    problemTags,
+    clauses,
+    contractHtml: buildContractHtml(data.contract_text ?? '', data.clauses ?? []),
+    summary: data.summary ?? undefined,
+  }
 }
 
 /* ── Mock data (베타 테스트 시 표시 — 렌탈/구독 서비스 계약서 샘플) ── */
 const RESULT: AnalysisResult = {
- contractName: '가전제품 렌탈 서비스 이용계약서',
- contractMeta: '공급사 ○○렌탈 · 월 렌탈료 39,900원 · 약정 60개월',
- analysisDate: '2026. 06. 20',
- totalClauses: 11,
- score: 76,
- grade: 'danger',
- dangerCount: 3,
- warnCount: 3,
- safeCount: 5,
- analysisTime: '22초',
- problemTags: [
- { text: '중도 해지 위약금 수백만 원', level: 'danger' },
- { text: '해지 미통보 시 자동 1년 연장', level: 'danger' },
- { text: '렌탈료 일방 인상 가능', level: 'danger' },
- { text: '약정 기간 계약일부터 기산', level: 'warn' },
- { text: '제품 임의 교체 가능', level: 'warn' },
- { text: '소유권 이전에 추가 수수료', level: 'warn' },
- ],
- clauses: [
- {
- id: 1, level: 'danger', title: '중도 해지 위약금', article: '제9조',
- desc: '"잔여 약정 렌탈료의 40%"라는 표현이 합리적으로 보이지만, 5년 약정 1년 시점에 해지하면 잔여 48개월×39,900원×40% ≈ 77만 원을 위약금으로 내야 합니다. 직접 계산해보지 않으면 알 수 없습니다.',
- original: '계약 기간 중 중도 해지 시 잔여 약정 렌탈료의 40%에 해당하는 금액을 위약금으로 납부하여야 한다.',
- problem: '"40%"라는 숫자가 합리적으로 느껴지나 잔여 기간이 길수록 실제 금액은 수십~수백만 원에 달함',
- suggestion: '중도 해지 위약금은 잔여 약정 기간에 따라 구간별로 감소하는 방식으로 산정하며, 계약 체결 시 예상 위약금 금액을 소비자에게 서면으로 고지하여야 한다.',
- lawRef: '소비자기본법 제19조 (사업자의 의무) · 공정거래위원회 렌탈 표준약관 제14조 · 약관규제법 제8조',
- },
- {
- id: 2, level: 'danger', title: '자동 연장 조항', article: '제8조',
- desc: '계약 만료 45일 전까지 해지 의사를 통보하지 않으면 동일 조건으로 1년 자동 연장됩니다. 만료일을 잊거나 통보 기간(45일)을 놓치면 원치 않는 1년을 더 사용하게 됩니다.',
- original: '계약 만료일 45일 전까지 서면으로 해지 의사를 통보하지 않을 경우, 동일 조건으로 1년간 자동 연장된다.',
- problem: '소비자가 만료일과 통보 기한을 정확히 계산하지 않으면 자동으로 추가 1년 약정에 묶임. 사전 안내 의무 없음.',
- suggestion: '자동 연장 시 회사는 계약 만료 60일 전 이메일·문자로 만료일 및 해지 신청 기한을 소비자에게 고지하여야 한다. 고지 없이 자동 연장된 경우 소비자는 위약금 없이 해지할 수 있다.',
- lawRef: '전자상거래법 제21조 (금지행위) · 공정거래위원회 구독경제 가이드라인 · 약관규제법 제6조',
- },
- {
- id: 3, level: 'danger', title: '렌탈료 일방 인상', article: '제5조',
- desc: '"소비자 물가지수 변동 및 제반 비용 상승에 따라 조정할 수 있다"는 한 문장이 매년 렌탈료 인상의 근거가 됩니다. 인상 폭 상한선이 없어 5년간 실제 납부 금액이 크게 달라질 수 있습니다.',
- original: '회사는 소비자 물가지수 변동 및 원자재·서비스 비용 상승에 따라 렌탈료를 조정할 수 있으며, 변경 30일 전 고지한다.',
- problem: '인상 상한선 없음. 고지 후 소비자가 거부하면 위약금을 내고 해지해야 하는 구조',
- suggestion: '렌탈료 인상은 연 1회, 직전 연도 소비자물가지수 상승률 이내로 제한한다. 인상 시 소비자는 위약금 없이 60일 이내 계약을 해지할 수 있다.',
- lawRef: '약관규제법 제10조 (소비자에게 불리한 조항) · 공정거래위원회 표준약관 제8조 · 소비자기본법 제20조',
- },
- {
- id: 4, level: 'warn', title: '약정 기간 기산점', article: '제3조',
- desc: '약정 기간이 "계약 체결일"부터 시작됩니다. 설치까지 2~3주 걸리는 경우 실제 제품을 사용하지도 않았는데 약정 기간이 줄어들고, 60개월 렌탈료는 모두 납부해야 합니다.',
- original: '약정 기간은 계약 체결일로부터 기산하며, 계약 기간 동안 렌탈료가 부과된다.',
- suggestion: '약정 기간은 제품 설치 완료일로부터 기산하며, 설치 지연이 회사 귀책인 경우 지연 기간만큼 약정 기간을 연장하거나 렌탈료를 감면한다.',
- lawRef: '민법 제656조 (임대차의 기간) · 소비자분쟁해결기준 (렌탈 분야)',
- },
- {
- id: 5, level: 'warn', title: '제품 임의 교체', article: '제7조',
- desc: '회사가 "동급 사양의 제품"으로 임의 교체할 수 있습니다. 소비자가 선택한 특정 브랜드·색상·기능의 제품이 다른 제품으로 교체될 수 있으며, 거부 시 해지 위약금이 발생합니다.',
- original: '회사는 서비스 운영상 필요한 경우 동급 사양의 제품으로 교체할 수 있으며, 소비자는 이에 동의한다.',
- suggestion: '"동급 사양"의 기준을 구체적으로 명시하고, 제품 교체 시 소비자의 사전 동의를 받아야 한다. 소비자가 교체에 동의하지 않는 경우 위약금 없이 계약을 해지할 수 있다.',
- lawRef: '민법 제390조 (채무불이행) · 소비자기본법 제19조 · 공정거래위원회 렌탈 표준약관',
- },
- {
- id: 6, level: 'warn', title: '소유권 이전 추가 수수료', article: '제11조',
- desc: '60개월 렌탈료를 모두 납부해도 소유권이 자동 이전되지 않습니다. 별도 "소유권 이전 신청"을 하고 수수료를 납부해야 내 것이 됩니다. 이 사실을 모르고 그냥 두면 소유권이 회사에 남습니다.',
- original: '약정 기간 만료 후 소비자가 소유권 이전을 신청하고 이전 수수료를 납부한 경우에 한하여 소유권이 이전된다.',
- suggestion: '약정 기간 만료 시 별도 절차 없이 소유권이 자동으로 소비자에게 이전된다. 이전 수수료는 별도로 청구하지 아니한다.',
- lawRef: '민법 제186조 (부동산물권변동) · 소비자분쟁해결기준 (가전제품 렌탈 분야)',
- },
- ],
- contractHtml: `
+  contractName: '가전제품 렌탈 서비스 이용계약서',
+  contractMeta: '공급사 ○○렌탈 · 월 렌탈료 39,900원 · 약정 60개월',
+  analysisDate: '2026. 06. 20',
+  totalClauses: 11,
+  score: 76,
+  grade: 'danger',
+  dangerCount: 3,
+  warnCount: 3,
+  safeCount: 5,
+  analysisTime: '22초',
+  problemTags: [
+    { text: '중도 해지 위약금 수백만 원', level: 'danger' },
+    { text: '해지 미통보 시 자동 1년 연장', level: 'danger' },
+    { text: '렌탈료 일방 인상 가능', level: 'danger' },
+    { text: '약정 기간 계약일부터 기산', level: 'warn' },
+    { text: '제품 임의 교체 가능', level: 'warn' },
+    { text: '소유권 이전에 추가 수수료', level: 'warn' },
+  ],
+  clauses: [
+    {
+      id: 1, level: 'danger', title: '중도 해지 위약금', article: '제9조',
+      desc: '"잔여 약정 렌탈료의 40%"라는 표현이 합리적으로 보이지만, 5년 약정 1년 시점에 해지하면 잔여 48개월×39,900원×40% ≈ 77만 원을 위약금으로 내야 합니다. 직접 계산해보지 않으면 알 수 없습니다.',
+      original: '계약 기간 중 중도 해지 시 잔여 약정 렌탈료의 40%에 해당하는 금액을 위약금으로 납부하여야 한다.',
+      problem: '"40%"라는 숫자가 합리적으로 느껴지나 잔여 기간이 길수록 실제 금액은 수십~수백만 원에 달함',
+      suggestion: '중도 해지 위약금은 잔여 약정 기간에 따라 구간별로 감소하는 방식으로 산정하며, 계약 체결 시 예상 위약금 금액을 소비자에게 서면으로 고지하여야 한다.',
+      lawRef: '소비자기본법 제19조 (사업자의 의무) · 공정거래위원회 렌탈 표준약관 제14조 · 약관규제법 제8조',
+    },
+    {
+      id: 2, level: 'danger', title: '자동 연장 조항', article: '제8조',
+      desc: '계약 만료 45일 전까지 해지 의사를 통보하지 않으면 동일 조건으로 1년 자동 연장됩니다. 만료일을 잊거나 통보 기간(45일)을 놓치면 원치 않는 1년을 더 사용하게 됩니다.',
+      original: '계약 만료일 45일 전까지 서면으로 해지 의사를 통보하지 않을 경우, 동일 조건으로 1년간 자동 연장된다.',
+      problem: '소비자가 만료일과 통보 기한을 정확히 계산하지 않으면 자동으로 추가 1년 약정에 묶임. 사전 안내 의무 없음.',
+      suggestion: '자동 연장 시 회사는 계약 만료 60일 전 이메일·문자로 만료일 및 해지 신청 기한을 소비자에게 고지하여야 한다. 고지 없이 자동 연장된 경우 소비자는 위약금 없이 해지할 수 있다.',
+      lawRef: '전자상거래법 제21조 (금지행위) · 공정거래위원회 구독경제 가이드라인 · 약관규제법 제6조',
+    },
+    {
+      id: 3, level: 'danger', title: '렌탈료 일방 인상', article: '제5조',
+      desc: '"소비자 물가지수 변동 및 제반 비용 상승에 따라 조정할 수 있다"는 한 문장이 매년 렌탈료 인상의 근거가 됩니다. 인상 폭 상한선이 없어 5년간 실제 납부 금액이 크게 달라질 수 있습니다.',
+      original: '회사는 소비자 물가지수 변동 및 원자재·서비스 비용 상승에 따라 렌탈료를 조정할 수 있으며, 변경 30일 전 고지한다.',
+      problem: '인상 상한선 없음. 고지 후 소비자가 거부하면 위약금을 내고 해지해야 하는 구조',
+      suggestion: '렌탈료 인상은 연 1회, 직전 연도 소비자물가지수 상승률 이내로 제한한다. 인상 시 소비자는 위약금 없이 60일 이내 계약을 해지할 수 있다.',
+      lawRef: '약관규제법 제10조 (소비자에게 불리한 조항) · 공정거래위원회 표준약관 제8조 · 소비자기본법 제20조',
+    },
+    {
+      id: 4, level: 'warn', title: '약정 기간 기산점', article: '제3조',
+      desc: '약정 기간이 "계약 체결일"부터 시작됩니다. 설치까지 2~3주 걸리는 경우 실제 제품을 사용하지도 않았는데 약정 기간이 줄어들고, 60개월 렌탈료는 모두 납부해야 합니다.',
+      original: '약정 기간은 계약 체결일로부터 기산하며, 계약 기간 동안 렌탈료가 부과된다.',
+      suggestion: '약정 기간은 제품 설치 완료일로부터 기산하며, 설치 지연이 회사 귀책인 경우 지연 기간만큼 약정 기간을 연장하거나 렌탈료를 감면한다.',
+      lawRef: '민법 제656조 (임대차의 기간) · 소비자분쟁해결기준 (렌탈 분야)',
+    },
+    {
+      id: 5, level: 'warn', title: '제품 임의 교체', article: '제7조',
+      desc: '회사가 "동급 사양의 제품"으로 임의 교체할 수 있습니다. 소비자가 선택한 특정 브랜드·색상·기능의 제품이 다른 제품으로 교체될 수 있으며, 거부 시 해지 위약금이 발생합니다.',
+      original: '회사는 서비스 운영상 필요한 경우 동급 사양의 제품으로 교체할 수 있으며, 소비자는 이에 동의한다.',
+      suggestion: '"동급 사양"의 기준을 구체적으로 명시하고, 제품 교체 시 소비자의 사전 동의를 받아야 한다. 소비자가 교체에 동의하지 않는 경우 위약금 없이 계약을 해지할 수 있다.',
+      lawRef: '민법 제390조 (채무불이행) · 소비자기본법 제19조 · 공정거래위원회 렌탈 표준약관',
+    },
+    {
+      id: 6, level: 'warn', title: '소유권 이전 추가 수수료', article: '제11조',
+      desc: '60개월 렌탈료를 모두 납부해도 소유권이 자동 이전되지 않습니다. 별도 "소유권 이전 신청"을 하고 수수료를 납부해야 내 것이 됩니다. 이 사실을 모르고 그냥 두면 소유권이 회사에 남습니다.',
+      original: '약정 기간 만료 후 소비자가 소유권 이전을 신청하고 이전 수수료를 납부한 경우에 한하여 소유권이 이전된다.',
+      suggestion: '약정 기간 만료 시 별도 절차 없이 소유권이 자동으로 소비자에게 이전된다. 이전 수수료는 별도로 청구하지 아니한다.',
+      lawRef: '민법 제186조 (부동산물권변동) · 소비자분쟁해결기준 (가전제품 렌탈 분야)',
+    },
+  ],
+  contractHtml: `
 <p><strong>가전제품 렌탈 서비스 이용계약서</strong></p>
 <p>공급사 ○○렌탈(이하 "회사")과 소비자는 아래와 같이 가전제품 렌탈 서비스 이용 계약을 체결합니다.</p>
 
@@ -235,893 +235,893 @@ const RESULT: AnalysisResult = {
 
 /* ── Helpers ───────────────────────────────────────── */
 function scoreColor(score: number): string {
- if (score >= 61) return 'var(--risk-high)'
- if (score >= 31) return 'var(--risk-mid)'
- return 'var(--risk-safe)'
+  if (score >= 61) return 'var(--risk-high)'
+  if (score >= 31) return 'var(--risk-mid)'
+  return 'var(--risk-safe)'
 }
 
 function gradeLabel(grade: RiskLevel): string {
- return grade === 'danger' ? ' 위험' : grade === 'warn' ? ' 주의' : ' 안전'
+  return grade === 'danger' ? '⚠ 위험' : grade === 'warn' ? '⚡ 주의' : '✓ 안전'
 }
 
 /* ── ResultNav ─────────────────────────────────────── */
 function ResultNav({ date, onPdf, onSign }: { date: string; onPdf?: () => void; onSign?: () => void }) {
- const navigate = useNavigate()
- return (
- <nav className="result-nav">
- <div className="result-nav-inner">
- <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
- <Link to="/" className="result-nav-logo">
- <div className="logo-sm">
- <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
- <path d="M12 2L3 7V12C3 16.97 6.84 21.61 12 23C17.16 21.61 21 16.97 21 12V7L12 2Z" fill="white" fillOpacity="0.95"/>
- <path d="M9 12L11 14L15 10" stroke="#060d1f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
- </svg>
- </div>
- <span className="gradient-text">CHECKMATE</span>
- </Link>
- <span style={{ color: 'var(--border)', fontSize: 16 }}>|</span>
- {/* 대시보드 버튼 */}
- <button className="result-nav-back" onClick={() => navigate('/dashboard')}>
- <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
- <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
- <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
- </svg>
- 대시보드
- </button>
- {/* 새 분석 버튼 */}
- <Link to="/upload" className="result-nav-back">
- <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
- <path d="M19 12H5M12 5l-7 7 7 7"/>
- </svg>
- 새 계약서 분석
- </Link>
- </div>
+  const navigate = useNavigate()
+  return (
+    <nav className="result-nav">
+      <div className="result-nav-inner">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <Link to="/" className="result-nav-logo">
+            <div className="logo-sm">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2L3 7V12C3 16.97 6.84 21.61 12 23C17.16 21.61 21 16.97 21 12V7L12 2Z" fill="white" fillOpacity="0.95"/>
+                <path d="M9 12L11 14L15 10" stroke="#060d1f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <span className="gradient-text">CHECKMATE</span>
+          </Link>
+          <span style={{ color: 'var(--border)', fontSize: 16 }}>|</span>
+          {/* 대시보드 버튼 */}
+          <button className="result-nav-back" onClick={() => navigate('/dashboard')}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+              <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+            </svg>
+            대시보드
+          </button>
+          {/* 새 분석 버튼 */}
+          <Link to="/upload" className="result-nav-back">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M19 12H5M12 5l-7 7 7 7"/>
+            </svg>
+            새 계약서 분석
+          </Link>
+        </div>
 
- <div style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
- <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
- <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
- </svg>
- {date}
- </div>
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          {date}
+        </div>
 
- <div className="result-nav-actions">
- <button
- className="result-download-btn"
- onClick={onPdf}
- disabled={!onPdf}
- title={!onPdf ? '결과를 저장해야 PDF를 받을 수 있습니다' : undefined}
- style={!onPdf ? { opacity: 0.4, cursor: 'not-allowed' } : undefined}
- >
- <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
- <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
- </svg>
- PDF 다운로드
- </button>
- <button
- className="result-download-btn"
- onClick={onSign}
- disabled={!onSign}
- title={!onSign ? '결과를 저장해야 서명할 수 있습니다' : undefined}
- style={{
- ...(!onSign ? { opacity: 0.4, cursor: 'not-allowed' } : undefined),
- background: onSign ? 'rgba(37,99,235,0.12)' : undefined,
- color: onSign ? 'var(--accent)' : undefined,
- borderColor: onSign ? 'rgba(37,99,235,0.3)' : undefined,
- }}
- >
- <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
- <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
- </svg>
- 전자서명
- </button>
- </div>
- </div>
- </nav>
- )
+        <div className="result-nav-actions">
+          <button
+            className="result-download-btn"
+            onClick={onPdf}
+            disabled={!onPdf}
+            title={!onPdf ? '결과를 저장해야 PDF를 받을 수 있습니다' : undefined}
+            style={!onPdf ? { opacity: 0.4, cursor: 'not-allowed' } : undefined}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+            </svg>
+            PDF 다운로드
+          </button>
+          <button
+            className="result-download-btn"
+            onClick={onSign}
+            disabled={!onSign}
+            title={!onSign ? '결과를 저장해야 서명할 수 있습니다' : undefined}
+            style={{
+              ...(!onSign ? { opacity: 0.4, cursor: 'not-allowed' } : undefined),
+              background: onSign ? 'rgba(37,99,235,0.12)' : undefined,
+              color: onSign ? 'var(--accent)' : undefined,
+              borderColor: onSign ? 'rgba(37,99,235,0.3)' : undefined,
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+            </svg>
+            전자서명
+          </button>
+        </div>
+      </div>
+    </nav>
+  )
 }
 
 /* ── ScoreSection ──────────────────────────────────── */
 function ScoreSection({ result }: { result: AnalysisResult }) {
- const { score, grade, dangerCount, warnCount, safeCount, analysisTime, totalClauses, problemTags } = result
- const color = scoreColor(score)
+  const { score, grade, dangerCount, warnCount, safeCount, analysisTime, totalClauses, problemTags } = result
+  const color = scoreColor(score)
 
- return (
- <div className="score-section">
- <div className="score-top-row">
- {/* Left: big score */}
- <div className="score-left">
- <div className="score-number" style={{ color }}>{score}</div>
- <div className={`score-grade-badge ${grade}`}>{gradeLabel(grade)}</div>
- <div className="score-summary">
- {dangerCount}개 위험 · {warnCount}개 주의 · {safeCount}개 안전
- <span style={{ margin: '0 6px', opacity: 0.3 }}>·</span>
- 총 {totalClauses}개 조항
- </div>
- </div>
+  return (
+    <div className="score-section">
+      <div className="score-top-row">
+        {/* Left: big score */}
+        <div className="score-left">
+          <div className="score-number" style={{ color }}>{score}</div>
+          <div className={`score-grade-badge ${grade}`}>{gradeLabel(grade)}</div>
+          <div className="score-summary">
+            {dangerCount}개 위험 · {warnCount}개 주의 · {safeCount}개 안전
+            <span style={{ margin: '0 6px', opacity: 0.3 }}>·</span>
+            총 {totalClauses}개 조항
+          </div>
+        </div>
 
- {/* Right: spectrum bar */}
- <div className="score-right">
- <div className="spectrum-label">위험도 스펙트럼</div>
- <div className="spectrum-bar-track">
- <div className="spectrum-needle" style={{ left: `${score}%` }} />
- </div>
- <div className="spectrum-ticks">
- <span>0 안전</span>
- <span>50 주의</span>
- <span>100 위험</span>
- </div>
- </div>
- </div>
+        {/* Right: spectrum bar */}
+        <div className="score-right">
+          <div className="spectrum-label">위험도 스펙트럼</div>
+          <div className="spectrum-bar-track">
+            <div className="spectrum-needle" style={{ left: `${score}%` }} />
+          </div>
+          <div className="spectrum-ticks">
+            <span>0 안전</span>
+            <span>50 주의</span>
+            <span>100 위험</span>
+          </div>
+        </div>
+      </div>
 
- {/* Metrics */}
- <div className="result-metric-grid">
- <div className="result-metric">
- <div className="result-metric-label">위험 조항</div>
- <div className="result-metric-value" style={{ color: 'var(--risk-high)' }}>{dangerCount}개</div>
- </div>
- <div className="result-metric">
- <div className="result-metric-label">주의 조항</div>
- <div className="result-metric-value" style={{ color: 'var(--risk-mid)' }}>{warnCount}개</div>
- </div>
- <div className="result-metric">
- <div className="result-metric-label">안전 조항</div>
- <div className="result-metric-value" style={{ color: 'var(--risk-safe)' }}>{safeCount}개</div>
- </div>
- <div className="result-metric">
- <div className="result-metric-label">분석 소요</div>
- <div className="result-metric-value" style={{ color: 'var(--text-secondary)' }}>{analysisTime}</div>
- </div>
- </div>
+      {/* Metrics */}
+      <div className="result-metric-grid">
+        <div className="result-metric">
+          <div className="result-metric-label">위험 조항</div>
+          <div className="result-metric-value" style={{ color: 'var(--risk-high)' }}>{dangerCount}개</div>
+        </div>
+        <div className="result-metric">
+          <div className="result-metric-label">주의 조항</div>
+          <div className="result-metric-value" style={{ color: 'var(--risk-mid)' }}>{warnCount}개</div>
+        </div>
+        <div className="result-metric">
+          <div className="result-metric-label">안전 조항</div>
+          <div className="result-metric-value" style={{ color: 'var(--risk-safe)' }}>{safeCount}개</div>
+        </div>
+        <div className="result-metric">
+          <div className="result-metric-label">분석 소요</div>
+          <div className="result-metric-value" style={{ color: 'var(--text-secondary)' }}>{analysisTime}</div>
+        </div>
+      </div>
 
- {/* Problem tags */}
- <div className="section-eyebrow">탐지된 문제 유형</div>
- <div className="problem-tag-row">
- {problemTags.map((tag) => (
- <span key={tag.text} className={`problem-tag ${tag.level}`}>{tag.text}</span>
- ))}
- </div>
- </div>
- )
+      {/* Problem tags */}
+      <div className="section-eyebrow">탐지된 문제 유형</div>
+      <div className="problem-tag-row">
+        {problemTags.map((tag) => (
+          <span key={tag.text} className={`problem-tag ${tag.level}`}>{tag.text}</span>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 /* ── ClauseItem ────────────────────────────────────── */
 interface ClauseItemProps {
- clause: Clause
- isOpen: boolean
- onToggle: () => void
+  clause: Clause
+  isOpen: boolean
+  onToggle: () => void
 }
 
 function ClauseItem({ clause, isOpen, onToggle }: ClauseItemProps) {
- const bodyRef = useRef<HTMLDivElement>(null)
- const innerRef = useRef<HTMLDivElement>(null)
+  const bodyRef = useRef<HTMLDivElement>(null)
+  const innerRef = useRef<HTMLDivElement>(null)
 
- useEffect(() => {
- if (!bodyRef.current || !innerRef.current) return
- bodyRef.current.style.maxHeight = isOpen
- ? `${innerRef.current.scrollHeight}px`
- : '0px'
- }, [isOpen])
+  useEffect(() => {
+    if (!bodyRef.current || !innerRef.current) return
+    bodyRef.current.style.maxHeight = isOpen
+      ? `${innerRef.current.scrollHeight}px`
+      : '0px'
+  }, [isOpen])
 
- return (
- <div className={`result-clause${isOpen ? ' open' : ''} ${clause.level}-clause`}>
- <button className="result-clause-head" onClick={onToggle}>
- <span className={`result-clause-badge ${clause.level}`}>
- {clause.level === 'danger' ? '위험' : '주의'}
- </span>
- <span className="result-clause-title">{clause.title}</span>
- <span className="result-clause-article">{clause.article}</span>
- <svg
- className="result-clause-chevron"
- width="18" height="18" viewBox="0 0 24 24"
- fill="none" stroke="currentColor" strokeWidth="2"
- >
- <polyline points="6 9 12 15 18 9" />
- </svg>
- </button>
+  return (
+    <div className={`result-clause${isOpen ? ' open' : ''} ${clause.level}-clause`}>
+      <button className="result-clause-head" onClick={onToggle}>
+        <span className={`result-clause-badge ${clause.level}`}>
+          {clause.level === 'danger' ? '위험' : '주의'}
+        </span>
+        <span className="result-clause-title">{clause.title}</span>
+        <span className="result-clause-article">{clause.article}</span>
+        <svg
+          className="result-clause-chevron"
+          width="18" height="18" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" strokeWidth="2"
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
 
- <div className="result-clause-body" ref={bodyRef}>
- <div className="result-clause-body-inner" ref={innerRef}>
- <p className="result-clause-desc">{clause.desc}</p>
+      <div className="result-clause-body" ref={bodyRef}>
+        <div className="result-clause-body-inner" ref={innerRef}>
+          <p className="result-clause-desc">{clause.desc}</p>
 
- {/* 원문 vs 쉬운 설명 비교 */}
- <div style={{
- display: 'grid',
- gridTemplateColumns: clause.simpleExplanation ? '1fr 1fr' : '1fr',
- gap: 10,
- marginBottom: 12,
- }}>
- {/* Original */}
- <div className="result-quote-block original">
- <div className="result-quote-label orig">
- <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }}>
- <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
- </svg>
- 계약서 원문
- </div>
- <div className="result-quote-text">"{clause.original}"</div>
- </div>
+          {/* 원문 vs 쉬운 설명 비교 */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: clause.simpleExplanation ? '1fr 1fr' : '1fr',
+            gap: 10,
+            marginBottom: 12,
+          }}>
+            {/* Original */}
+            <div className="result-quote-block original">
+              <div className="result-quote-label orig">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }}>
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                </svg>
+                계약서 원문
+              </div>
+              <div className="result-quote-text">"{clause.original}"</div>
+            </div>
 
- {/* 쉬운 설명 */}
- {clause.simpleExplanation && (
- <div className="result-quote-block" style={{ borderLeftColor: 'var(--accent)' }}>
- <div className="result-quote-label" style={{ color: 'var(--accent)' }}>
- <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }}>
- <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
- </svg>
- 쉽게 풀어보면
- </div>
- <div className="result-quote-text" style={{ color: 'var(--text)' }}>
- {clause.simpleExplanation}
- </div>
- </div>
- )}
- </div>
+            {/* 쉬운 설명 */}
+            {clause.simpleExplanation && (
+              <div className="result-quote-block" style={{ borderLeftColor: 'var(--accent)' }}>
+                <div className="result-quote-label" style={{ color: 'var(--accent)' }}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }}>
+                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                  </svg>
+                  쉽게 풀어보면
+                </div>
+                <div className="result-quote-text" style={{ color: 'var(--text)' }}>
+                  {clause.simpleExplanation}
+                </div>
+              </div>
+            )}
+          </div>
 
- {/* Problem */}
- {clause.problem && (
- <div className="result-problem-text">
- <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ flexShrink: 0, marginTop: 2 }}>
- <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
- </svg>
- 문제점: {clause.problem}
- </div>
- )}
+          {/* Problem */}
+          {clause.problem && (
+            <div className="result-problem-text">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ flexShrink: 0, marginTop: 2 }}>
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              문제점: {clause.problem}
+            </div>
+          )}
 
- {/* Suggestion */}
- <div className="result-quote-block suggest">
- <div className="result-quote-label sugg">판례 및 법적 기준 대안</div>
- <div className="result-quote-text">"{clause.suggestion}"</div>
- </div>
+          {/* Suggestion */}
+          <div className="result-quote-block suggest">
+            <div className="result-quote-label sugg">판례 및 법적 기준 대안</div>
+            <div className="result-quote-text">"{clause.suggestion}"</div>
+          </div>
 
- {/* Law ref */}
- <div className="result-law-ref">
- 법적 근거: {clause.lawRef}
- </div>
- </div>
- </div>
- </div>
- )
+          {/* Law ref */}
+          <div className="result-law-ref">
+            📌 법적 근거: {clause.lawRef}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 /* ── SummaryCard ───────────────────────────────────── */
 function SummaryCard({ summary }: { summary?: string }) {
- if (!summary) return null
- return (
- <div style={{
- background: 'linear-gradient(135deg, rgba(79,142,247,0.07) 0%, rgba(6,195,255,0.04) 100%)',
- border: '1px solid rgba(79,142,247,0.22)',
- borderRadius: 14,
- padding: '18px 22px',
- marginBottom: 28,
- }}>
- <div style={{
- display: 'flex', alignItems: 'center', gap: 7,
- marginBottom: 12,
- fontSize: 11, fontWeight: 700,
- color: 'var(--accent)',
- textTransform: 'uppercase', letterSpacing: 1.2,
- }}>
- <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
- <circle cx="12" cy="12" r="10"/>
- <path d="M12 16v-4M12 8h.01"/>
- </svg>
- AI 계약서 요약
- </div>
- <p style={{
- color: 'var(--text)',
- fontSize: 14,
- lineHeight: 1.8,
- margin: 0,
- }}>
- {summary}
- </p>
- </div>
- )
+  if (!summary) return null
+  return (
+    <div style={{
+      background: 'linear-gradient(135deg, rgba(79,142,247,0.07) 0%, rgba(6,195,255,0.04) 100%)',
+      border: '1px solid rgba(79,142,247,0.22)',
+      borderRadius: 14,
+      padding: '18px 22px',
+      marginBottom: 28,
+    }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 7,
+        marginBottom: 12,
+        fontSize: 11, fontWeight: 700,
+        color: 'var(--accent)',
+        textTransform: 'uppercase', letterSpacing: 1.2,
+      }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 16v-4M12 8h.01"/>
+        </svg>
+        AI 계약서 요약
+      </div>
+      <p style={{
+        color: 'var(--text)',
+        fontSize: 14,
+        lineHeight: 1.8,
+        margin: 0,
+      }}>
+        {summary}
+      </p>
+    </div>
+  )
 }
 
 /* ── ClauseList ────────────────────────────────────── */
 function ClauseList({ clauses }: { clauses: Clause[] }) {
- const [openId, setOpenId] = useState<number | null>(1)
+  const [openId, setOpenId] = useState<number | null>(1)
 
- const toggle = (id: number) =>
- setOpenId((prev) => (prev === id ? null : id))
+  const toggle = (id: number) =>
+    setOpenId((prev) => (prev === id ? null : id))
 
- return (
- <div className="result-clause-list">
- {clauses.map((c) => (
- <ClauseItem
- key={c.id}
- clause={c}
- isOpen={openId === c.id}
- onToggle={() => toggle(c.id)}
- />
- ))}
- </div>
- )
+  return (
+    <div className="result-clause-list">
+      {clauses.map((c) => (
+        <ClauseItem
+          key={c.id}
+          clause={c}
+          isOpen={openId === c.id}
+          onToggle={() => toggle(c.id)}
+        />
+      ))}
+    </div>
+  )
 }
 
 /* ── 계약 전 체크리스트 ──────────────────────────────────── */
 
 const CHECKLIST: Record<string, { id: string; text: string }[]> = {
- 근로: [
- { id: 'e1', text: '계약 내용에 대해 충분한 설명을 받으셨나요?' },
- { id: 'e2', text: '임금 금액과 지급일이 명시되어 있나요?' },
- { id: 'e3', text: '근로시간(주 52시간 이내)이 기재되어 있나요?' },
- { id: 'e4', text: '휴일·휴가 규정이 명시되어 있나요?' },
- { id: 'e5', text: '수습기간과 수습 급여가 명확하게 기재되어 있나요?' },
- { id: 'e6', text: '포괄임금제 조항이 포함되어 있지 않나요?' },
- { id: 'e7', text: '경업금지 조항의 범위가 합리적인가요?' },
- { id: 'e8', text: '해고 사유와 절차가 명확하게 규정되어 있나요?' },
- { id: 'e9', text: '4대보험 가입이 명시되어 있나요?' },
- { id: 'e10', text: '퇴직금 규정이 법정 기준 이상인가요?' },
- ],
- 임대차: [
- { id: 'l1', text: '임대인의 신원과 소유권이 등기부등본으로 확인되었나요?' },
- { id: 'l2', text: '임대차 기간(시작일·종료일)이 명확하게 기재되어 있나요?' },
- { id: 'l3', text: '임대료 및 관리비 금액과 지급 방법이 명시되어 있나요?' },
- { id: 'l4', text: '보증금 반환 조건과 절차가 명확한가요?' },
- { id: 'l5', text: '임차인의 원상복구 범위가 합리적으로 제한되어 있나요?' },
- { id: 'l6', text: '근저당·전세권 등 권리 제한이 없는지 확인했나요?' },
- { id: 'l7', text: '계약 갱신 거절 사유가 법정 요건과 일치하나요?' },
- { id: 'l8', text: '수선의무가 임대인에게 적절히 배분되어 있나요?' },
- { id: 'l9', text: '전대차(재임대) 허용 여부가 명시되어 있나요?' },
- { id: 'l10', text: '임대차 신고(확정일자)를 완료했나요?' },
- ],
- 프리랜서: [
- { id: 'f1', text: '업무 범위와 결과물 기준이 구체적으로 명시되어 있나요?' },
- { id: 'f2', text: '대금 지급 일정과 조건이 명확하게 기재되어 있나요?' },
- { id: 'f3', text: '결과물의 지식재산권 귀속이 합리적으로 규정되어 있나요?' },
- { id: 'f4', text: '추가 업무 요청 시 별도 보상 조항이 있나요?' },
- { id: 'f5', text: '일방적 계약 해지 시 위약금 조항이 균형 잡혀 있나요?' },
- { id: 'f6', text: '납품 후 수정 범위와 횟수가 명시되어 있나요?' },
- { id: 'f7', text: '비밀유지(NDA) 조항의 범위가 과도하지 않나요?' },
- { id: 'f8', text: '세금계산서·계산서 발행 조건이 명시되어 있나요?' },
- { id: 'f9', text: '완성물 검수 기준과 기간이 합리적인가요?' },
- { id: 'f10', text: '분쟁 해결 기관(관할 법원 등)이 합리적으로 지정되어 있나요?' },
- ],
- 기본: [
- { id: 'g1', text: '계약 당사자 정보(이름, 연락처)가 정확하게 기재되어 있나요?' },
- { id: 'g2', text: '계약 기간과 효력 발생 조건이 명확한가요?' },
- { id: 'g3', text: '의무와 권리가 양측에 균형 있게 배분되어 있나요?' },
- { id: 'g4', text: '위약금·손해배상 조항이 과도하지 않나요?' },
- { id: 'g5', text: '자동 갱신·자동 연장 조항이 있다면 해지 기간을 확인했나요?' },
- { id: 'g6', text: '계약 변경·수정 절차가 명시되어 있나요?' },
- { id: 'g7', text: '불가항력(천재지변 등) 조항이 포함되어 있나요?' },
- { id: 'g8', text: '분쟁 발생 시 중재·소송 절차가 명시되어 있나요?' },
- { id: 'g9', text: '개인정보 처리·보관 조항이 적법한가요?' },
- { id: 'g10', text: '모든 조항을 충분히 이해한 뒤 서명하나요?' },
- ],
+  근로: [
+    { id: 'e1', text: '계약 내용에 대해 충분한 설명을 받으셨나요?' },
+    { id: 'e2', text: '임금 금액과 지급일이 명시되어 있나요?' },
+    { id: 'e3', text: '근로시간(주 52시간 이내)이 기재되어 있나요?' },
+    { id: 'e4', text: '휴일·휴가 규정이 명시되어 있나요?' },
+    { id: 'e5', text: '수습기간과 수습 급여가 명확하게 기재되어 있나요?' },
+    { id: 'e6', text: '포괄임금제 조항이 포함되어 있지 않나요?' },
+    { id: 'e7', text: '경업금지 조항의 범위가 합리적인가요?' },
+    { id: 'e8', text: '해고 사유와 절차가 명확하게 규정되어 있나요?' },
+    { id: 'e9', text: '4대보험 가입이 명시되어 있나요?' },
+    { id: 'e10', text: '퇴직금 규정이 법정 기준 이상인가요?' },
+  ],
+  임대차: [
+    { id: 'l1', text: '임대인의 신원과 소유권이 등기부등본으로 확인되었나요?' },
+    { id: 'l2', text: '임대차 기간(시작일·종료일)이 명확하게 기재되어 있나요?' },
+    { id: 'l3', text: '임대료 및 관리비 금액과 지급 방법이 명시되어 있나요?' },
+    { id: 'l4', text: '보증금 반환 조건과 절차가 명확한가요?' },
+    { id: 'l5', text: '임차인의 원상복구 범위가 합리적으로 제한되어 있나요?' },
+    { id: 'l6', text: '근저당·전세권 등 권리 제한이 없는지 확인했나요?' },
+    { id: 'l7', text: '계약 갱신 거절 사유가 법정 요건과 일치하나요?' },
+    { id: 'l8', text: '수선의무가 임대인에게 적절히 배분되어 있나요?' },
+    { id: 'l9', text: '전대차(재임대) 허용 여부가 명시되어 있나요?' },
+    { id: 'l10', text: '임대차 신고(확정일자)를 완료했나요?' },
+  ],
+  프리랜서: [
+    { id: 'f1', text: '업무 범위와 결과물 기준이 구체적으로 명시되어 있나요?' },
+    { id: 'f2', text: '대금 지급 일정과 조건이 명확하게 기재되어 있나요?' },
+    { id: 'f3', text: '결과물의 지식재산권 귀속이 합리적으로 규정되어 있나요?' },
+    { id: 'f4', text: '추가 업무 요청 시 별도 보상 조항이 있나요?' },
+    { id: 'f5', text: '일방적 계약 해지 시 위약금 조항이 균형 잡혀 있나요?' },
+    { id: 'f6', text: '납품 후 수정 범위와 횟수가 명시되어 있나요?' },
+    { id: 'f7', text: '비밀유지(NDA) 조항의 범위가 과도하지 않나요?' },
+    { id: 'f8', text: '세금계산서·계산서 발행 조건이 명시되어 있나요?' },
+    { id: 'f9', text: '완성물 검수 기준과 기간이 합리적인가요?' },
+    { id: 'f10', text: '분쟁 해결 기관(관할 법원 등)이 합리적으로 지정되어 있나요?' },
+  ],
+  기본: [
+    { id: 'g1', text: '계약 당사자 정보(이름, 연락처)가 정확하게 기재되어 있나요?' },
+    { id: 'g2', text: '계약 기간과 효력 발생 조건이 명확한가요?' },
+    { id: 'g3', text: '의무와 권리가 양측에 균형 있게 배분되어 있나요?' },
+    { id: 'g4', text: '위약금·손해배상 조항이 과도하지 않나요?' },
+    { id: 'g5', text: '자동 갱신·자동 연장 조항이 있다면 해지 기간을 확인했나요?' },
+    { id: 'g6', text: '계약 변경·수정 절차가 명시되어 있나요?' },
+    { id: 'g7', text: '불가항력(천재지변 등) 조항이 포함되어 있나요?' },
+    { id: 'g8', text: '분쟁 발생 시 중재·소송 절차가 명시되어 있나요?' },
+    { id: 'g9', text: '개인정보 처리·보관 조항이 적법한가요?' },
+    { id: 'g10', text: '모든 조항을 충분히 이해한 뒤 서명하나요?' },
+  ],
 }
 
 function ChecklistSection({ contractType }: { contractType?: string }) {
- const ct = (contractType ?? '').toLowerCase()
- const items = ct.includes('근로') || ct.includes('employment') ? CHECKLIST.근로
- : ct.includes('임대') || ct.includes('lease') ? CHECKLIST.임대차
- : ct.includes('프리랜서') || ct.includes('freelance') || ct.includes('용역') ? CHECKLIST.프리랜서
- : CHECKLIST.기본
+  const ct = (contractType ?? '').toLowerCase()
+  const items = ct.includes('근로') || ct.includes('employment') ? CHECKLIST.근로
+    : ct.includes('임대') || ct.includes('lease') ? CHECKLIST.임대차
+    : ct.includes('프리랜서') || ct.includes('freelance') || ct.includes('용역') ? CHECKLIST.프리랜서
+    : CHECKLIST.기본
 
- const [checked, setChecked] = useState<Record<string, boolean>>({})
- const total = items.length
- const done = Object.values(checked).filter(Boolean).length
+  const [checked, setChecked] = useState<Record<string, boolean>>({})
+  const total = items.length
+  const done = Object.values(checked).filter(Boolean).length
 
- const toggle = (id: string) => setChecked(prev => ({ ...prev, [id]: !prev[id] }))
+  const toggle = (id: string) => setChecked(prev => ({ ...prev, [id]: !prev[id] }))
 
- return (
- <div style={{ marginBottom: 32 }}>
- <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
- <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase' }}>
- 계약 체결 전 체크리스트
- </span>
- <span style={{
- fontSize: 12, fontWeight: 700, padding: '2px 10px', borderRadius: 10,
- background: done === total ? 'rgba(34,197,94,0.12)' : 'rgba(245,158,11,0.12)',
- color: done === total ? '#16a34a' : '#d97706',
- }}>
- {done} / {total} 완료
- </span>
- </div>
- <div style={{ background: 'var(--bg-card)', borderRadius: 14, border: '1px solid var(--border)', overflow: 'hidden' }}>
- {items.map((item, i) => (
- <label key={item.id} onClick={() => toggle(item.id)} style={{
- display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 16px',
- cursor: 'pointer', borderBottom: i < items.length - 1 ? '1px solid var(--border)' : 'none',
- background: checked[item.id] ? 'rgba(34,197,94,0.04)' : 'transparent',
- transition: 'background 0.15s',
- }}>
- <div style={{
- width: 20, height: 20, borderRadius: 6, border: `2px solid ${checked[item.id] ? '#16a34a' : 'var(--border)'}`,
- background: checked[item.id] ? '#16a34a' : 'transparent',
- display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1,
- transition: 'all 0.15s',
- }}>
- {checked[item.id] && <span style={{ color: '#fff', fontSize: 12, fontWeight: 800 }}></span>}
- </div>
- <span style={{
- fontSize: 13, lineHeight: '1.5',
- color: checked[item.id] ? 'var(--text-muted)' : 'var(--text)',
- textDecoration: checked[item.id] ? 'line-through' : 'none',
- }}>{item.text}</span>
- </label>
- ))}
- </div>
- {done === total && (
- <div style={{ textAlign: 'center', marginTop: 10, fontSize: 13, color: '#16a34a', fontWeight: 700 }}>
- 모든 항목을 확인했습니다. 안전하게 계약을 진행하세요!
- </div>
- )}
- </div>
- )
+  return (
+    <div style={{ marginBottom: 32 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase' }}>
+          계약 체결 전 체크리스트
+        </span>
+        <span style={{
+          fontSize: 12, fontWeight: 700, padding: '2px 10px', borderRadius: 10,
+          background: done === total ? 'rgba(34,197,94,0.12)' : 'rgba(245,158,11,0.12)',
+          color: done === total ? '#16a34a' : '#d97706',
+        }}>
+          {done} / {total} 완료
+        </span>
+      </div>
+      <div style={{ background: 'var(--bg-card)', borderRadius: 14, border: '1px solid var(--border)', overflow: 'hidden' }}>
+        {items.map((item, i) => (
+          <label key={item.id} onClick={() => toggle(item.id)} style={{
+            display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 16px',
+            cursor: 'pointer', borderBottom: i < items.length - 1 ? '1px solid var(--border)' : 'none',
+            background: checked[item.id] ? 'rgba(34,197,94,0.04)' : 'transparent',
+            transition: 'background 0.15s',
+          }}>
+            <div style={{
+              width: 20, height: 20, borderRadius: 6, border: `2px solid ${checked[item.id] ? '#16a34a' : 'var(--border)'}`,
+              background: checked[item.id] ? '#16a34a' : 'transparent',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1,
+              transition: 'all 0.15s',
+            }}>
+              {checked[item.id] && <span style={{ color: '#fff', fontSize: 12, fontWeight: 800 }}>✓</span>}
+            </div>
+            <span style={{
+              fontSize: 13, lineHeight: '1.5',
+              color: checked[item.id] ? 'var(--text-muted)' : 'var(--text)',
+              textDecoration: checked[item.id] ? 'line-through' : 'none',
+            }}>{item.text}</span>
+          </label>
+        ))}
+      </div>
+      {done === total && (
+        <div style={{ textAlign: 'center', marginTop: 10, fontSize: 13, color: '#16a34a', fontWeight: 700 }}>
+          ✅ 모든 항목을 확인했습니다. 안전하게 계약을 진행하세요!
+        </div>
+      )}
+    </div>
+  )
 }
 
 /* ── ExpertCard ────────────────────────────────────── */
 /* ── 대응 기관 데이터 ──────────────────────────────────── */
 const AGENCIES = [
- {
- id: 'klac',
- icon: '',
- name: '대한법률구조공단',
- desc: '무료 법률 상담 · 소송 지원 · 계약 분쟁 대리',
- phone: '132',
- url: 'https://www.klac.or.kr',
- tags: [] as string[],
- always: true,
- },
- {
- id: 'moel',
- icon: '',
- name: '고용노동부',
- desc: '임금체불 · 부당해고 · 근로계약 위반 신고',
- phone: '1350',
- url: 'https://minwon.moel.go.kr',
- tags: ['근로', '임금', '채용', '프리랜서', '알바', '용역'],
- always: false,
- },
- {
- id: 'ftc',
- icon: '️',
- name: '공정거래위원회',
- desc: '불공정 약관 · 가맹점 분쟁 · 하도급 피해 신고',
- phone: '1372',
- url: 'https://www.ftc.go.kr',
- tags: ['가맹', '하도급', '대리점', '약관', '소비자', '유통'],
- always: false,
- },
- {
- id: 'kca',
- icon: '️',
- name: '한국소비자원',
- desc: '소비자 계약 피해 · 환급 거부 · 위약금 분쟁',
- phone: '1372',
- url: 'https://www.kca.go.kr',
- tags: ['소비자', '렌탈', '구독', '방문판매', '학원', '헬스', '피트니스'],
- always: false,
- },
- {
- id: 'molit',
- icon: '',
- name: '국토교통부 임대차 분쟁',
- desc: '전월세 분쟁 · 임대차 3법 위반 · 보증금 반환',
- phone: '1599-0001',
- url: 'https://www.molit.go.kr',
- tags: ['임대차', '전세', '월세', '주택', '상가', '임대'],
- always: false,
- },
- {
- id: 'police',
- icon: '',
- name: '경찰청 사이버범죄신고',
- desc: '계약 사기 · 허위 계약 · 온라인 거래 피해 신고',
- phone: '182',
- url: 'https://ecrm.police.go.kr',
- tags: ['사기'],
- always: false,
- },
+  {
+    id: 'klac',
+    icon: '🏛',
+    name: '대한법률구조공단',
+    desc: '무료 법률 상담 · 소송 지원 · 계약 분쟁 대리',
+    phone: '132',
+    url: 'https://www.klac.or.kr',
+    tags: [] as string[],
+    always: true,
+  },
+  {
+    id: 'moel',
+    icon: '👷',
+    name: '고용노동부',
+    desc: '임금체불 · 부당해고 · 근로계약 위반 신고',
+    phone: '1350',
+    url: 'https://minwon.moel.go.kr',
+    tags: ['근로', '임금', '채용', '프리랜서', '알바', '용역'],
+    always: false,
+  },
+  {
+    id: 'ftc',
+    icon: '⚖️',
+    name: '공정거래위원회',
+    desc: '불공정 약관 · 가맹점 분쟁 · 하도급 피해 신고',
+    phone: '1372',
+    url: 'https://www.ftc.go.kr',
+    tags: ['가맹', '하도급', '대리점', '약관', '소비자', '유통'],
+    always: false,
+  },
+  {
+    id: 'kca',
+    icon: '🛡️',
+    name: '한국소비자원',
+    desc: '소비자 계약 피해 · 환급 거부 · 위약금 분쟁',
+    phone: '1372',
+    url: 'https://www.kca.go.kr',
+    tags: ['소비자', '렌탈', '구독', '방문판매', '학원', '헬스', '피트니스'],
+    always: false,
+  },
+  {
+    id: 'molit',
+    icon: '🏠',
+    name: '국토교통부 임대차 분쟁',
+    desc: '전월세 분쟁 · 임대차 3법 위반 · 보증금 반환',
+    phone: '1599-0001',
+    url: 'https://www.molit.go.kr',
+    tags: ['임대차', '전세', '월세', '주택', '상가', '임대'],
+    always: false,
+  },
+  {
+    id: 'police',
+    icon: '🚨',
+    name: '경찰청 사이버범죄신고',
+    desc: '계약 사기 · 허위 계약 · 온라인 거래 피해 신고',
+    phone: '182',
+    url: 'https://ecrm.police.go.kr',
+    tags: ['사기'],
+    always: false,
+  },
 ]
 
 function ExpertCard({ grade, contractType }: { grade: RiskLevel; contractType?: string }) {
- const ct = (contractType ?? '').toLowerCase()
+  const ct = (contractType ?? '').toLowerCase()
 
- // 계약 유형 키워드로 관련 기관 우선 표시
- const sorted = [...AGENCIES].sort((a, b) => {
- if (a.always) return -1
- if (b.always) return 1
- const aMatch = a.tags.some(t => ct.includes(t))
- const bMatch = b.tags.some(t => ct.includes(t))
- if (aMatch && !bMatch) return -1
- if (!aMatch && bMatch) return 1
- return 0
- })
+  // 계약 유형 키워드로 관련 기관 우선 표시
+  const sorted = [...AGENCIES].sort((a, b) => {
+    if (a.always) return -1
+    if (b.always) return 1
+    const aMatch = a.tags.some(t => ct.includes(t))
+    const bMatch = b.tags.some(t => ct.includes(t))
+    if (aMatch && !bMatch) return -1
+    if (!aMatch && bMatch) return 1
+    return 0
+  })
 
- return (
- <div style={{
- background: 'var(--bg-card)',
- borderRadius: 18,
- border: '1px solid var(--border)',
- padding: '24px 28px',
- marginBottom: 24,
- }}>
- {/* 헤더 */}
- <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
- <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: 'var(--text)' }}>
- 무료 법률 지원 기관
- </h3>
- </div>
- <p style={{ margin: '0 0 20px', fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
- 계약 피해 예방 및 분쟁 발생 시 아래 기관을 통해 <strong style={{ color: 'var(--text)' }}>무료로</strong> 도움받을 수 있습니다.
- {contractType && <> 계약 유형 (<strong style={{ color: 'var(--accent)' }}>{contractType}</strong>)에 맞는 기관이 상단에 표시됩니다.</>}
- </p>
+  return (
+    <div style={{
+      background: 'var(--bg-card)',
+      borderRadius: 18,
+      border: '1px solid var(--border)',
+      padding: '24px 28px',
+      marginBottom: 24,
+    }}>
+      {/* 헤더 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+        <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: 'var(--text)' }}>
+          무료 법률 지원 기관
+        </h3>
+      </div>
+      <p style={{ margin: '0 0 20px', fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+        계약 피해 예방 및 분쟁 발생 시 아래 기관을 통해 <strong style={{ color: 'var(--text)' }}>무료로</strong> 도움받을 수 있습니다.
+        {contractType && <> 계약 유형 (<strong style={{ color: 'var(--accent)' }}>{contractType}</strong>)에 맞는 기관이 상단에 표시됩니다.</>}
+      </p>
 
- {/* 기관 카드 그리드 */}
- <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
- {sorted.map(ag => {
- const isRelevant = ag.always || ag.tags.some(t => ct.includes(t))
- return (
- <div key={ag.id} style={{
- background: isRelevant ? 'rgba(37,99,235,0.04)' : 'var(--bg)',
- border: `1.5px solid ${isRelevant ? 'rgba(37,99,235,0.2)' : 'var(--border)'}`,
- borderRadius: 12,
- padding: '14px 16px',
- display: 'flex',
- flexDirection: 'column',
- gap: 8,
- }}>
- <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
- <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>{ag.name}</span>
- {isRelevant && ag.always === false && (
- <span style={{
- marginLeft: 'auto', fontSize: 10, fontWeight: 700,
- background: 'rgba(37,99,235,0.12)', color: 'var(--accent)',
- borderRadius: 6, padding: '2px 7px',
- }}>관련</span>
- )}
- </div>
- <p style={{ margin: 0, fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
- {ag.desc}
- </p>
- <div style={{ display: 'flex', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
- <a
- href={ag.url}
- target="_blank"
- rel="noreferrer"
- style={{
- display: 'inline-flex', alignItems: 'center', gap: 5,
- fontSize: 12, fontWeight: 600, color: 'var(--accent)',
- textDecoration: 'none', padding: '5px 12px',
- background: 'rgba(37,99,235,0.07)', borderRadius: 8,
- border: '1px solid rgba(37,99,235,0.15)',
- }}
- >
- 홈페이지 →
- </a>
- <a
- href={`tel:${ag.phone}`}
- style={{
- display: 'inline-flex', alignItems: 'center', gap: 5,
- fontSize: 12, fontWeight: 600, color: '#059669',
- textDecoration: 'none', padding: '5px 12px',
- background: 'rgba(5,150,105,0.07)', borderRadius: 8,
- border: '1px solid rgba(5,150,105,0.2)',
- }}
- >
- {ag.phone}
- </a>
- </div>
- </div>
- )
- })}
- </div>
+      {/* 기관 카드 그리드 */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
+        {sorted.map(ag => {
+          const isRelevant = ag.always || ag.tags.some(t => ct.includes(t))
+          return (
+            <div key={ag.id} style={{
+              background: isRelevant ? 'rgba(37,99,235,0.04)' : 'var(--bg)',
+              border: `1.5px solid ${isRelevant ? 'rgba(37,99,235,0.2)' : 'var(--border)'}`,
+              borderRadius: 12,
+              padding: '14px 16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>{ag.name}</span>
+                {isRelevant && ag.always === false && (
+                  <span style={{
+                    marginLeft: 'auto', fontSize: 10, fontWeight: 700,
+                    background: 'rgba(37,99,235,0.12)', color: 'var(--accent)',
+                    borderRadius: 6, padding: '2px 7px',
+                  }}>관련</span>
+                )}
+              </div>
+              <p style={{ margin: 0, fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                {ag.desc}
+              </p>
+              <div style={{ display: 'flex', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
+                <a
+                  href={ag.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                    fontSize: 12, fontWeight: 600, color: 'var(--accent)',
+                    textDecoration: 'none', padding: '5px 12px',
+                    background: 'rgba(37,99,235,0.07)', borderRadius: 8,
+                    border: '1px solid rgba(37,99,235,0.15)',
+                  }}
+                >
+                  홈페이지 →
+                </a>
+                <a
+                  href={`tel:${ag.phone}`}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                    fontSize: 12, fontWeight: 600, color: '#059669',
+                    textDecoration: 'none', padding: '5px 12px',
+                    background: 'rgba(5,150,105,0.07)', borderRadius: 8,
+                    border: '1px solid rgba(5,150,105,0.2)',
+                  }}
+                >
+                  📞 {ag.phone}
+                </a>
+              </div>
+            </div>
+          )
+        })}
+      </div>
 
- {/* 안내 문구 */}
- <div style={{
- marginTop: 18, padding: '12px 16px',
- background: grade === 'danger' ? 'rgba(239,68,68,0.06)' : 'rgba(245,158,11,0.06)',
- borderRadius: 10, border: `1px solid ${grade === 'danger' ? 'rgba(239,68,68,0.2)' : 'rgba(245,158,11,0.2)'}`,
- fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6,
- }}>
- {grade === 'danger'
- ? '️ 이 계약서는 위험도가 높습니다. 서명 전 반드시 전문가 검토를 권장합니다. 대한법률구조공단(132)에서 무료 상담을 받을 수 있습니다.'
- : ' 체크메이트는 정보 제공 서비스로, 법률 자문을 대체하지 않습니다. 중요한 계약은 전문가 상담을 권장합니다.'}
- </div>
- </div>
- )
+      {/* 안내 문구 */}
+      <div style={{
+        marginTop: 18, padding: '12px 16px',
+        background: grade === 'danger' ? 'rgba(239,68,68,0.06)' : 'rgba(245,158,11,0.06)',
+        borderRadius: 10, border: `1px solid ${grade === 'danger' ? 'rgba(239,68,68,0.2)' : 'rgba(245,158,11,0.2)'}`,
+        fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6,
+      }}>
+        {grade === 'danger'
+          ? '⚠️ 이 계약서는 위험도가 높습니다. 서명 전 반드시 전문가 검토를 권장합니다. 대한법률구조공단(132)에서 무료 상담을 받을 수 있습니다.'
+          : '💡 체크메이트는 정보 제공 서비스로, 법률 자문을 대체하지 않습니다. 중요한 계약은 전문가 상담을 권장합니다.'}
+      </div>
+    </div>
+  )
 }
 
 /* ── ContractTextView ──────────────────────────────── */
 function ContractTextView({ contractName, html }: { contractName: string; html: string }) {
- if (!html) {
- return (
- <div className="contract-text-card">
- <div className="section-eyebrow" style={{ marginBottom: 16 }}>{contractName} 전문</div>
- <div className="contract-text-empty">
- <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ opacity: 0.3, marginBottom: 12 }}>
- <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
- <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
- </svg>
- <p style={{ margin: 0, fontSize: 14, color: 'var(--text-muted)' }}>
- 계약서 원문을 표시하려면 PDF 또는 DOCX 파일을 업로드하세요.<br/>
- 이미지(JPG/PNG)로 분석한 경우 원문이 제공되지 않습니다.
- </p>
- </div>
- </div>
- )
- }
+  if (!html) {
+    return (
+      <div className="contract-text-card">
+        <div className="section-eyebrow" style={{ marginBottom: 16 }}>{contractName} 전문</div>
+        <div className="contract-text-empty">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ opacity: 0.3, marginBottom: 12 }}>
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+          </svg>
+          <p style={{ margin: 0, fontSize: 14, color: 'var(--text-muted)' }}>
+            계약서 원문을 표시하려면 PDF 또는 DOCX 파일을 업로드하세요.<br/>
+            이미지(JPG/PNG)로 분석한 경우 원문이 제공되지 않습니다.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
- return (
- <div className="contract-text-card">
- <div className="section-eyebrow" style={{ marginBottom: 16 }}>{contractName} 전문</div>
- <div
- className="contract-text-scroll"
- dangerouslySetInnerHTML={{ __html: html }}
- />
- <div className="contract-text-legend">
- <div className="legend-chip">
- <div className="legend-dot-sq" style={{ background: 'rgba(239,68,68,0.3)' }} />
- 위험 조항
- </div>
- <div className="legend-chip">
- <div className="legend-dot-sq" style={{ background: 'rgba(245,158,11,0.25)' }} />
- 주의 조항
- </div>
- </div>
- </div>
- )
+  return (
+    <div className="contract-text-card">
+      <div className="section-eyebrow" style={{ marginBottom: 16 }}>{contractName} 전문</div>
+      <div
+        className="contract-text-scroll"
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+      <div className="contract-text-legend">
+        <div className="legend-chip">
+          <div className="legend-dot-sq" style={{ background: 'rgba(239,68,68,0.3)' }} />
+          위험 조항
+        </div>
+        <div className="legend-chip">
+          <div className="legend-dot-sq" style={{ background: 'rgba(245,158,11,0.25)' }} />
+          주의 조항
+        </div>
+      </div>
+    </div>
+  )
 }
 
 /* ── Page ──────────────────────────────────────────── */
 export default function ResultPage() {
- const location = useLocation()
- const navigate = useNavigate()
- const directResult = (location.state as any)?.directResult as AnalysisResult | undefined
- const rawResult = (location.state as any)?.analysisResult
- const contractId = (location.state as any)?.contractId as string | undefined
- const isMock = (location.state as any)?.isMock || (!directResult && !rawResult)
- const isSaved = (location.state as any)?.isSaved === true // 대시보드에서 열었을 때
- const result: AnalysisResult = directResult ?? (rawResult ? transformApiResult(rawResult) : RESULT)
+  const location = useLocation()
+  const navigate = useNavigate()
+  const directResult = (location.state as any)?.directResult as AnalysisResult | undefined
+  const rawResult = (location.state as any)?.analysisResult
+  const contractId = (location.state as any)?.contractId as string | undefined
+  const isMock = (location.state as any)?.isMock || (!directResult && !rawResult)
+  const isSaved = (location.state as any)?.isSaved === true   // 대시보드에서 열었을 때
+  const result: AnalysisResult = directResult ?? (rawResult ? transformApiResult(rawResult) : RESULT)
 
- const [activeTab, setActiveTab] = useState<'result' | 'contract'>('result')
- const [saveState, setSaveState] = useState<'pending' | 'saved' | 'discarded'>(
- (isMock || isSaved) ? 'saved' : 'pending'
- )
- const [savedNumericId, setSavedNumericId] = useState<number | null>(
- (location.state as any)?.savedId ?? null
- )
- const [saving, setSaving] = useState(false)
- const [saveError, setSaveError] = useState('')
- const [showSignModal, setShowSignModal] = useState(false)
- const [signDoneMsg, setSignDoneMsg] = useState('')
- const [signContractHtml, setSignContractHtml] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<'result' | 'contract'>('result')
+  const [saveState, setSaveState] = useState<'pending' | 'saved' | 'discarded'>(
+    (isMock || isSaved) ? 'saved' : 'pending'
+  )
+  const [savedNumericId, setSavedNumericId] = useState<number | null>(
+    (location.state as any)?.savedId ?? null
+  )
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
+  const [showSignModal, setShowSignModal] = useState(false)
+  const [signDoneMsg, setSignDoneMsg] = useState('')
+  const [signContractHtml, setSignContractHtml] = useState<string | null>(null)
 
- /* 결과 저장 */
- const handleSave = useCallback(async () => {
- if (!contractId || !rawResult) { setSaveState('saved'); return }
- setSaving(true)
- setSaveError('')
- try {
- const token = localStorage.getItem('cm_token')
- if (!token) {
- setSaveError('로그인이 필요합니다. 다시 로그인해주세요.')
- setSaving(false)
- return
- }
- const res = await fetch(`/api/v1/contracts/${contractId}/save`, {
- method: 'POST',
- headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
- body: JSON.stringify(rawResult),
- })
- if (res.ok) {
- const data = await res.json()
- if (data?.id) setSavedNumericId(data.id)
- setSaveState('saved')
- } else if (res.status === 409) {
- // 이미 저장된 경우 → 정상 처리
- setSaveState('saved')
- } else {
- const errData = await res.json().catch(() => ({}))
- setSaveError(`저장 실패 (${res.status}): ${errData.detail ?? '서버 오류'}`)
- }
- } catch {
- setSaveError('네트워크 오류가 발생했습니다. 다시 시도해주세요.')
- } finally {
- setSaving(false)
- }
- }, [contractId, rawResult])
+  /* 결과 저장 */
+  const handleSave = useCallback(async () => {
+    if (!contractId || !rawResult) { setSaveState('saved'); return }
+    setSaving(true)
+    setSaveError('')
+    try {
+      const token = localStorage.getItem('cm_token')
+      if (!token) {
+        setSaveError('로그인이 필요합니다. 다시 로그인해주세요.')
+        setSaving(false)
+        return
+      }
+      const res = await fetch(`/api/v1/contracts/${contractId}/save`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(rawResult),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data?.id) setSavedNumericId(data.id)
+        setSaveState('saved')
+      } else if (res.status === 409) {
+        // 이미 저장된 경우 → 정상 처리
+        setSaveState('saved')
+      } else {
+        const errData = await res.json().catch(() => ({}))
+        setSaveError(`저장 실패 (${res.status}): ${errData.detail ?? '서버 오류'}`)
+      }
+    } catch {
+      setSaveError('네트워크 오류가 발생했습니다. 다시 시도해주세요.')
+    } finally {
+      setSaving(false)
+    }
+  }, [contractId, rawResult])
 
- /* 저장 안 함 → 파일 삭제 후 대시보드 */
- const handleDiscard = useCallback(async () => {
- if (contractId) {
- const token = localStorage.getItem('cm_token')
- fetch(`/api/v1/contracts/${contractId}`, {
- method: 'DELETE',
- headers: { Authorization: `Bearer ${token}` },
- }).catch(() => {})
- }
- navigate('/dashboard')
- }, [contractId, navigate])
+  /* 저장 안 함 → 파일 삭제 후 대시보드 */
+  const handleDiscard = useCallback(async () => {
+    if (contractId) {
+      const token = localStorage.getItem('cm_token')
+      fetch(`/api/v1/contracts/${contractId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => {})
+    }
+    navigate('/dashboard')
+  }, [contractId, navigate])
 
- /* PDF: 저장된 리포트 HTML을 새 창에서 출력 */
- const handlePdf = useCallback(async () => {
- const token = localStorage.getItem('cm_token')
- if (savedNumericId && token) {
- try {
- const res = await fetch(`/api/v1/contracts/saved/${savedNumericId}/report`, {
- headers: { Authorization: `Bearer ${token}` },
- })
- if (res.ok) {
- const html = await res.text()
- const w = window.open('', '_blank')
- if (w) {
- w.document.write(html + '<scri' + 'pt>window.onload=function(){window.print()}<\/scri' + 'pt>')
- w.document.close()
- return
- }
- }
- } catch {}
- }
- // fallback: 현재 페이지 인쇄
- document.body.classList.add('print-expand')
- requestAnimationFrame(() => {
- requestAnimationFrame(() => {
- window.print()
- document.body.classList.remove('print-expand')
- })
- })
- }, [savedNumericId])
+  /* PDF: 저장된 리포트 HTML을 새 창에서 출력 */
+  const handlePdf = useCallback(async () => {
+    const token = localStorage.getItem('cm_token')
+    if (savedNumericId && token) {
+      try {
+        const res = await fetch(`/api/v1/contracts/saved/${savedNumericId}/report`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (res.ok) {
+          const html = await res.text()
+          const w = window.open('', '_blank')
+          if (w) {
+            w.document.write(html + '<scri' + 'pt>window.onload=function(){window.print()}<\/scri' + 'pt>')
+            w.document.close()
+            return
+          }
+        }
+      } catch {}
+    }
+    // fallback: 현재 페이지 인쇄
+    document.body.classList.add('print-expand')
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.print()
+        document.body.classList.remove('print-expand')
+      })
+    })
+  }, [savedNumericId])
 
- return (
- <div className="result-page">
- <ResultNav
- date={result.analysisDate}
- onPdf={saveState === 'saved' ? handlePdf : undefined}
- onSign={saveState === 'saved' ? async () => {
- if (savedNumericId) {
- try {
- const tok = localStorage.getItem('cm_token')
- const res = await fetch(`/api/v1/contracts/saved/${savedNumericId}/report`, {
- headers: { Authorization: `Bearer ${tok}` },
- })
- if (res.ok) setSignContractHtml(await res.text())
- } catch {}
- }
- setShowSignModal(true)
- } : undefined}
- />
- {showSignModal && (
- <SigningModal
- contractId={contractId ?? result.contractName}
- contractName={result.contractName}
- contractHtml={signContractHtml ?? undefined}
- onClose={() => setShowSignModal(false)}
- onDone={(msg) => { setShowSignModal(false); setSignDoneMsg(msg) }}
- />
- )}
- {signDoneMsg && (
- <div style={{
- position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
- background: '#16a34a', color: '#fff', borderRadius: 12,
- padding: '12px 24px', fontSize: 14, fontWeight: 600, zIndex: 9998,
- boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
- }}>
- {signDoneMsg}
- </div>
- )}
+  return (
+    <div className="result-page">
+      <ResultNav
+        date={result.analysisDate}
+        onPdf={saveState === 'saved' ? handlePdf : undefined}
+        onSign={saveState === 'saved' ? async () => {
+          if (savedNumericId) {
+            try {
+              const tok = localStorage.getItem('cm_token')
+              const res = await fetch(`/api/v1/contracts/saved/${savedNumericId}/report`, {
+                headers: { Authorization: `Bearer ${tok}` },
+              })
+              if (res.ok) setSignContractHtml(await res.text())
+            } catch {}
+          }
+          setShowSignModal(true)
+        } : undefined}
+      />
+      {showSignModal && (
+        <SigningModal
+          contractId={contractId ?? result.contractName}
+          contractName={result.contractName}
+          contractHtml={signContractHtml ?? undefined}
+          onClose={() => setShowSignModal(false)}
+          onDone={(msg) => { setShowSignModal(false); setSignDoneMsg(msg) }}
+        />
+      )}
+      {signDoneMsg && (
+        <div style={{
+          position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+          background: '#16a34a', color: '#fff', borderRadius: 12,
+          padding: '12px 24px', fontSize: 14, fontWeight: 600, zIndex: 9998,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
+        }}>
+          ✓ {signDoneMsg}
+        </div>
+      )}
 
- {/* 베타 테스트 배너 */}
- {isMock && (
- <div style={{
- background: 'rgba(79,142,247,0.08)',
- borderBottom: '1px solid rgba(79,142,247,0.2)',
- padding: '10px 24px',
- display: 'flex',
- alignItems: 'center',
- justifyContent: 'center',
- gap: 10,
- fontSize: 13,
- color: 'rgba(79,142,247,0.95)',
- }}>
- <span></span>
- <span>
- <strong>베타 테스트 버전</strong> · 현재 샘플 분석 결과를 표시하고 있습니다.
- 실제 AI 분석은 서비스 정식 출시 후 이용 가능합니다.
- </span>
- </div>
- )}
+      {/* 베타 테스트 배너 */}
+      {isMock && (
+        <div style={{
+          background: 'rgba(79,142,247,0.08)',
+          borderBottom: '1px solid rgba(79,142,247,0.2)',
+          padding: '10px 24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 10,
+          fontSize: 13,
+          color: 'rgba(79,142,247,0.95)',
+        }}>
+          <span>🧪</span>
+          <span>
+            <strong>베타 테스트 버전</strong> · 현재 샘플 분석 결과를 표시하고 있습니다.
+            실제 AI 분석은 서비스 정식 출시 후 이용 가능합니다.
+          </span>
+        </div>
+      )}
 
- <div className="result-content">
- {/* Title block */}
- <div className="result-eyebrow">분석 완료</div>
- <h1 className="result-contract-name">{result.contractName}</h1>
- <p className="result-contract-meta">
- {result.contractMeta}
- <span>·</span>
- 총 {result.totalClauses}개 조항
- </p>
+      <div className="result-content">
+        {/* Title block */}
+        <div className="result-eyebrow">분석 완료</div>
+        <h1 className="result-contract-name">{result.contractName}</h1>
+        <p className="result-contract-meta">
+          {result.contractMeta}
+          <span>·</span>
+          총 {result.totalClauses}개 조항
+        </p>
 
- {/* Tab bar */}
- <div className="result-tabs">
- <button
- className={`result-tab-btn${activeTab === 'result' ? ' active' : ''}`}
- onClick={() => setActiveTab('result')}
- >
- 분석 결과
- </button>
- <button
- className={`result-tab-btn${activeTab === 'contract' ? ' active' : ''}`}
- onClick={() => setActiveTab('contract')}
- >
- 계약서 원문
- </button>
- </div>
+        {/* Tab bar */}
+        <div className="result-tabs">
+          <button
+            className={`result-tab-btn${activeTab === 'result' ? ' active' : ''}`}
+            onClick={() => setActiveTab('result')}
+          >
+            분석 결과
+          </button>
+          <button
+            className={`result-tab-btn${activeTab === 'contract' ? ' active' : ''}`}
+            onClick={() => setActiveTab('contract')}
+          >
+            계약서 원문
+          </button>
+        </div>
 
- {/* Tab content */}
- {activeTab === 'result' ? (
- <>
- <ScoreSection result={result} />
+        {/* Tab content */}
+        {activeTab === 'result' ? (
+          <>
+            <ScoreSection result={result} />
 
- <SummaryCard summary={result.summary} />
+            <SummaryCard summary={result.summary} />
 
- <div className="section-eyebrow" style={{ marginTop: result.summary ? 0 : 32 }}>위험 조항 상세 분석</div>
- <ClauseList clauses={result.clauses} />
+            <div className="section-eyebrow" style={{ marginTop: result.summary ? 0 : 32 }}>위험 조항 상세 분석</div>
+            <ClauseList clauses={result.clauses} />
 
- <div className="section-eyebrow">계약 체결 전 체크리스트</div>
- <ChecklistSection contractType={result.contract_type ?? result.contractMeta} />
+            <div className="section-eyebrow">계약 체결 전 체크리스트</div>
+            <ChecklistSection contractType={result.contract_type ?? result.contractMeta} />
 
- <div className="section-eyebrow">무료 법률 지원 기관</div>
- <ExpertCard grade={result.grade} contractType={result.contractMeta} />
- </>
- ) : (
- <ContractTextView
- contractName={result.contractName}
- html={result.contractHtml ?? ''}
- />
- )}
+            <div className="section-eyebrow">무료 법률 지원 기관</div>
+            <ExpertCard grade={result.grade} contractType={result.contractMeta} />
+          </>
+        ) : (
+          <ContractTextView
+            contractName={result.contractName}
+            html={result.contractHtml ?? ''}
+          />
+        )}
 
- {/* 저장 여부 선택 배너 */}
- {saveState === 'pending' && (
- <div className="result-save-banner">
- <div className="result-save-banner-text">
- <span className="result-save-banner-title">분석 결과를 저장할까요?</span>
- <span className="result-save-banner-sub">저장하면 대시보드에서 언제든지 다시 확인할 수 있습니다.</span>
- </div>
- <div className="result-save-banner-actions">
- <button
- className="result-save-btn"
- onClick={handleSave}
- disabled={saving}
- >
- {saving ? '저장 중...' : '결과 저장'}
- </button>
- <button
- className="result-discard-btn"
- onClick={handleDiscard}
- >
- 저장 안 함
- </button>
- </div>
- {saveError && (
- <div style={{
- width: '100%', marginTop: 10, padding: '10px 14px',
- background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
- borderRadius: 10, color: '#ef4444', fontSize: 13, fontWeight: 600,
- }}>
- {saveError}
- </div>
- )}
- </div>
- )}
+        {/* 저장 여부 선택 배너 */}
+        {saveState === 'pending' && (
+          <div className="result-save-banner">
+            <div className="result-save-banner-text">
+              <span className="result-save-banner-title">분석 결과를 저장할까요?</span>
+              <span className="result-save-banner-sub">저장하면 대시보드에서 언제든지 다시 확인할 수 있습니다.</span>
+            </div>
+            <div className="result-save-banner-actions">
+              <button
+                className="result-save-btn"
+                onClick={handleSave}
+                disabled={saving}
+              >
+                {saving ? '저장 중...' : '결과 저장'}
+              </button>
+              <button
+                className="result-discard-btn"
+                onClick={handleDiscard}
+              >
+                저장 안 함
+              </button>
+            </div>
+            {saveError && (
+              <div style={{
+                width: '100%', marginTop: 10, padding: '10px 14px',
+                background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
+                borderRadius: 10, color: '#ef4444', fontSize: 13, fontWeight: 600,
+              }}>
+                ⚠ {saveError}
+              </div>
+            )}
+          </div>
+        )}
 
- {saveState === 'saved' && (
- <div className="result-saved-notice">
- 대시보드에 저장되었습니다. PDF 다운로드와 전자서명이 활성화되었습니다.
- </div>
- )}
+        {saveState === 'saved' && (
+          <div className="result-saved-notice">
+            ✓ 대시보드에 저장되었습니다. PDF 다운로드와 전자서명이 활성화되었습니다.
+          </div>
+        )}
 
- {/* Footer */}
- <div className="result-footer">
- <strong>CHECKMATE</strong> — "누구나 이해할 수 있게, 누구도 피해 보지 않게"<br />
- 본 리포트는 AI 분석 결과이며 법적 효력이 없습니다. 중요한 계약은 반드시 법률 전문가 검토를 받으시기 바랍니다.
- </div>
- </div>
- </div>
- )
+        {/* Footer */}
+        <div className="result-footer">
+          <strong>CHECKMATE</strong> — "누구나 이해할 수 있게, 누구도 피해 보지 않게"<br />
+          본 리포트는 AI 분석 결과이며 법적 효력이 없습니다. 중요한 계약은 반드시 법률 전문가 검토를 받으시기 바랍니다.
+        </div>
+      </div>
+    </div>
+  )
 }
