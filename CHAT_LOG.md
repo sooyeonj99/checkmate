@@ -1712,6 +1712,7 @@ SMTP_PASS=<Gmail 앱 비밀번호>
 | AI 생성기 | /generate | 설명 → 계약서 초안 자동 생성 |
 | 일괄 분석 | /bulk | 최대 10개 드래그앤드롭 분석 |
 | 어드민 | /admin | 사용자 관리 · B2B 키 관리 |
+| 법령 추적 | /law-tracker | 법령 개정 추적 (준비중 UI) |
 | 이용약관 | /terms | 서비스 약관 |
 | 개인정보 | /privacy | 개인정보처리방침 |
 | 사이트맵 | /sitemap | 전체 페이지 구조 |
@@ -1720,36 +1721,52 @@ SMTP_PASS=<Gmail 앱 비밀번호>
 | 화면 | 설명 |
 |------|------|
 | AuthScreen | 로그인 / 회원가입 |
-| DashboardScreen | 계약서 목록 · 검색 · 통계 카드 |
-| UploadScreen | 파일 업로드 + 카메라 촬영 |
+| DashboardScreen | 계약서 목록 · 검색 · 통계 · 퀵액션 버튼 |
+| UploadScreen | 파일 업로드 + 카메라 촬영 OCR |
 | MaskingReviewScreen | 개인정보 마스킹 검토 |
+| LoadingScreen | AI 분석 로딩 (WebSocket 완료 알림) |
 | ResultScreen | 분석 결과 |
 | ChatScreen | AI 챗봇 |
 | ProfileScreen | 내 정보 · 다크모드 설정 |
 | FranchiseScreen | 프랜차이즈 관리 |
 | TemplateEditorScreen | 서명 템플릿 편집 |
 | SigningScreen | 전자서명 |
-| TeamScreen | 팀원 관리 |
+| GenerateScreen | AI 계약서 생성기 ✅ NEW |
+| CompareScreen | 계약서 비교 분석 ✅ NEW |
+| BulkScreen | 일괄 분석 (최대 10개) ✅ NEW |
+| AdminScreen | 어드민 패널 (관리자 전용) ✅ NEW |
+| LawTrackerScreen | 법령 변경 추적 (준비중) ✅ NEW |
 
 ---
+
+## 세션 13 (2026-07-09) — 구현 완료
+
+| 작업 | 결과 |
+|------|------|
+| 앱 GenerateScreen | AI 계약서 생성기 (설명 → 계약서 자동 작성 + 공유) |
+| 앱 CompareScreen | 두 계약서 비교 (Modal 선택 UI, @react-native-picker 미사용) |
+| 앱 BulkScreen | 일괄 분석 (파일 선택 → 각개 분석 상태 추적) |
+| 앱 AdminScreen | 어드민 패널 (통계/사용자/API키 3탭) |
+| 앱 LawTrackerScreen | 법령 추적 준비중 화면 |
+| 웹 LawTrackerPage | 법령 추적 준비중 페이지 (/law-tracker) |
+| DashboardScreen 퀵액션 | ✨AI생성 / ⚖️비교 / 📦일괄 / 📜법령 / 🛡️어드민 |
+| 웹 다크모드 | ThemeContext (system/dark/light) + Navbar 토글 버튼 |
+| WebSocket 백엔드 | /ws/{user_id} 엔드포인트 + ConnectionManager |
+| WebSocket 프론트 | LoadingPage에 WS 클라이언트 (분석 완료 즉시 이동) |
+| WebSocket 모바일 | LoadingScreen에 WS 클라이언트 |
+| contracts.py | 분석 완료 후 ws.manager.send() broadcast |
+| FEATURES.md | 전체 기능 현황 + 사용자별 흐름 문서 신규 작성 |
+| APK 빌드 | assembleRelease 성공 (13분 소요) |
 
 ## 미구현 / 향후 개발 예정 기능
 
 | 기능 | 우선순위 | 설명 |
 |------|---------|------|
-| 카메라 OCR (모바일) | 높음 | react-native-mlkit-ocr 네이티브 빌드 필요 |
-| 계약서 비교 (모바일) | 중간 | 웹 CompareScreen 앱 버전 |
-| AI 생성기 (모바일) | 중간 | 웹 GeneratePage 앱 버전 |
-| 일괄 분석 (모바일) | 낮음 | 모바일에서 다중 파일 선택 |
-| 웹 다크 모드 | 중간 | 모바일은 구현됨, 웹 미구현 |
-| 법령 변경 추적 | 낮음 | 외부 법령 API 연동 |
+| 법령 변경 추적 (API) | 낮음 | 법제처 Open API 키 필요, UI는 구현됨 |
 | 결제 시스템 | 높음 | 구독 플랜 실결제 (포트원 등) |
-| 관리자 앱 화면 | 낮음 | 모바일 어드민 패널 |
-| Push FCM 연동 | 중간 | Firebase Cloud Messaging 실 연동 |
+| Push FCM 연동 | 중간 | Firebase Cloud Messaging |
 | 소셜 로그인 | 낮음 | 카카오 · 네이버 OAuth |
 
 ---
-
-*마지막 업데이트: 2026-07-09*
 
 *마지막 업데이트: 2026-07-09*
