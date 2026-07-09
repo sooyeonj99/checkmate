@@ -31,6 +31,7 @@ import GenerateScreen from './src/screens/GenerateScreen'
 import CompareScreen from './src/screens/CompareScreen'
 import BulkScreen from './src/screens/BulkScreen'
 import AdminScreen from './src/screens/AdminScreen'
+import LawTrackerScreen from './src/screens/LawTrackerScreen'
 import { colors } from './src/theme/colors'
 import api from './src/services/api'
 
@@ -77,6 +78,7 @@ export type RootStackParamList = {
   Compare: undefined
   Bulk: undefined
   Admin: undefined
+  LawTracker: undefined
 }
 
 export type TabParamList = {
@@ -262,6 +264,7 @@ function Navigation() {
             <RootStack.Screen name="Compare" component={CompareScreen} />
             <RootStack.Screen name="Bulk" component={BulkScreen} />
             <RootStack.Screen name="Admin" component={AdminScreen} />
+            <RootStack.Screen name="LawTracker" component={LawTrackerScreen} />
           </>
         ) : (
           <>

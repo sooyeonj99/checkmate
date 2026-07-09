@@ -24,6 +24,7 @@ import ComparePage from './pages/ComparePage'
 import GeneratePage from './pages/GeneratePage'
 import BulkPage from './pages/BulkPage'
 import StatsPage from './pages/StatsPage'
+import LawTrackerPage from './pages/LawTrackerPage'
 import ChatWidget from './components/ChatWidget'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -59,6 +60,7 @@ function AppRoutes() {
         <Route path="/generate" element={<ProtectedRoute><GeneratePage /></ProtectedRoute>} />
         <Route path="/bulk" element={<ProtectedRoute><BulkPage /></ProtectedRoute>} />
         <Route path="/stats" element={<ProtectedRoute><StatsPage /></ProtectedRoute>} />
+        <Route path="/law-tracker" element={<ProtectedRoute><LawTrackerPage /></ProtectedRoute>} />
         <Route
           path="/dashboard"
           element={

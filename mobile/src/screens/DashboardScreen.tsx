@@ -425,6 +425,7 @@ export default function DashboardScreen() {
               { label: 'AI 생성', icon: '✨', screen: 'Generate' },
               { label: '비교 분석', icon: '⚖️', screen: 'Compare' },
               { label: '일괄 분석', icon: '📦', screen: 'Bulk' },
+              { label: '법령 추적', icon: '📜', screen: 'LawTracker' },
               ...(user?.email === 'ghdiehddl@gmail.com' ? [{ label: '어드민', icon: '🛡️', screen: 'Admin' }] : []),
             ].map(btn => (
               <TouchableOpacity
