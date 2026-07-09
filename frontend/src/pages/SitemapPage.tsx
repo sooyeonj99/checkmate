@@ -25,7 +25,6 @@ const SECTIONS: SiteSection[] = [
       { label: '홈', path: '/', desc: '서비스 소개 및 랜딩 페이지' },
       { label: '서비스 소개', path: '/#features', desc: 'AI 계약서 분석 기능 안내' },
       { label: '요금제', path: '/#bm', desc: '구독 플랜 및 가격 안내' },
-      { label: '성장 로드맵', path: '/#roadmap', desc: '서비스 개발 예정 기능 로드맵' },
       { label: '사이트맵', path: '/sitemap', desc: '모든 페이지 구조 한눈에 보기' },
     ],
   },

@@ -74,7 +74,12 @@ export default function ComparePage() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', padding: '0 0 60px' }}>
       <header style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border)', padding: '16px 32px', display: 'flex', alignItems: 'center', gap: 16 }}>
-        <Link to="/dashboard" style={{ color: 'var(--text-muted)', fontSize: 13, textDecoration: 'none' }}>← 대시보드</Link>
+        <Link to="/dashboard" style={{
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          color: 'var(--accent)', fontSize: 13, textDecoration: 'none', fontWeight: 700,
+          padding: '6px 14px', borderRadius: 10, background: 'rgba(90,63,192,0.08)',
+          border: '1px solid rgba(90,63,192,0.18)',
+        }}>← 대시보드</Link>
         <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', margin: 0, flex: 1 }}>계약서 비교</h1>
       </header>
 

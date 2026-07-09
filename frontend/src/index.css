@@ -2610,9 +2610,10 @@ img, svg {
   height: 60px;
   display: flex;
   align-items: center;
-  background: #211C2E;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
   padding: 0 24px;
+  box-shadow: 0 2px 8px rgba(33,28,46,0.06);
 }
 
 .result-nav-inner {
@@ -2633,7 +2634,7 @@ img, svg {
   font-weight: 800;
   letter-spacing: -0.3px;
   flex-shrink: 0;
-  color: #fff;
+  color: var(--text);
 }
 
 .result-nav-logo .logo-sm {
@@ -2652,7 +2653,7 @@ img, svg {
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  color: rgba(255,255,255,0.5);
+  color: var(--text-muted);
   transition: color 0.2s;
   background: none;
   border: none;
@@ -2661,7 +2662,7 @@ img, svg {
   text-decoration: none;
 }
 
-.result-nav-back:hover { color: rgba(255,255,255,0.8); }
+.result-nav-back:hover { color: var(--accent); }
 
 .result-nav-actions {
   display: flex;
@@ -4469,7 +4470,7 @@ img, svg {
 .saved-card-type {
   font-size: 11px;
   color: var(--text-muted);
-  background: rgba(255,255,255,0.05);
+  background: var(--bg-input);
   border-radius: 6px;
   padding: 3px 8px;
 }
@@ -4479,7 +4480,9 @@ img, svg {
   font-weight: 600;
   color: var(--text);
   line-height: 1.4;
-  word-break: break-all;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .saved-card-score { font-size: 13px; color: var(--text-muted); }
 .saved-card-score strong { font-size: 18px; }
@@ -4498,21 +4501,22 @@ img, svg {
 .saved-count.safe   { color: var(--risk-safe); background: rgba(34,197,94,0.1); }
 .saved-card-date { font-size: 11px; color: var(--text-muted); }
 .saved-card-actions {
-  display: flex;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
   margin-top: 4px;
 }
 .saved-view-btn {
-  flex: 1;
   background: #5A3FC0;
   color: #fff;
   border: none;
-  border-radius: 10px;
-  padding: 8px 0;
-  font-size: 13px;
+  border-radius: 8px;
+  padding: 7px 2px;
+  font-size: 11px;
   font-weight: 700;
   cursor: pointer;
   transition: opacity .15s;
+  text-align: center;
 }
 .saved-view-btn:hover { opacity: .85; }
 .saved-delete-btn {
@@ -4520,11 +4524,12 @@ img, svg {
   color: var(--risk-high);
   border: 1px solid rgba(239,68,68,0.3);
   border-radius: 8px;
-  padding: 8px 14px;
-  font-size: 13px;
+  padding: 7px 2px;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   transition: background .15s;
+  text-align: center;
 }
 .saved-delete-btn:hover { background: rgba(239,68,68,0.08); }
 .saved-delete-btn:disabled { opacity: .5; cursor: not-allowed; }

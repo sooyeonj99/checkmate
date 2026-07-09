@@ -448,7 +448,7 @@ export default function DashboardPage() {
     })
     if (res.ok) {
       const analysisResult = await res.json()
-      navigate('/result', { state: { analysisResult, isSaved: true } })
+      navigate('/result', { state: { analysisResult, isSaved: true, savedId: item.id } })
     }
   }, [navigate])
 

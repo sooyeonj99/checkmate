@@ -22,9 +22,15 @@ export default function StatsPage() {
 
   useEffect(() => {
     setLoading(true)
+    setStats(null)
     fetch(`/api/v1/stats/me?months=${months}`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
-      .then(setStats)
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+        return r.json()
+      })
+      .then(data => {
+        if (data && typeof data === 'object' && 'total_analyzed' in data) setStats(data)
+      })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [months])
@@ -32,12 +38,17 @@ export default function StatsPage() {
   const gradeColor = (g: string) =>
     g === '위험' ? '#ef4444' : g === '주의' ? '#f59e0b' : '#22c55e'
 
-  const maxCount = stats ? Math.max(...stats.monthly_trend.map(m => m.count), 1) : 1
+  const maxCount = stats?.monthly_trend?.length ? Math.max(...stats.monthly_trend.map(m => m.count), 1) : 1
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', padding: '0 0 60px' }}>
       <header style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border)', padding: '16px 32px', display: 'flex', alignItems: 'center', gap: 16 }}>
-        <Link to="/dashboard" style={{ color: 'var(--text-muted)', fontSize: 13, textDecoration: 'none' }}>← 대시보드</Link>
+        <Link to="/dashboard" style={{
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          color: 'var(--accent)', fontSize: 13, textDecoration: 'none', fontWeight: 700,
+          padding: '6px 14px', borderRadius: 10, background: 'rgba(90,63,192,0.08)',
+          border: '1px solid rgba(90,63,192,0.18)',
+        }}>← 대시보드</Link>
         <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', margin: 0, flex: 1 }}>분석 통계</h1>
         <div style={{ display: 'flex', gap: 4 }}>
           {[3, 6, 12].map(m => (

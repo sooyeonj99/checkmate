@@ -286,13 +286,6 @@ function ResultNav({ date, onPdf, onSign }: { date: string; onPdf?: () => void; 
         </div>
 
         <div className="result-nav-actions">
-          <button className="result-share-btn" onClick={() => navigator.clipboard?.writeText(window.location.href)}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-            </svg>
-            공유
-          </button>
           <button
             className="result-download-btn"
             onClick={onPdf}
@@ -552,7 +545,7 @@ function ClauseList({ clauses }: { clauses: Clause[] }) {
 
 const CHECKLIST: Record<string, { id: string; text: string }[]> = {
   근로: [
-    { id: 'e1', text: '근로계약서를 서면으로 작성했나요?' },
+    { id: 'e1', text: '계약 내용에 대해 충분한 설명을 받으셨나요?' },
     { id: 'e2', text: '임금 금액과 지급일이 명시되어 있나요?' },
     { id: 'e3', text: '근로시간(주 52시간 이내)이 기재되어 있나요?' },
     { id: 'e4', text: '휴일·휴가 규정이 명시되어 있나요?' },
@@ -890,6 +883,9 @@ export default function ResultPage() {
   const [saveState, setSaveState] = useState<'pending' | 'saved' | 'discarded'>(
     (isMock || isSaved) ? 'saved' : 'pending'
   )
+  const [savedNumericId, setSavedNumericId] = useState<number | null>(
+    (location.state as any)?.savedId ?? null
+  )
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
   const [showSignModal, setShowSignModal] = useState(false)
@@ -913,6 +909,8 @@ export default function ResultPage() {
         body: JSON.stringify(rawResult),
       })
       if (res.ok) {
+        const data = await res.json()
+        if (data?.id) setSavedNumericId(data.id)
         setSaveState('saved')
       } else if (res.status === 409) {
         // 이미 저장된 경우 → 정상 처리
@@ -940,8 +938,26 @@ export default function ResultPage() {
     navigate('/dashboard')
   }, [contractId, navigate])
 
-  /* PDF: 모든 조항 펼침 → 인쇄 → 복원 */
-  const handlePdf = useCallback(() => {
+  /* PDF: 저장된 리포트 HTML을 새 창에서 출력 */
+  const handlePdf = useCallback(async () => {
+    const token = localStorage.getItem('cm_token')
+    if (savedNumericId && token) {
+      try {
+        const res = await fetch(`/api/v1/contracts/saved/${savedNumericId}/report`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (res.ok) {
+          const html = await res.text()
+          const w = window.open('', '_blank')
+          if (w) {
+            w.document.write(html + '<scri' + 'pt>window.onload=function(){window.print()}<\/scri' + 'pt>')
+            w.document.close()
+            return
+          }
+        }
+      } catch {}
+    }
+    // fallback: 현재 페이지 인쇄
     document.body.classList.add('print-expand')
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -949,7 +965,7 @@ export default function ResultPage() {
         document.body.classList.remove('print-expand')
       })
     })
-  }, [])
+  }, [savedNumericId])
 
   return (
     <div className="result-page">

@@ -213,15 +213,6 @@ function ProgressRing({ progress }: RingProps) {
 
       {/* Center content */}
       <div className="loading-center-content">
-        <div className="loading-center-icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M12 2L3 7V12C3 16.97 6.84 21.61 12 23C17.16 21.61 21 16.97 21 12V7L12 2Z"
-              fill="white" fillOpacity="0.95"
-            />
-            <path d="M9 12L11 14L15 10" stroke="#060d1f" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </div>
         <div className="loading-center-pct">{Math.round(progress)}%</div>
         <div className="loading-center-label">분석 진행</div>
       </div>

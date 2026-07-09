@@ -28,12 +28,6 @@ function HeroSection() {
             </svg>
             무료로 계약서 분석하기
           </Link>
-          <a href="#bm" className="btn-ghost">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>
-            </svg>
-            요금제 보기
-          </a>
         </div>
 
         <div className="hero-stats">
@@ -394,82 +388,6 @@ function SubscriptionSection() {
   )
 }
 
-/* ── Business Model / Pricing ──────────────────────── */
-function BMSection() {
-  return (
-    <section className="section bm-section" id="bm">
-      <div className="container">
-        <div className="section-header" style={{ textAlign: 'center' }}>
-          <div className="section-tag">BUSINESS MODEL</div>
-          <h2 className="section-title">
-            무료로 시작해서<br />
-            <span className="gradient-text">필요한 만큼 확장하세요</span>
-          </h2>
-          <p className="section-desc" style={{ margin: '0 auto 48px' }}>
-            개인부터 기업까지, 단계별로 성장하는 구독 수익 구조
-          </p>
-        </div>
-
-        <div className="bm-grid">
-          {/* Free */}
-          <div className="bm-card">
-            <div className="bm-card-top">
-              <div className="bm-plan">무료</div>
-              <div className="bm-price">₩0<span>/월</span></div>
-              <p className="bm-desc">계약서 분석이 처음인 분</p>
-            </div>
-            <ul className="bm-features">
-              <li>✓ 계약서 분석 3건/월</li>
-              <li>✓ 위험도 점수 확인</li>
-              <li>✓ 위험 조항 태그</li>
-              <li style={{ color: 'var(--text-muted)' }}>— 계약 대시보드</li>
-              <li style={{ color: 'var(--text-muted)' }}>— 구독 관리 기능</li>
-              <li style={{ color: 'var(--text-muted)' }}>— 수정 제안 전문</li>
-            </ul>
-            <Link to="/upload" className="bm-btn secondary">무료 시작하기</Link>
-          </div>
-
-          {/* Premium */}
-          <div className="bm-card featured">
-            <div className="bm-popular">가장 인기</div>
-            <div className="bm-card-top">
-              <div className="bm-plan">프리미엄</div>
-              <div className="bm-price">₩9,900<span>/월</span></div>
-              <p className="bm-desc">계약이 잦은 프리랜서·직장인</p>
-            </div>
-            <ul className="bm-features">
-              <li>✓ 계약서 분석 <strong>무제한</strong></li>
-              <li>✓ 위험도 점수 + 상세 분석</li>
-              <li>✓ 조항별 AI 수정 제안</li>
-              <li>✓ 계약 이력 대시보드</li>
-              <li>✓ 구독·렌탈 비용 관리</li>
-              <li>✓ 만료 임박 알림</li>
-            </ul>
-            <Link to="/upload" className="bm-btn primary">14일 무료 체험</Link>
-          </div>
-
-          {/* Business */}
-          <div className="bm-card">
-            <div className="bm-card-top">
-              <div className="bm-plan">기업 <span className="bm-coming">출시 예정</span></div>
-              <div className="bm-price">₩49,000<span>/월</span></div>
-              <p className="bm-desc">소상공인·팀 단위 계약 관리</p>
-            </div>
-            <ul className="bm-features">
-              <li>✓ 팀원 최대 10명</li>
-              <li>✓ 프리미엄 전 기능</li>
-              <li>✓ 팀 계약 공유·협업</li>
-              <li>✓ 계약 리스크 리포트</li>
-              <li>✓ API 연동</li>
-              <li>✓ 전담 고객 지원</li>
-            </ul>
-            <button className="bm-btn secondary" disabled>출시 알림 받기</button>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
 
 /* ── Competition ───────────────────────────────────── */
 function CompetitionSection() {
@@ -621,7 +539,6 @@ function Footer() {
 
           <ul className="footer-links">
             <li><a href="#features">서비스 소개</a></li>
-            <li><a href="#bm">요금제</a></li>
             <li><a href="#">문의하기</a></li>
             <li><Link to="/sitemap">사이트맵</Link></li>
           </ul>
@@ -644,7 +561,6 @@ export default function HomePage() {
         <FeaturesSection />
         <HowItWorksSection />
         <SubscriptionSection />
-        <BMSection />
         <CompetitionSection />
         <TargetsSection />
         <CTASection />
