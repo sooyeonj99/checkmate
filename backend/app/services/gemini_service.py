@@ -242,7 +242,10 @@ def _init_model() -> genai.GenerativeModel:
     if not settings.GEMINI_API_KEY:
         raise ValueError("GEMINI_API_KEY가 설정되지 않았습니다. .env 파일을 확인해 주세요.")
     genai.configure(api_key=settings.GEMINI_API_KEY)
-    return genai.GenerativeModel(GEMINI_MODEL)
+    return genai.GenerativeModel(
+        GEMINI_MODEL,
+        generation_config={"temperature": 0},
+    )
 
 
 def _extract_pdf_text(file_path: str) -> str:
