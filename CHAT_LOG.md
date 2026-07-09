@@ -3,6 +3,135 @@
 
 ---
 
+## 세션 15 — 다중 UX 개선 (2026-07-09)
+
+### 변경사항 목록 (커밋: 79a71e4)
+
+**백업 위치:** `E:\checkmate\_backup\2026-07-09\session15\`
+**Git 태그:** `v14-pre-session15` (변경 전 스냅샷)
+
+| 항목 | 변경 내용 |
+|------|----------|
+| 홈페이지 | 가격(BM) 섹션 완전 제거, 요금제 보기 버튼 제거 |
+| 사이트맵 | 성장 로드맵 링크 제거 |
+| 로딩화면 | 분석 링 중앙 CHECKMATE 방패 아이콘 제거 |
+| 결과페이지 | 공유 버튼 제거, 결과 상단 배경 라이트 전환 |
+| 결과페이지 | PDF 다운로드 개선 — 저장된 리포트 HTML 새 창에서 출력 (savedId 연동) |
+| 체크리스트 | 근로계약서 항목 e1: "서면으로 작성" → "충분한 설명을 받으셨나요?" |
+| 대시보드 카드 | 파일명 1줄 truncate, 액션 버튼 5개 1행 grid 레이아웃 |
+| 분석통계 | 빈 페이지 오류 수정 (API 에러 핸들링), 대시보드 버튼 가시성 개선 |
+| 생성기/비교/일괄 | 대시보드 돌아가기 버튼 → 보라 강조 버튼 스타일 |
+| CSS | result-nav 다크 → 라이트 배경 전환 |
+
+### 서버 배포 명령
+
+```bash
+git pull && npm run build   # /var/www/checkmate/frontend 에서 실행
+```
+
+---
+
+## 세션 14 추가2 — 웹 디자인 전면 리뉴얼 (2026-07-09)
+
+### 라이트 프렌들리 / 보라 계열 디자인 교체
+
+**백업 위치:** `E:\checkmate\_backup\2026-07-09\frontend-full\` (40개 파일)
+
+**변경 사항 (CSS 스타일만, 콘텐츠·기능 무변경):**
+- CSS 변수: accent `#2563eb`→`#5A3FC0`, 배경 `#f7f6f3`→`#FFFFFF`, 섹션 교차 `#FAF9FC`
+- 텍스트: `#1a1917`→`#211C2E`, 보조 `#6b6860`→`#6B6478`
+- 상태색: danger `#B0114E`(bg `#FCE2EA`), warn `#8A6300`(bg `#FBEECB`), safe `#00A173`(bg `#E6F9F1`)
+- radius: md 10→14px, lg 12→20px, xl 16→24px (카드 더 둥글게)
+- shadow: 딱딱한 → 크고 부드러운 `0 8px 40px -8px rgba(33,28,46,0.12)`
+- 버튼: gradient 제거 → flat `#5A3FC0`, radius 16px, border 없음 / 보조: `#F3F0FA` 배경
+- Navbar: 다크 → 흰색 + backdrop-blur
+- result-nav / dash-topbar: `#1a1917`→`#211C2E` (장식적 다크)
+- 히어로/auth/loading: 격자 제거 → 보라 블롭(EDE7FB/F5EBFB) 배경 장식
+- 폰트: Pretendard Variable, 헤드라인 letter-spacing -0.032~-0.035em
+- 다크 테마: 보라 계열 다크(`#0E0B18` 기반)
+
+**롤백 방법:** `E:\checkmate\_backup\2026-07-09\frontend-full\src\index.css`로 복원
+
+**커밋:** `78c3581` — GitHub push 완료
+
+**서버 배포 (수동 필요):**
+```
+cd /var/www/checkmate && git pull origin main
+cd frontend && npm run build
+```
+
+---
+
+## 세션 14 추가 — 전체 스캔 + TS 오류 수정 (2026-07-09)
+
+### 전체 스캔 결과
+
+| 영역 | 결과 |
+|------|------|
+| Python 백엔드 문법 | 오류 없음 ✅ |
+| 백엔드 ↔ 프론트/모바일 API 매핑 | 전체 정상 매핑 ✅ |
+| 웹 프론트엔드 TS | LawTrackerPage.tsx 미사용 import 2건 → 수정 완료 |
+| 모바일 TS | App.tsx NotificationBehavior 타입 오류 2건 → 수정 완료 |
+
+### 수정 내용
+
+**`frontend/src/pages/LawTrackerPage.tsx`**
+- `Link` (react-router-dom) 미사용 import 제거
+- `isDark` 미사용 변수 선언 제거
+
+**`mobile/App.tsx`**
+- `handleNotification` 반환 객체에 `shouldShowBanner: true, shouldShowList: true` 추가 (Expo SDK 50+ 필수 필드)
+- `navigationRef.navigate` 타입 추론 오류 → `(navigationRef as any).navigate()` 캐스팅 적용
+
+### 백업 정책 적용
+- 수정 전 파일 E드라이브 백업: `E:\checkmate\_backup\2026-07-09\`
+- 커밋: `2e6dce0` — GitHub push 완료
+
+---
+
+## 세션 14 (2026-07-09)
+
+### 앱 버그 4종 수정 + GitHub push + APK 빌드
+
+**수정 사항:**
+
+**1. CompareScreen - 하단 바 가림 현상**
+- 증상: 계약서 선택 Modal FlatList 맨 아래 항목이 하단 내비게이션 바에 가려짐
+- 원인: Modal 하단에 safe area insets 미적용
+- 수정: `useSafeAreaInsets` → `paddingBottom: insets.bottom` Modal 컨테이너에 적용
+
+**2. ProfileScreen - 다크/라이트모드 전환 미반영**
+- 증상: 마이페이지에서 다크모드 토글해도 색상이 변하지 않음
+- 원인: `placeholderTextColor={colors.textMuted}` — 정적 `colors` (항상 lightColors) 참조
+- 수정: `colors.textMuted` → `c.textMuted` (c = isDark ? darkColors : lightColors)
+
+**3. GenerateScreen - 표준 계약서 템플릿 추가**
+- 추가: 8종 표준 계약서 태그 그리드 (근로/임대차/프리랜서/용역/물품공급/비밀유지/동업/전대차)
+- 탭 선택 시 계약 유형 자동 입력 + 설명 힌트 자동 채움
+
+**4. ChatScreen - API 응답 필드 불일치 수정 + dead code 제거**
+- 수정: `data.reply ?? data.response ?? data.message` (기존: response/message만 확인)
+- 제거: 사용되지 않는 `renderItem` 함수 (StyleSheet 참조로 TS 오류 발생)
+- 제거: 미사용 `StyleSheet` import
+
+**TypeScript 오류 정리:**
+- ChatScreen.tsx: `styles.*` 참조 dead code 제거
+- ProfileScreen.tsx: `colors.textMuted` → `c.textMuted` 교체 (3곳)
+- 수정 4개 파일 TS 오류 0건 확인 후 커밋
+
+**커밋:** `0f56a87` — GitHub push 완료
+**APK 빌드:** `./gradlew assembleRelease` 백그라운드 실행 중
+
+**서버 배포 (수동 진행 필요):**
+```
+ssh -i checkmate-key.pem root@101.79.25.139
+cd /var/www/checkmate && git pull origin main
+cd frontend && npm run build
+sudo systemctl restart checkmate-backend
+```
+
+---
+
 ## 세션 1 (이전 세션 — 컨텍스트 압축으로 요약 보존)
 
 ### 주요 작업 내역

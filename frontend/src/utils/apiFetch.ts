@@ -2,21 +2,21 @@
 let _logoutFn: (() => void) | null = null
 
 export function registerLogout(fn: () => void) {
-  _logoutFn = fn
+ _logoutFn = fn
 }
 
 export async function apiFetch(input: RequestInfo, init: RequestInit = {}): Promise<Response> {
-  const token = localStorage.getItem('cm_token')
-  const headers = new Headers(init.headers)
-  if (token) headers.set('Authorization', `Bearer ${token}`)
+ const token = localStorage.getItem('cm_token')
+ const headers = new Headers(init.headers)
+ if (token) headers.set('Authorization', `Bearer ${token}`)
 
-  const res = await fetch(input, { ...init, headers })
+ const res = await fetch(input, { ...init, headers })
 
-  if (res.status === 401) {
-    _logoutFn?.()
-    const redirect = encodeURIComponent(window.location.pathname + window.location.search)
-    window.location.href = `/checkmate/auth?reason=token&redirect=${redirect}`
-  }
+ if (res.status === 401) {
+ _logoutFn?.()
+ const redirect = encodeURIComponent(window.location.pathname + window.location.search)
+ window.location.href = `/checkmate/auth?reason=token&redirect=${redirect}`
+ }
 
-  return res
+ return res
 }
