@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import {
   View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Modal, FlatList,
 } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
 import { useTheme } from '../context/ThemeContext'
 import api from '../services/api'
@@ -22,6 +23,7 @@ function ContractPicker({
 }) {
   const [open, setOpen] = useState(false)
   const current = contracts.find(c => c.id === selected)
+  const insets = useSafeAreaInsets()
 
   return (
     <>
@@ -36,7 +38,7 @@ function ContractPicker({
       </TouchableOpacity>
       <Modal visible={open} transparent animationType="slide">
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
-          <View style={{ backgroundColor: card, borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '70%' }}>
+          <View style={{ backgroundColor: card, borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '70%', paddingBottom: insets.bottom }}>
             <View style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: border, flexDirection: 'row', justifyContent: 'space-between' }}>
               <Text style={{ fontSize: 16, fontWeight: '800', color: text }}>계약서 {label} 선택</Text>
               <TouchableOpacity onPress={() => setOpen(false)}>

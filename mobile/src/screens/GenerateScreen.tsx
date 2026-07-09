@@ -7,6 +7,17 @@ import { useNavigation } from '@react-navigation/native'
 import { useTheme } from '../context/ThemeContext'
 import api from '../services/api'
 
+const CONTRACT_TEMPLATES = [
+  { type: '근로계약서', icon: '👷', desc: '월급, 근무시간, 계약기간을 알려주세요.' },
+  { type: '임대차계약서', icon: '🏠', desc: '임대인, 임차인, 보증금, 월세, 기간을 입력해주세요.' },
+  { type: '프리랜서 계약서', icon: '💻', desc: '업무 범위, 납기일, 금액, 지급 조건을 알려주세요.' },
+  { type: '용역계약서', icon: '🔧', desc: '용역 내용, 금액, 이행 기간을 입력해주세요.' },
+  { type: '물품공급계약서', icon: '📦', desc: '공급 품목, 수량, 단가, 납기를 알려주세요.' },
+  { type: '비밀유지계약서', icon: '🔒', desc: '기밀 정보 범위와 보호 기간을 알려주세요.' },
+  { type: '동업계약서', icon: '🤝', desc: '지분 비율, 역할 분담, 수익 배분을 입력해주세요.' },
+  { type: '전대차계약서', icon: '🏢', desc: '전대 조건, 기간, 임대료를 알려주세요.' },
+]
+
 export default function GenerateScreen() {
   const navigation = useNavigation()
   const { isDark } = useTheme()
@@ -15,6 +26,11 @@ export default function GenerateScreen() {
   const [contractType, setContractType] = useState('')
   const [result, setResult] = useState<{ contract_text: string; suggested_title: string; contract_type: string } | null>(null)
   const [loading, setLoading] = useState(false)
+
+  const selectTemplate = (tpl: typeof CONTRACT_TEMPLATES[0]) => {
+    setContractType(tpl.type)
+    setDescription(prev => prev || tpl.desc)
+  }
 
   const generate = async () => {
     if (!description.trim()) { Alert.alert('입력 필요', '계약서 내용을 설명해주세요.'); return }
@@ -57,9 +73,32 @@ export default function GenerateScreen() {
       </View>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, gap: 16 }}>
-        {/* 계약 유형 */}
+        {/* 표준 계약서 유형 */}
         <View>
-          <Text style={{ fontSize: 13, fontWeight: '700', color: text, marginBottom: 8 }}>계약 유형 (선택)</Text>
+          <Text style={{ fontSize: 13, fontWeight: '700', color: text, marginBottom: 10 }}>표준 계약서 선택</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+            {CONTRACT_TEMPLATES.map(tpl => (
+              <TouchableOpacity
+                key={tpl.type}
+                onPress={() => selectTemplate(tpl)}
+                style={{
+                  paddingHorizontal: 14, paddingVertical: 10, borderRadius: 20,
+                  borderWidth: 1.5,
+                  backgroundColor: contractType === tpl.type ? '#2563eb' : card,
+                  borderColor: contractType === tpl.type ? '#2563eb' : border,
+                  flexDirection: 'row', alignItems: 'center', gap: 6,
+                }}
+              >
+                <Text style={{ fontSize: 14 }}>{tpl.icon}</Text>
+                <Text style={{ fontSize: 13, fontWeight: '700', color: contractType === tpl.type ? '#fff' : text }}>{tpl.type}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* 계약 유형 직접 입력 */}
+        <View>
+          <Text style={{ fontSize: 13, fontWeight: '700', color: text, marginBottom: 8 }}>계약 유형 (직접 입력)</Text>
           <TextInput
             value={contractType}
             onChangeText={setContractType}

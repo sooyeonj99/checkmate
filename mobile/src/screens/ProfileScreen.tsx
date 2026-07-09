@@ -8,7 +8,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { RootStackParamList } from '../../App'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
-import { colors } from '../theme/colors'
+import { lightColors, darkColors } from '../theme/colors'
 import api from '../services/api'
 
 type ModalType = 'none' | 'editProfile' | 'changePassword'
@@ -17,6 +17,8 @@ export default function ProfileScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const { user, token, login, logout } = useAuth()
   const { theme, setTheme, isDark } = useTheme()
+  const c = isDark ? darkColors : lightColors
+  const styles = makeStyles(c)
   const isEnterprise = user?.user_type === 'enterprise'
 
   const [modalType, setModalType] = useState<ModalType>('none')
@@ -110,7 +112,7 @@ export default function ProfileScreen() {
               value={editName}
               onChangeText={setEditName}
               placeholder="이름을 입력하세요"
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={c.textMuted}
             />
             <Text style={styles.inputLabel}>전화번호 (선택)</Text>
             <TextInput
@@ -118,7 +120,7 @@ export default function ProfileScreen() {
               value={editPhone}
               onChangeText={setEditPhone}
               placeholder="010-0000-0000"
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={c.textMuted}
               keyboardType="phone-pad"
             />
             <View style={styles.modalActions}>
@@ -148,7 +150,7 @@ export default function ProfileScreen() {
                   value={currentPw}
                   onChangeText={setCurrentPw}
                   placeholder="현재 비밀번호"
-                  placeholderTextColor={colors.textMuted}
+                  placeholderTextColor={c.textMuted}
                   secureTextEntry
                 />
                 <View style={styles.modalActions}>
@@ -168,7 +170,7 @@ export default function ProfileScreen() {
                   value={newPw}
                   onChangeText={setNewPw}
                   placeholder="새 비밀번호"
-                  placeholderTextColor={colors.textMuted}
+                  placeholderTextColor={c.textMuted}
                   secureTextEntry
                 />
                 <Text style={styles.inputLabel}>새 비밀번호 확인</Text>
@@ -177,7 +179,7 @@ export default function ProfileScreen() {
                   value={newPwConfirm}
                   onChangeText={setNewPwConfirm}
                   placeholder="새 비밀번호 재입력"
-                  placeholderTextColor={colors.textMuted}
+                  placeholderTextColor={c.textMuted}
                   secureTextEntry
                 />
                 <View style={styles.modalActions}>
@@ -217,8 +219,8 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>계정 관리</Text>
           <View style={styles.menuCard}>
-            <MenuRow label="프로필 수정" desc="이름 · 전화번호 변경" onPress={openEditProfile} />
-            <MenuRow label="비밀번호 변경" desc="현재 비밀번호 확인 후 변경" onPress={openChangePassword} last />
+            <MenuRow label="프로필 수정" desc="이름 · 전화번호 변경" onPress={openEditProfile} styles={styles} />
+            <MenuRow label="비밀번호 변경" desc="현재 비밀번호 확인 후 변경" onPress={openChangePassword} last styles={styles} />
           </View>
         </View>
 
@@ -226,9 +228,9 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>서비스 기능</Text>
           <View style={styles.menuCard}>
-            <MenuRow label="서명 템플릿 편집" desc="전자서명 서식 관리" onPress={() => navigation.navigate('TemplateEditor')} />
+            <MenuRow label="서명 템플릿 편집" desc="전자서명 서식 관리" onPress={() => navigation.navigate('TemplateEditor')} styles={styles} />
             {isEnterprise && (
-              <MenuRow label="프랜차이즈 관리" desc="가맹점 현황 및 계약 관리" onPress={() => navigation.navigate('Franchise')} last />
+              <MenuRow label="프랜차이즈 관리" desc="가맹점 현황 및 계약 관리" onPress={() => navigation.navigate('Franchise')} last styles={styles} />
             )}
           </View>
         </View>
@@ -252,7 +254,7 @@ export default function ProfileScreen() {
                   </Text>
                 </View>
                 {theme === t && (
-                  <Text style={{ color: colors.primary, fontWeight: '700', fontSize: 15 }}>✓</Text>
+                  <Text style={{ color: c.primary, fontWeight: '700', fontSize: 15 }}>✓</Text>
                 )}
               </TouchableOpacity>
             ))}
@@ -263,9 +265,9 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>계정 정보</Text>
           <View style={styles.infoCard}>
-            <InfoRow label="이메일" value={user?.email ?? '-'} />
-            <InfoRow label="사용자명" value={user?.username ?? '-'} />
-            <InfoRow label="계정 유형" value={isEnterprise ? '기업/법인' : '개인 사용자'} last />
+            <InfoRow label="이메일" value={user?.email ?? '-'} styles={styles} />
+            <InfoRow label="사용자명" value={user?.username ?? '-'} styles={styles} />
+            <InfoRow label="계정 유형" value={isEnterprise ? '기업/법인' : '개인 사용자'} last styles={styles} />
           </View>
         </View>
 
@@ -286,13 +288,13 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>이용 가능한 기능</Text>
           {FEATURES_PERSONAL.map((f) => (
-            <FeatureRow key={f.title} {...f} available />
+            <FeatureRow key={f.title} {...f} available styles={styles} c={c} />
           ))}
           {isEnterprise && FEATURES_ENTERPRISE.map((f) => (
-            <FeatureRow key={f.title} {...f} available />
+            <FeatureRow key={f.title} {...f} available styles={styles} c={c} />
           ))}
           {!isEnterprise && FEATURES_ENTERPRISE.map((f) => (
-            <FeatureRow key={f.title} {...f} available={false} />
+            <FeatureRow key={f.title} {...f} available={false} styles={styles} c={c} />
           ))}
         </View>
 
@@ -308,7 +310,10 @@ export default function ProfileScreen() {
   )
 }
 
-function MenuRow({ label, desc, onPress, last }: { label: string; desc: string; onPress: () => void; last?: boolean }) {
+type S = ReturnType<typeof makeStyles>
+type C = typeof lightColors
+
+function MenuRow({ label, desc, onPress, last, styles }: { label: string; desc: string; onPress: () => void; last?: boolean; styles: S }) {
   return (
     <TouchableOpacity style={[styles.menuRow, last && { borderBottomWidth: 0 }]} onPress={onPress} activeOpacity={0.7}>
       <View style={{ flex: 1 }}>
@@ -320,7 +325,7 @@ function MenuRow({ label, desc, onPress, last }: { label: string; desc: string; 
   )
 }
 
-function InfoRow({ label, value, last }: { label: string; value: string; last?: boolean }) {
+function InfoRow({ label, value, last, styles }: { label: string; value: string; last?: boolean; styles: S }) {
   return (
     <View style={[styles.infoRow, last && { borderBottomWidth: 0 }]}>
       <Text style={styles.infoLabel}>{label}</Text>
@@ -329,10 +334,10 @@ function InfoRow({ label, value, last }: { label: string; value: string; last?: 
   )
 }
 
-function FeatureRow({ title, desc, available }: { title: string; desc: string; available: boolean }) {
+function FeatureRow({ title, desc, available, styles, c }: { title: string; desc: string; available: boolean; styles: S; c: C }) {
   return (
     <View style={[styles.featureRow, !available && styles.featureRowDisabled]}>
-      <View style={[styles.featureDot, { backgroundColor: available ? colors.safe : colors.textMuted }]} />
+      <View style={[styles.featureDot, { backgroundColor: available ? c.safe : c.textMuted }]} />
       <View style={styles.featureContent}>
         <Text style={[styles.featureTitle, !available && styles.featureTitleDisabled]}>{title}</Text>
         <Text style={styles.featureDesc}>{desc}</Text>
@@ -356,101 +361,58 @@ const FEATURES_ENTERPRISE = [
   { title: '리포트 다운로드', desc: 'PDF 형식 분석 리포트 출력' },
 ]
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.bg },
-  header: {
-    paddingHorizontal: 20, paddingTop: 56, paddingBottom: 20,
-    borderBottomWidth: 1, borderBottomColor: colors.border,
-    backgroundColor: colors.navBg,
-  },
-  headerTitle: { color: '#fff', fontSize: 18, fontWeight: '700' },
-  content: { padding: 20 },
-  profileCard: {
-    backgroundColor: colors.bgCard, borderRadius: 20, borderWidth: 1,
-    borderColor: colors.border, padding: 28, alignItems: 'center', marginBottom: 24,
-  },
-  avatar: {
-    width: 72, height: 72, borderRadius: 36, backgroundColor: colors.primary,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 14,
-  },
-  avatarText: { color: '#fff', fontSize: 30, fontWeight: '800' },
-  username: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 4 },
-  email: { color: colors.textMuted, fontSize: 13, marginBottom: 12 },
-  typeBadge: {
-    backgroundColor: colors.bgInput, borderRadius: 20,
-    paddingHorizontal: 14, paddingVertical: 5,
-    borderWidth: 1, borderColor: colors.border,
-  },
-  typeBadgeEnterprise: { backgroundColor: 'rgba(37,99,235,0.08)', borderColor: colors.borderAccent },
-  typeBadgeText: { color: colors.textSecondary, fontSize: 13, fontWeight: '600' },
-  typeBadgeTextEnterprise: { color: colors.primary },
-  section: { marginBottom: 24 },
-  sectionTitle: {
-    color: colors.textMuted, fontSize: 11, fontWeight: '700',
-    letterSpacing: 1, marginBottom: 10, textTransform: 'uppercase',
-  },
-  menuCard: { backgroundColor: colors.bgCard, borderRadius: 14, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' },
-  menuRow: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingVertical: 14, paddingHorizontal: 16,
-    borderBottomWidth: 1, borderBottomColor: colors.border,
-  },
-  menuLabel: { color: colors.text, fontSize: 14, fontWeight: '600', marginBottom: 2 },
-  menuDesc: { color: colors.textMuted, fontSize: 12 },
-  menuArrow: { color: colors.textMuted, fontSize: 22, fontWeight: '300' },
-  infoCard: { backgroundColor: colors.bgCard, borderRadius: 14, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' },
-  infoRow: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingVertical: 14, paddingHorizontal: 16,
-    borderBottomWidth: 1, borderBottomColor: colors.border,
-  },
-  infoLabel: { color: colors.textSecondary, fontSize: 14 },
-  infoValue: { color: colors.text, fontSize: 14, fontWeight: '600' },
-  planCard: {
-    backgroundColor: colors.bgCard, borderRadius: 14,
-    borderWidth: 1, borderColor: colors.border, padding: 16,
-  },
-  planCardEnterprise: { backgroundColor: 'rgba(37,99,235,0.04)', borderColor: colors.borderAccent },
-  planName: { color: colors.text, fontSize: 15, fontWeight: '700', marginBottom: 4 },
-  planDesc: { color: colors.textMuted, fontSize: 12, lineHeight: 17 },
-  featureRow: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: colors.bgCard, borderRadius: 12,
-    borderWidth: 1, borderColor: colors.border,
-    padding: 14, marginBottom: 8, gap: 12,
-  },
-  featureRowDisabled: { opacity: 0.45 },
-  featureDot: { width: 8, height: 8, borderRadius: 4 },
-  featureContent: { flex: 1 },
-  featureTitle: { color: colors.text, fontSize: 14, fontWeight: '600', marginBottom: 2 },
-  featureTitleDisabled: { color: colors.textMuted },
-  featureDesc: { color: colors.textMuted, fontSize: 12 },
-  featureCheck: { color: colors.safe, fontSize: 16, fontWeight: '700' },
-  featureLock: { color: colors.textMuted, fontSize: 11, fontWeight: '600' },
-  logoutBtn: {
-    borderWidth: 1, borderColor: 'rgba(217,64,64,0.3)',
-    borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 16,
-  },
-  logoutText: { color: colors.danger, fontSize: 15, fontWeight: '600' },
-  version: { textAlign: 'center', color: colors.textMuted, fontSize: 12 },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
-  modalBox: {
-    backgroundColor: colors.bgCard, borderTopLeftRadius: 20, borderTopRightRadius: 20,
-    padding: 24, borderWidth: 1, borderColor: colors.border,
-  },
-  modalTitle: { color: colors.text, fontSize: 18, fontWeight: '700', marginBottom: 4 },
-  modalSub: { color: colors.textMuted, fontSize: 13, marginBottom: 16 },
-  inputLabel: { color: colors.textSecondary, fontSize: 13, fontWeight: '600', marginBottom: 6, marginTop: 12 },
-  input: {
-    borderWidth: 1, borderColor: colors.border, borderRadius: 10,
-    padding: 14, color: colors.text, fontSize: 15, backgroundColor: colors.bgInput,
-  },
-  modalActions: { flexDirection: 'row', gap: 10, marginTop: 20 },
-  cancelBtn: {
-    flex: 1, borderWidth: 1, borderColor: colors.border,
-    borderRadius: 12, paddingVertical: 14, alignItems: 'center',
-  },
-  cancelText: { color: colors.textMuted, fontWeight: '600', fontSize: 15 },
-  saveBtn: { flex: 1, backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
-  saveText: { color: '#fff', fontWeight: '700', fontSize: 15 },
-})
+function makeStyles(c: typeof lightColors) {
+  return StyleSheet.create({
+    root: { flex: 1, backgroundColor: c.bg },
+    header: { paddingHorizontal: 20, paddingTop: 56, paddingBottom: 20, borderBottomWidth: 1, borderBottomColor: c.border, backgroundColor: c.navBg },
+    headerTitle: { color: '#fff', fontSize: 18, fontWeight: '700' },
+    content: { padding: 20 },
+    profileCard: { backgroundColor: c.bgCard, borderRadius: 20, borderWidth: 1, borderColor: c.border, padding: 28, alignItems: 'center', marginBottom: 24 },
+    avatar: { width: 72, height: 72, borderRadius: 36, backgroundColor: c.primary, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
+    avatarText: { color: '#fff', fontSize: 30, fontWeight: '800' },
+    username: { color: c.text, fontSize: 20, fontWeight: '700', marginBottom: 4 },
+    email: { color: c.textMuted, fontSize: 13, marginBottom: 12 },
+    typeBadge: { backgroundColor: c.bgInput, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 5, borderWidth: 1, borderColor: c.border },
+    typeBadgeEnterprise: { backgroundColor: 'rgba(37,99,235,0.08)', borderColor: c.borderAccent },
+    typeBadgeText: { color: c.textSecondary, fontSize: 13, fontWeight: '600' },
+    typeBadgeTextEnterprise: { color: c.primary },
+    section: { marginBottom: 24 },
+    sectionTitle: { color: c.textMuted, fontSize: 11, fontWeight: '700', letterSpacing: 1, marginBottom: 10, textTransform: 'uppercase' },
+    menuCard: { backgroundColor: c.bgCard, borderRadius: 14, borderWidth: 1, borderColor: c.border, overflow: 'hidden' },
+    menuRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: c.border },
+    menuLabel: { color: c.text, fontSize: 14, fontWeight: '600', marginBottom: 2 },
+    menuDesc: { color: c.textMuted, fontSize: 12 },
+    menuArrow: { color: c.textMuted, fontSize: 22, fontWeight: '300' },
+    infoCard: { backgroundColor: c.bgCard, borderRadius: 14, borderWidth: 1, borderColor: c.border, overflow: 'hidden' },
+    infoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: c.border },
+    infoLabel: { color: c.textSecondary, fontSize: 14 },
+    infoValue: { color: c.text, fontSize: 14, fontWeight: '600' },
+    planCard: { backgroundColor: c.bgCard, borderRadius: 14, borderWidth: 1, borderColor: c.border, padding: 16 },
+    planCardEnterprise: { backgroundColor: 'rgba(37,99,235,0.04)', borderColor: c.borderAccent },
+    planName: { color: c.text, fontSize: 15, fontWeight: '700', marginBottom: 4 },
+    planDesc: { color: c.textMuted, fontSize: 12, lineHeight: 17 },
+    featureRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: c.bgCard, borderRadius: 12, borderWidth: 1, borderColor: c.border, padding: 14, marginBottom: 8, gap: 12 },
+    featureRowDisabled: { opacity: 0.45 },
+    featureDot: { width: 8, height: 8, borderRadius: 4 },
+    featureContent: { flex: 1 },
+    featureTitle: { color: c.text, fontSize: 14, fontWeight: '600', marginBottom: 2 },
+    featureTitleDisabled: { color: c.textMuted },
+    featureDesc: { color: c.textMuted, fontSize: 12 },
+    featureCheck: { color: c.safe, fontSize: 16, fontWeight: '700' },
+    featureLock: { color: c.textMuted, fontSize: 11, fontWeight: '600' },
+    logoutBtn: { borderWidth: 1, borderColor: 'rgba(217,64,64,0.3)', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 16 },
+    logoutText: { color: c.danger, fontSize: 15, fontWeight: '600' },
+    version: { textAlign: 'center', color: c.textMuted, fontSize: 12 },
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
+    modalBox: { backgroundColor: c.bgCard, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, borderWidth: 1, borderColor: c.border },
+    modalTitle: { color: c.text, fontSize: 18, fontWeight: '700', marginBottom: 4 },
+    modalSub: { color: c.textMuted, fontSize: 13, marginBottom: 16 },
+    inputLabel: { color: c.textSecondary, fontSize: 13, fontWeight: '600', marginBottom: 6, marginTop: 12 },
+    input: { borderWidth: 1, borderColor: c.border, borderRadius: 10, padding: 14, color: c.text, fontSize: 15, backgroundColor: c.bgInput },
+    modalActions: { flexDirection: 'row', gap: 10, marginTop: 20 },
+    cancelBtn: { flex: 1, borderWidth: 1, borderColor: c.border, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+    cancelText: { color: c.textMuted, fontWeight: '600', fontSize: 15 },
+    saveBtn: { flex: 1, backgroundColor: c.primary, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+    saveText: { color: '#fff', fontWeight: '700', fontSize: 15 },
+  })
+}
