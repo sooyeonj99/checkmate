@@ -1,6 +1,4 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { useTheme } from '../context/ThemeContext'
 
 const SAMPLE_LAWS = [
   { id: 1, name: '근로기준법', lastChanged: '2024-10-01', changeType: '개정', summary: '연장근로 한도 및 휴가 규정 변경', relevance: '근로계약서' },
@@ -12,7 +10,6 @@ const SAMPLE_LAWS = [
 const CATEGORIES = ['전체', '근로', '임대차', '상사', '프랜차이즈', '전자상거래']
 
 export default function LawTrackerPage() {
-  const { isDark } = useTheme()
   const [category, setCategory] = useState('전체')
   const [keyword, setKeyword] = useState('')
 

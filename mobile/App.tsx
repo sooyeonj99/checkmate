@@ -41,6 +41,8 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 })
 
@@ -208,7 +210,7 @@ function Navigation() {
     responseSubRef.current = Notifications.addNotificationResponseReceivedListener(response => {
       const data = response.notification.request.content.data as any
       if (data?.type === 'signing_request' && data?.token && navigationRef.isReady()) {
-        navigationRef.navigate('Signing' as any, { token: data.token })
+        ;(navigationRef as any).navigate('Signing', { token: data.token })
       }
     })
 
