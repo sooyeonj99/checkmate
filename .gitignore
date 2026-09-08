@@ -43,8 +43,12 @@ alembic/versions/*.py
 
 # 업로드 파일 (개인정보 보호)
 backend/uploads/
+backend/masked_data/
 ssh_fix.py
 checkmate-key.pem
 fix-server.ps1
 create_test_accounts.py
 checkmate-server.JPG
+
+# 로컬 수동 백업 스냅샷
+_backup/
