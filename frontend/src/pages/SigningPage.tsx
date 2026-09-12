@@ -72,7 +72,7 @@ export default function SigningPage() {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 18,
         }}>♟</div>
-        <span style={{ fontWeight: 800, fontSize: 18, color: 'var(--text)', letterSpacing: 1 }}>CHECKMATE</span>
+        <span style={{ fontWeight: 800, fontSize: 18, color: 'var(--text)', letterSpacing: 1 }}>RESPECTCHECK</span>
       </Link>
 
       <div style={{
@@ -230,7 +230,7 @@ export default function SigningPage() {
       </div>
 
       <p style={{ marginTop: 32, fontSize: 12, color: 'var(--text-muted)' }}>
-        ⓒ 2026 CHECKMATE — AI 계약서 분석 서비스
+        ⓒ 2026 RESPECTCHECK — AI 계약서 분석 서비스
       </p>
     </div>
   )

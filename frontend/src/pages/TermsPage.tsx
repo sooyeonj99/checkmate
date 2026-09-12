@@ -9,7 +9,7 @@ export default function TermsPage() {
             <path d="M12 2L3 7V12C3 16.97 6.84 21.61 12 23C17.16 21.61 21 16.97 21 12V7L12 2Z" fill="white" fillOpacity="0.9"/>
             <path d="M9 12L11 14L15 10" stroke="#1e3a8a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          <span>CHECKMATE</span>
+          <span>RESPECTCHECK</span>
         </Link>
         <Link to="/auth" className="legal-back">← 돌아가기</Link>
       </div>
@@ -22,13 +22,13 @@ export default function TermsPage() {
           </div>
 
           <div className="legal-intro">
-            체크메이트(이하 "회사")가 제공하는 AI 계약서 분석 서비스(이하 "서비스")를 이용해 주셔서 감사합니다.
+            리스펙체크(이하 "회사")가 제공하는 AI 계약서 분석 서비스(이하 "서비스")를 이용해 주셔서 감사합니다.
             본 약관은 회사와 이용자 간의 서비스 이용에 관한 권리, 의무 및 책임사항, 기타 필요한 사항을 규정합니다.
             서비스를 이용하기 전 본 약관을 주의 깊게 읽어 주시기 바랍니다.
           </div>
 
           <Section title="제1조 (목적)">
-            본 약관은 체크메이트(이하 "회사")가 운영하는 체크메이트 서비스(이하 "서비스")의 이용과 관련하여 회사와 이용자의 권리·의무 및 책임사항, 서비스 이용조건 및 절차 등 기본적인 사항을 규정함을 목적으로 합니다.
+            본 약관은 리스펙체크(이하 "회사")가 운영하는 리스펙체크 서비스(이하 "서비스")의 이용과 관련하여 회사와 이용자의 권리·의무 및 책임사항, 서비스 이용조건 및 절차 등 기본적인 사항을 규정함을 목적으로 합니다.
           </Section>
 
           <Section title="제2조 (정의)">
@@ -170,7 +170,7 @@ export default function TermsPage() {
           </Section>
 
           <div className="legal-footer-box">
-            <p><strong>체크메이트 (CHECKMATE)</strong></p>
+            <p><strong>리스펙체크 (RespectCheck)</strong></p>
             <p>서비스 문의: support@checkmate.kr</p>
             <p>본 약관은 2026년 06월 23일부터 시행됩니다.</p>
           </div>

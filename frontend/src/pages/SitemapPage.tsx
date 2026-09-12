@@ -149,7 +149,7 @@ export default function SitemapPage() {
         <div className="container">
           <div className="sitemap-header">
             <h1 className="sitemap-title">사이트맵</h1>
-            <p className="sitemap-subtitle">체크메이트의 모든 페이지와 기능을 한눈에 확인하세요</p>
+            <p className="sitemap-subtitle">리스펙체크의 모든 페이지와 기능을 한눈에 확인하세요</p>
 
             {/* 뱃지 범례 */}
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 20, flexWrap: 'wrap' }}>

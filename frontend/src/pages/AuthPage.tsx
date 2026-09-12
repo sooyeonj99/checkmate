@@ -52,7 +52,7 @@ export default function AuthPage() {
 
       <Link to="/" className="auth-logo">
         <div className="auth-logo-icon">♟</div>
-        <span>체크메이트</span>
+        <span>리스펙체크</span>
       </Link>
 
       <div className="auth-card">

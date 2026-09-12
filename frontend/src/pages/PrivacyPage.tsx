@@ -9,7 +9,7 @@ export default function PrivacyPage() {
             <path d="M12 2L3 7V12C3 16.97 6.84 21.61 12 23C17.16 21.61 21 16.97 21 12V7L12 2Z" fill="white" fillOpacity="0.9"/>
             <path d="M9 12L11 14L15 10" stroke="#1e3a8a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          <span>CHECKMATE</span>
+          <span>RESPECTCHECK</span>
         </Link>
         <Link to="/auth" className="legal-back">← 돌아가기</Link>
       </div>
@@ -22,7 +22,7 @@ export default function PrivacyPage() {
           </div>
 
           <div className="legal-intro">
-            체크메이트(이하 "회사")는 「개인정보 보호법」, 「정보통신망 이용촉진 및 정보보호 등에 관한 법률」 등 관련 법령에 따라
+            리스펙체크(이하 "회사")는 「개인정보 보호법」, 「정보통신망 이용촉진 및 정보보호 등에 관한 법률」 등 관련 법령에 따라
             이용자의 개인정보를 보호하고 이와 관련한 고충을 신속하고 원활하게 처리할 수 있도록 하기 위하여 다음과 같이 개인정보처리방침을 수립·공개합니다.
           </div>
 
@@ -170,7 +170,7 @@ export default function PrivacyPage() {
           </Section>
 
           <div className="legal-footer-box">
-            <p><strong>체크메이트 (CHECKMATE)</strong></p>
+            <p><strong>리스펙체크 (RespectCheck)</strong></p>
             <p>개인정보 문의: privacy@checkmate.kr</p>
             <p>본 방침은 2026년 06월 23일부터 시행됩니다.</p>
           </div>

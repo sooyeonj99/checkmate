@@ -53,7 +53,7 @@ export default function ResetPasswordPage() {
               </linearGradient>
             </defs>
           </svg>
-          <span>CHECKMATE</span>
+          <span>RESPECTCHECK</span>
         </Link>
 
         {!token ? (

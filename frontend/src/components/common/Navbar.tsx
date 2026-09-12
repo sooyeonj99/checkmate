@@ -45,7 +45,7 @@ export default function Navbar() {
               <path d="M9 12L11 14L15 10" stroke="#060d1f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
-          <span className="gradient-text">CHECKMATE</span>
+          <span className="gradient-text">RESPECTCHECK</span>
         </Link>
 
         <ul className="navbar-links">

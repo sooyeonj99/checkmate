@@ -104,7 +104,7 @@ function Logo() {
           />
         </svg>
       </div>
-      <span className="loading-logo-text gradient-text">CHECKMATE</span>
+      <span className="loading-logo-text gradient-text">RESPECTCHECK</span>
     </Link>
   )
 }

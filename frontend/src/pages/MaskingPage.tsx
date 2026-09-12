@@ -459,7 +459,7 @@ export default function MaskingPage() {
               <path d="M9 12L11 14L15 10" stroke="#060d1f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
-          <span style={{ fontWeight: 800, fontSize: 16, letterSpacing: 1.5, color: 'var(--accent)' }}>CHECKMATE</span>
+          <span style={{ fontWeight: 800, fontSize: 16, letterSpacing: 1.5, color: 'var(--accent)' }}>RESPECTCHECK</span>
         </Link>
 
         {/* Progress steps */}

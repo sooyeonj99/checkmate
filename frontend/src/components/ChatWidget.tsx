@@ -101,7 +101,7 @@ const FAQ: { keywords: string[]; answer: string }[] = [
 - 중도 해지 가능 시점 (보통 절반 이상 사용 후)
 - 기기 반납 조건 및 택배비 부담 주체
 
-💡 **Checkmate 팁**: 대시보드에서 지금 해지 시 위약금을 실시간으로 확인할 수 있어요!`,
+💡 **RespectCheck 팁**: 대시보드에서 지금 해지 시 위약금을 실시간으로 확인할 수 있어요!`,
   },
   {
     keywords: ['자동갱신', '자동 갱신', '구독', '갱신'],
@@ -120,7 +120,7 @@ const FAQ: { keywords: string[]; answer: string }[] = [
 - 해지 신청은 만료 45~60일 전에 여유있게 하세요
 - 해지 신청 증거(이메일, 문자)를 보관하세요
 
-💡 **Checkmate 대시보드**에서 만료 30일 전 자동 알림을 받을 수 있어요!`,
+💡 **RespectCheck 대시보드**에서 만료 30일 전 자동 알림을 받을 수 있어요!`,
   },
   {
     keywords: ['수정', '협상', '불리', '바꿀', '변경'],
@@ -139,11 +139,11 @@ const FAQ: { keywords: string[]; answer: string }[] = [
 - 특약 사항으로 예외 조건 추가
 - 최악의 경우 계약 체결을 거부할 권리가 있어요
 
-💡 Checkmate로 계약서를 분석하면 어떤 조항이 불리한지 자동으로 파악할 수 있어요!`,
+💡 RespectCheck로 계약서를 분석하면 어떤 조항이 불리한지 자동으로 파악할 수 있어요!`,
   },
   {
-    keywords: ['체크메이트', 'checkmate', '서비스', '이용', '사용법', '어떻게'],
-    answer: `✅ **Checkmate 이용 방법**
+    keywords: ['체크메이트', 'checkmate', '리스펙체크', 'respectcheck', '서비스', '이용', '사용법', '어떻게'],
+    answer: `✅ **RespectCheck 이용 방법**
 
 **3단계로 계약서를 분석할 수 있어요:**
 
@@ -172,7 +172,7 @@ function getLocalAnswer(text: string): string | null {
   return null
 }
 
-const WELCOME = `안녕하세요! 👋 Checkmate AI 상담사입니다.
+const WELCOME = `안녕하세요! 👋 RespectCheck AI 상담사입니다.
 계약서 관련 궁금한 점을 도와드릴게요.
 
 아래 자주 묻는 질문을 선택하거나, 직접 입력해 주세요!`
@@ -255,7 +255,7 @@ export default function ChatWidget() {
           <div className="chat-header">
             <ChatLogo size={36} />
             <div>
-              <div className="chat-header-title">CHECKMATE AI</div>
+              <div className="chat-header-title">RESPECTCHECK AI</div>
               <div className="chat-header-sub">계약서 상담 전문 AI</div>
             </div>
             <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>

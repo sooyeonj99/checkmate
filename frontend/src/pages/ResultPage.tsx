@@ -258,7 +258,7 @@ function ResultNav({ date, onPdf, onSign }: { date: string; onPdf?: () => void; 
                 <path d="M9 12L11 14L15 10" stroke="#060d1f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
-            <span className="gradient-text">CHECKMATE</span>
+            <span className="gradient-text">RESPECTCHECK</span>
           </Link>
           <span style={{ color: 'var(--border)', fontSize: 16 }}>|</span>
           {/* 대시보드 버튼 */}
@@ -821,7 +821,7 @@ function ExpertCard({ grade, contractType }: { grade: RiskLevel; contractType?: 
       }}>
         {grade === 'danger'
           ? '⚠️ 이 계약서는 위험도가 높습니다. 서명 전 반드시 전문가 검토를 권장합니다. 대한법률구조공단(132)에서 무료 상담을 받을 수 있습니다.'
-          : '💡 체크메이트는 정보 제공 서비스로, 법률 자문을 대체하지 않습니다. 중요한 계약은 전문가 상담을 권장합니다.'}
+          : '💡 리스펙체크는 정보 제공 서비스로, 법률 자문을 대체하지 않습니다. 중요한 계약은 전문가 상담을 권장합니다.'}
       </div>
     </div>
   )
@@ -1118,7 +1118,7 @@ export default function ResultPage() {
 
         {/* Footer */}
         <div className="result-footer">
-          <strong>CHECKMATE</strong> — "누구나 이해할 수 있게, 누구도 피해 보지 않게"<br />
+          <strong>RESPECTCHECK</strong> — "누구나 이해할 수 있게, 누구도 피해 보지 않게"<br />
           본 리포트는 AI 분석 결과이며 법적 효력이 없습니다. 중요한 계약은 반드시 법률 전문가 검토를 받으시기 바랍니다.
         </div>
       </div>

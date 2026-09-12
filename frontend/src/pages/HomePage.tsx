@@ -70,7 +70,7 @@ function PainPointSection() {
             { stat: '78%', desc: '계약서를 제대로 읽지 않고 서명하는 직장인 비율', src: '고용노동부 실태조사' },
             { stat: '연 4.2조', desc: '계약서 분쟁으로 발생하는 사회적 손실 추정액', src: '법무부 통계' },
             { stat: '평균 150만원', desc: '변호사 계약서 검토 비용 (1건 기준)', src: '대한변협' },
-            { stat: '30초', desc: 'Checkmate AI가 동일한 검토를 완료하는 시간', src: 'Checkmate', accent: true },
+            { stat: '30초', desc: 'RespectCheck AI가 동일한 검토를 완료하는 시간', src: 'RespectCheck', accent: true },
           ].map((p) => (
             <div key={p.stat} className={`pain-card${p.accent ? ' accent' : ''}`}>
               <div className="pain-stat">{p.stat}</div>
@@ -404,7 +404,7 @@ function CompetitionSection() {
     <section className="section competition-section" id="competition">
       <div className="container">
         <div className="section-header" style={{ textAlign: 'center' }}>
-          <div className="section-tag">WHY CHECKMATE</div>
+          <div className="section-tag">WHY RESPECTCHECK</div>
           <h2 className="section-title">
             기존 서비스와<br />
             <span className="gradient-text">무엇이 다른가요?</span>
@@ -416,7 +416,7 @@ function CompetitionSection() {
             <thead>
               <tr>
                 <th>항목</th>
-                <th className="comp-us">✅ Checkmate</th>
+                <th className="comp-us">✅ RespectCheck</th>
                 <th>법률 사무소</th>
                 <th>유사 앱</th>
               </tr>
@@ -470,7 +470,7 @@ function TargetsSection() {
           <div className="section-tag">WHO WE HELP</div>
           <h2 className="section-title">
             이런 분들이<br />
-            <span className="gradient-text">Checkmate를 씁니다</span>
+            <span className="gradient-text">RespectCheck를 씁니다</span>
           </h2>
           <p className="section-desc" style={{ margin: '0 auto' }}>
             계약서 앞에서 혼자가 아니어도 됩니다
@@ -534,7 +534,7 @@ function Footer() {
                 <path d="M9 12L11 14L15 10" stroke="#060d1f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
-            <span className="gradient-text">CHECKMATE</span>
+            <span className="gradient-text">RESPECTCHECK</span>
           </div>
 
           <ul className="footer-links">
@@ -543,7 +543,7 @@ function Footer() {
             <li><Link to="/sitemap">사이트맵</Link></li>
           </ul>
 
-          <p className="footer-copy">© 2026 Checkmate. All rights reserved.</p>
+          <p className="footer-copy">© 2026 RespectCheck. All rights reserved.</p>
         </div>
       </div>
     </footer>

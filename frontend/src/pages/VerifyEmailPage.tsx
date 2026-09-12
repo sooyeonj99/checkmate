@@ -42,7 +42,7 @@ export default function VerifyEmailPage() {
               </linearGradient>
             </defs>
           </svg>
-          <span>CHECKMATE</span>
+          <span>RESPECTCHECK</span>
         </Link>
 
         {/* 로딩 */}
