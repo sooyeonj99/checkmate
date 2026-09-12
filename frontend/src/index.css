@@ -2401,44 +2401,6 @@ img, svg {
   letter-spacing: 0.5px;
 }
 
-/* Orbiting dots */
-@keyframes orbit {
-  from { transform: rotate(var(--start-deg)) translateX(136px) rotate(calc(-1 * var(--start-deg))); }
-  to   { transform: rotate(calc(var(--start-deg) + 360deg)) translateX(136px) rotate(calc(-1 * (var(--start-deg) + 360deg))); }
-}
-
-.loading-orbit-dot {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 8px;
-  height: 8px;
-  margin: -4px 0 0 -4px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 10px var(--accent);
-  animation: orbit 4s linear infinite;
-}
-
-.loading-orbit-dot:nth-child(1) {
-  --start-deg: 0deg;
-  animation-delay: 0s;
-}
-.loading-orbit-dot:nth-child(2) {
-  --start-deg: 120deg;
-  animation-delay: -1.33s;
-  width: 6px; height: 6px;
-  margin: -3px 0 0 -3px;
-  opacity: 0.6;
-}
-.loading-orbit-dot:nth-child(3) {
-  --start-deg: 240deg;
-  animation-delay: -2.66s;
-  width: 5px; height: 5px;
-  margin: -2.5px 0 0 -2.5px;
-  opacity: 0.35;
-}
-
 /* Step pills row */
 .loading-steps-row {
   display: flex;

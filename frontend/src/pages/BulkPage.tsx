@@ -16,7 +16,7 @@ export default function BulkPage() {
   const [uploadMsg, setUploadMsg] = useState('')
   const [dragOver, setDragOver] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
-  const token = localStorage.getItem('cm_token')
+  const token = sessionStorage.getItem('cm_token')
 
   const gradeColor = (g?: string) =>
     g === '위험' ? '#ef4444' : g === '주의' ? '#f59e0b' : g === '안전' ? '#22c55e' : 'var(--text-muted)'

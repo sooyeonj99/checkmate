@@ -39,7 +39,7 @@ export default function ComparePage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const token = localStorage.getItem('cm_token')
+  const token = sessionStorage.getItem('cm_token')
 
   useEffect(() => {
     fetch('/api/v1/contracts/saved', { headers: { Authorization: `Bearer ${token}` } })

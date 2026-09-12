@@ -77,7 +77,7 @@ export default function ProfilePage() {
       const data = await res.json()
       if (res.ok) {
         // AuthContext의 user 정보 업데이트 (토큰은 그대로 유지)
-        const token = localStorage.getItem('cm_token') ?? ''
+        const token = sessionStorage.getItem('cm_token') ?? ''
         login(token, data.user)
         setEditMsg('정보가 성공적으로 수정되었습니다.')
         setNewPassword(''); setNewPasswordConfirm('')

@@ -115,6 +115,65 @@ _PATTERNS: list[tuple[str, str, str]] = [
 ]
 
 
+# ── NER 오탐 필터링 ──────────────────────────────────────────────────────────
+# spaCy 한국어 소형 모델(ko_core_news_sm)이 자주 오탐하는 토큰들
+# (예: "제1조"의 "조"만 분리 인식, 서명 플랫폼이 남기는 "Envelope" 등)
+_NER_STOPWORDS = {
+    "조", "항", "호", "목", "년", "월", "일", "원", "등", "장", "절", "관", "款",
+    "envelope", "docusign",
+}
+_PURE_HANGUL_RE = re.compile(r"^[가-힣]+$")
+
+
+def _is_valid_ner_span(span: str, entity_type: str) -> bool:
+    """
+    spaCy NER 결과가 실제 개인정보일 가능성이 낮으면 False.
+    - 한 글자짜리("조", "항" 등)는 이름/기관명이 될 수 없음
+    - 알려진 오탐 단어(Envelope, Docusign 등) 제외
+    - 순수 한글 PERSON은 보통 2~4음절(실제 이름 길이) — 서명 플랫폼이 붙이는
+      "__signhereN" 같은 접미사가 있으면 길이 제한 없이 허용
+    """
+    s = span.strip()
+    if len(s) < 2:
+        return False
+    if s.lower() in _NER_STOPWORDS:
+        return False
+    if entity_type == "PERSON" and _PURE_HANGUL_RE.match(s) and not (2 <= len(s) <= 4):
+        return False
+    return True
+
+
+def _propagate_exact_name_matches(text: str, entities: list["PiiEntity"]) -> list["PiiEntity"]:
+    """
+    감지된 이름(PERSON)과 문자열이 정확히 같은 부분이 문서 다른 위치에도 있으면
+    같이 마스킹 대상에 포함시킨다.
+    NER은 문장 문맥별로 판단하기 때문에 동일 인물의 이름이라도 일부 등장 위치에서는
+    인식하지 못하는 경우가 있어(예: 서명란에 반복되는 "홍길동__signhere1"), 이미 한 번
+    이름으로 확인된 문자열은 나머지 등장 위치도 동일하게 처리한다.
+    """
+    working = list(entities)
+
+    def overlaps_any(s: int, e: int) -> bool:
+        return any(x.start < e and s < x.end for x in working)
+
+    seen: set[str] = set()
+    additions: list[PiiEntity] = []
+    for e in entities:
+        if e.type != "PERSON" or e.original in seen:
+            continue
+        seen.add(e.original)
+        for m in re.finditer(re.escape(e.original), text):
+            if overlaps_any(m.start(), m.end()):
+                continue
+            new_e = PiiEntity(
+                id=0, type="PERSON", label=LABEL["PERSON"],
+                start=m.start(), end=m.end(), original=m.group(),
+            )
+            working.append(new_e)
+            additions.append(new_e)
+    return additions
+
+
 @dataclass
 class PiiEntity:
     """감지된 개인정보 엔티티 (위치 포함)"""
@@ -239,7 +298,9 @@ def _spacy_ner_mask(text: str) -> tuple[str, dict[str, int]]:
         entities = [
             (ent.start_char, ent.end_char, label_map[ent.label_])
             for ent in doc.ents
-            if ent.label_ in label_map and not _in_masked(ent.start_char, ent.end_char)
+            if ent.label_ in label_map
+            and not _in_masked(ent.start_char, ent.end_char)
+            and _is_valid_ner_span(ent.text, label_map[ent.label_])
         ]
         entities.sort(key=lambda x: x[0], reverse=True)
 
@@ -330,8 +391,9 @@ def detect_pii(text: str) -> list[PiiEntity]:
 
         doc = nlp(text)
         for ent in doc.ents:
-            if ent.label_ in label_map and not overlaps(ent.start_char, ent.end_char):
-                mapped = label_map[ent.label_]
+            mapped = label_map.get(ent.label_)
+            if (mapped and not overlaps(ent.start_char, ent.end_char)
+                    and _is_valid_ner_span(ent.text, mapped)):
                 entities.append(PiiEntity(
                     id=0,
                     type=mapped,
@@ -342,6 +404,9 @@ def detect_pii(text: str) -> list[PiiEntity]:
                 ))
     except Exception:
         pass
+
+    # 3단계: 같은 이름 문자열이 다른 위치에도 있으면 함께 감지 대상에 포함
+    entities.extend(_propagate_exact_name_matches(text, entities))
 
     # 위치순 정렬 후 ID 부여
     entities.sort(key=lambda e: e.start)
@@ -386,6 +451,42 @@ def apply_custom_masks(text: str, custom_masks: list[dict]) -> str:
         if 0 <= start < end <= len(result):
             result = result[:start] + label + result[end:]
     return result
+
+
+def mask_text(
+    text: str,
+    selected_ids: list[int] | None,
+    custom_masks: list[dict] | None,
+) -> MaskingResult:
+    """
+    자동 감지(selected_ids로 필터링) + 사용자 직접 선택(custom_masks)을
+    원본 텍스트 기준으로 한 번에 마스킹한다.
+
+    주의: 자동 마스킹을 먼저 적용한 뒤 그 결과 문자열에 custom_masks의
+    start/end를 다시 적용하면 안 된다 — 자동 마스킹으로 치환된 라벨 때문에
+    뒤쪽 문자 위치가 이미 밀려서, 프론트엔드가 원본 텍스트 기준으로 계산해
+    보낸 custom_masks 좌표가 더 이상 맞지 않게 된다. 따라서 자동 감지 결과와
+    직접 선택 범위를 하나의 리스트로 합쳐 원본 텍스트에 대해 역순(오른쪽→왼쪽)
+    으로 한 번만 치환한다.
+    """
+    entities = detect_pii(text)
+    to_mask: list[PiiEntity] = (
+        list(entities) if selected_ids is None
+        else [e for e in entities if e.id in selected_ids]
+    )
+
+    if custom_masks:
+        next_id = -1
+        for m in custom_masks:
+            start, end = m.get("start", 0), m.get("end", 0)
+            if 0 <= start < end <= len(text):
+                to_mask.append(PiiEntity(
+                    id=next_id, type="CUSTOM", label=m.get("label", "<직접선택>"),
+                    start=start, end=end, original=text[start:end],
+                ))
+                next_id -= 1
+
+    return mask_pii_selective(text, to_mask, [e.id for e in to_mask])
 
 
 def mask_pii(text: str) -> MaskingResult:

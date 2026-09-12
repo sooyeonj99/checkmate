@@ -168,7 +168,7 @@ export default function DashboardPage() {
   const [expiryEditId, setExpiryEditId] = useState<number | null>(null)
   const [expiryDate, setExpiryDate] = useState('')
   const fetchExpiring = useCallback(async () => {
-    const token = localStorage.getItem('cm_token')
+    const token = sessionStorage.getItem('cm_token')
     if (!token) return
     try {
       const res = await fetch('/api/v1/contracts/expiring', { headers: { Authorization: `Bearer ${token}` } })
@@ -177,7 +177,7 @@ export default function DashboardPage() {
   }, [])
   const handleSetExpiry = async (savedId: number) => {
     if (!expiryDate) return
-    const token = localStorage.getItem('cm_token')
+    const token = sessionStorage.getItem('cm_token')
     await fetch(`/api/v1/contracts/saved/${savedId}/expiry`, {
       method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ expiry_date: expiryDate }),
@@ -198,7 +198,7 @@ export default function DashboardPage() {
   const [copiedLink, setCopiedLink] = useState('')
 
   const fetchTeamMembers = useCallback(async () => {
-    const token = localStorage.getItem('cm_token')
+    const token = sessionStorage.getItem('cm_token')
     if (!token) return
     try {
       const res = await fetch('/api/v1/team/members', { headers: { Authorization: `Bearer ${token}` } })
@@ -211,7 +211,7 @@ export default function DashboardPage() {
     if (!value) return
     setInviting(true)
     setCopiedLink('')
-    const token = localStorage.getItem('cm_token')
+    const token = sessionStorage.getItem('cm_token')
     try {
       if (inviteMethod === 'email') {
         const res = await fetch('/api/v1/team/invite', {
@@ -245,7 +245,7 @@ export default function DashboardPage() {
   }
   const handleRemoveMember = async (id: number) => {
     if (!confirm('이 팀원을 삭제할까요?')) return
-    const token = localStorage.getItem('cm_token')
+    const token = sessionStorage.getItem('cm_token')
     await fetch(`/api/v1/team/members/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } })
     fetchTeamMembers()
   }
@@ -254,7 +254,7 @@ export default function DashboardPage() {
   interface B2BStats { total_contracts: number; this_month: number; danger_count: number; warn_count: number; safe_count: number; team_members: number; contract_types: Record<string, number> }
   const [b2bStats, setB2bStats] = useState<B2BStats | null>(null)
   const fetchB2BStats = useCallback(async () => {
-    const token = localStorage.getItem('cm_token')
+    const token = sessionStorage.getItem('cm_token')
     if (!token) return
     try {
       const [savedRes, teamRes] = await Promise.all([
@@ -293,7 +293,7 @@ export default function DashboardPage() {
   const doSearch = useCallback(async (q: string) => {
     if (!q.trim()) { setSearchResults([]); return }
     setSearchLoading(true)
-    const token = localStorage.getItem('cm_token')
+    const token = sessionStorage.getItem('cm_token')
     try {
       const res = await fetch(`/api/v1/search/contracts?q=${encodeURIComponent(q)}&limit=10`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -321,7 +321,7 @@ export default function DashboardPage() {
   interface UserTemplateItem { id: number; name: string; content_type: string; file_ext: string | null; created_at: string }
   const [userTemplates, setUserTemplates] = useState<UserTemplateItem[]>([])
   const fetchUserTemplates = useCallback(async () => {
-    const token = localStorage.getItem('cm_token')
+    const token = sessionStorage.getItem('cm_token')
     if (!token) return
     try {
       const res = await fetch('/api/v1/templates/user', { headers: { Authorization: `Bearer ${token}` } })
@@ -331,7 +331,7 @@ export default function DashboardPage() {
 
   const deleteUserTemplate = async (id: number) => {
     if (!confirm('이 템플릿을 삭제할까요?')) return
-    const token = localStorage.getItem('cm_token')
+    const token = sessionStorage.getItem('cm_token')
     await fetch(`/api/v1/templates/user/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } })
     fetchUserTemplates()
   }
@@ -346,10 +346,10 @@ export default function DashboardPage() {
     start_date: '', end_date: '', cancellation_penalty: '', notes: '',
   })
 
-  const authHeader = () => ({ Authorization: `Bearer ${localStorage.getItem('cm_token')}` })
+  const authHeader = () => ({ Authorization: `Bearer ${sessionStorage.getItem('cm_token')}` })
 
   const fetchSubs = useCallback(async () => {
-    const token = localStorage.getItem('cm_token')
+    const token = sessionStorage.getItem('cm_token')
     if (!token) return
     try {
       const res = await fetch('/api/v1/subscriptions', { headers: { Authorization: `Bearer ${token}` } })
@@ -397,7 +397,7 @@ export default function DashboardPage() {
   }
 
   const fetchSaved = useCallback(async () => {
-    const token = localStorage.getItem('cm_token')
+    const token = sessionStorage.getItem('cm_token')
     if (!token) { setSavedLoading(false); return }
     try {
       const res = await fetch('/api/v1/contracts/saved', {
@@ -410,7 +410,7 @@ export default function DashboardPage() {
   }, [])
 
   const fetchSigningRecords = useCallback(async () => {
-    const token = localStorage.getItem('cm_token')
+    const token = sessionStorage.getItem('cm_token')
     if (!token) return
     const headers = { Authorization: `Bearer ${token}` }
     const [sentRes, recvRes] = await Promise.all([
@@ -429,7 +429,7 @@ export default function DashboardPage() {
   const handleDeleteSaved = useCallback(async (id: number) => {
     if (!confirm('이 분석 결과를 삭제할까요?')) return
     setDeletingId(id)
-    const token = localStorage.getItem('cm_token')
+    const token = sessionStorage.getItem('cm_token')
     try {
       await fetch(`/api/v1/contracts/saved/${id}`, {
         method: 'DELETE',
@@ -442,7 +442,7 @@ export default function DashboardPage() {
   }, [])
 
   const handleViewSaved = useCallback(async (item: SavedContractItem) => {
-    const token = localStorage.getItem('cm_token')
+    const token = sessionStorage.getItem('cm_token')
     const res = await fetch(`/api/v1/contracts/saved/${item.id}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -781,7 +781,7 @@ export default function DashboardPage() {
                           className="saved-view-btn"
                           style={{ background: 'rgba(37,99,235,0.1)', color: 'var(--accent)', border: '1px solid rgba(37,99,235,0.2)' }}
                           onClick={async () => {
-                            const token = localStorage.getItem('cm_token')
+                            const token = sessionStorage.getItem('cm_token')
                             const res = await fetch(`/api/v1/contracts/saved/${item.id}/report`, { headers: { Authorization: `Bearer ${token}` } })
                             if (res.ok) { const html = await res.text(); const w = window.open('', '_blank'); w?.document.write(html); w?.document.close() }
                           }}
@@ -893,7 +893,7 @@ export default function DashboardPage() {
                           <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                             <button
                               onClick={async () => {
-                                const token = localStorage.getItem('cm_token')
+                                const token = sessionStorage.getItem('cm_token')
                                 const res = await fetch(`/api/v1/signing/${r.id}/signed-doc`, {
                                   headers: { Authorization: `Bearer ${token}` },
                                 })
@@ -915,7 +915,7 @@ export default function DashboardPage() {
                             </button>
                             <button
                               onClick={async () => {
-                                const token = localStorage.getItem('cm_token')
+                                const token = sessionStorage.getItem('cm_token')
                                 const res = await fetch(`/api/v1/signing/${r.id}/certificate`, {
                                   headers: { Authorization: `Bearer ${token}` },
                                 })

@@ -16,7 +16,7 @@ export default function TeamAcceptPage() {
       navigate(`/auth?redirect=/team/accept?token=${token}`)
       return
     }
-    const authToken = localStorage.getItem('cm_token')
+    const authToken = sessionStorage.getItem('cm_token')
     fetch(`/api/v1/team/accept?token=${token}`, { headers: { Authorization: `Bearer ${authToken}` } })
       .then(async res => {
         if (res.ok) { setStatus('success'); setMsg('팀에 합류했습니다!') }

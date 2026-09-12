@@ -18,7 +18,7 @@ export default function StatsPage() {
   const [stats, setStats] = useState<StatsData | null>(null)
   const [months, setMonths] = useState(6)
   const [loading, setLoading] = useState(true)
-  const token = localStorage.getItem('cm_token')
+  const token = sessionStorage.getItem('cm_token')
 
   useEffect(() => {
     setLoading(true)

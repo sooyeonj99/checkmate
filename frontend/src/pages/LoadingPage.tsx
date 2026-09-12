@@ -191,22 +191,7 @@ function ProgressRing({ progress }: RingProps) {
           style={{ transition: 'stroke-dashoffset 0.6s cubic-bezier(0.4,0,0.2,1)' }}
         />
 
-        {/* Arc end dot */}
-        {progress > 2 && (
-          <circle
-            cx={130 + RING_R * Math.cos((progress / 100 * 360 - 90) * (Math.PI / 180))}
-            cy={130 + RING_R * Math.sin((progress / 100 * 360 - 90) * (Math.PI / 180))}
-            r="6"
-            fill="#06c3ff"
-            style={{ filter: 'drop-shadow(0 0 6px #06c3ff)' }}
-          />
-        )}
       </svg>
-
-      {/* Orbiting dots */}
-      <div className="loading-orbit-dot" />
-      <div className="loading-orbit-dot" />
-      <div className="loading-orbit-dot" />
 
       {/* Center glow */}
       <div className="loading-center-glow" />

@@ -32,6 +32,12 @@ interface ApiKeyItem {
   calls: number
 }
 
+interface TrendPoint {
+  date: string
+  signups: number
+  analyses: number
+}
+
 const ADMIN_EMAIL = 'ghdiehddl@gmail.com'
 
 export default function AdminPage() {
@@ -40,11 +46,13 @@ export default function AdminPage() {
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [users, setUsers] = useState<UserItem[]>([])
   const [keys, setKeys] = useState<ApiKeyItem[]>([])
+  const [trends, setTrends] = useState<TrendPoint[]>([])
+  const [trendDays, setTrendDays] = useState(30)
   const [newKeyName, setNewKeyName] = useState('')
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState('')
 
-  const token = localStorage.getItem('cm_token')
+  const token = sessionStorage.getItem('cm_token')
   const headers = { Authorization: `Bearer ${token}` }
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
@@ -64,10 +72,20 @@ export default function AdminPage() {
     if (res.ok) setKeys(await res.json())
   }, [])
 
+  const fetchTrends = useCallback(async (days: number) => {
+    const res = await fetch(`/api/v1/admin/trends?days=${days}`, { headers })
+    if (res.ok) setTrends(await res.json())
+  }, [])
+
   useEffect(() => {
     if (!user || user.email !== ADMIN_EMAIL) return
-    Promise.all([fetchStats(), fetchUsers(), fetchKeys()]).finally(() => setLoading(false))
-  }, [user, fetchStats, fetchUsers, fetchKeys])
+    Promise.all([fetchStats(), fetchUsers(), fetchKeys(), fetchTrends(trendDays)]).finally(() => setLoading(false))
+  }, [user, fetchStats, fetchUsers, fetchKeys, fetchTrends])
+
+  useEffect(() => {
+    if (!user || user.email !== ADMIN_EMAIL || loading) return
+    fetchTrends(trendDays)
+  }, [trendDays])
 
   const toggleUser = async (userId: number) => {
     await fetch(`/api/v1/admin/users/${userId}/toggle-active`, { method: 'PATCH', headers })
@@ -177,6 +195,60 @@ export default function AdminPage() {
                   </div>
                 </>
               ) : <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>분석된 계약서가 없습니다.</div>}
+            </div>
+
+            {/* 기간별 추이 (가입자 수 / 분석량) */}
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: '24px', marginTop: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>기간별 추이 (가입자 · 분석량)</div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {[7, 30, 90].map(d => (
+                    <button key={d} onClick={() => setTrendDays(d)} style={{
+                      fontSize: 11, padding: '4px 10px', borderRadius: 8, cursor: 'pointer',
+                      border: `1px solid ${trendDays === d ? 'var(--accent)' : 'var(--border)'}`,
+                      background: trendDays === d ? 'rgba(37,99,235,0.1)' : 'var(--bg)',
+                      color: trendDays === d ? 'var(--accent)' : 'var(--text-muted)',
+                      fontWeight: trendDays === d ? 700 : 400,
+                    }}>{d}일</button>
+                  ))}
+                </div>
+              </div>
+
+              {trends.length === 0 ? (
+                <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>데이터가 없습니다.</div>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', gap: 16, marginBottom: 14, fontSize: 12, color: 'var(--text-muted)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div style={{ width: 10, height: 10, borderRadius: 3, background: 'var(--accent)' }} />
+                      신규 가입 (총 {trends.reduce((a, t) => a + t.signups, 0)}명)
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div style={{ width: 10, height: 10, borderRadius: 3, background: '#f59e0b' }} />
+                      계약서 분석 (총 {trends.reduce((a, t) => a + t.analyses, 0)}건)
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: trendDays > 30 ? 1 : 3, height: 120, overflowX: 'auto' }}>
+                    {(() => {
+                      const maxVal = Math.max(1, ...trends.map(t => Math.max(t.signups, t.analyses)))
+                      return trends.map(t => (
+                        <div key={t.date} title={`${t.date} · 가입 ${t.signups}명 · 분석 ${t.analyses}건`}
+                          style={{ display: 'flex', alignItems: 'flex-end', gap: 1, height: '100%', flex: '1 0 auto', minWidth: trendDays > 30 ? 2 : 6 }}>
+                          <div style={{ flex: 1, height: `${(t.signups / maxVal) * 100}%`, minHeight: t.signups > 0 ? 2 : 0, background: 'var(--accent)', borderRadius: '2px 2px 0 0' }} />
+                          <div style={{ flex: 1, height: `${(t.analyses / maxVal) * 100}%`, minHeight: t.analyses > 0 ? 2 : 0, background: '#f59e0b', borderRadius: '2px 2px 0 0' }} />
+                        </div>
+                      ))
+                    })()}
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 11, color: 'var(--text-muted)' }}>
+                    <span>{trends[0]?.date}</span>
+                    <span>{trends[trends.length - 1]?.date}</span>
+                  </div>
+                </>
+              )}
+              <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--border)', fontSize: 12, color: 'var(--text-muted)' }}>
+                💡 매출 지표는 제공하지 않습니다 — 현재 결제/구독 과금 시스템이 연결되어 있지 않습니다.
+              </div>
             </div>
           </>
         ) : tab === 'users' ? (

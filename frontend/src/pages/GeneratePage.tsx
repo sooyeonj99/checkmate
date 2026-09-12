@@ -13,7 +13,7 @@ export default function GeneratePage() {
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
 
-  const token = localStorage.getItem('cm_token')
+  const token = sessionStorage.getItem('cm_token')
 
   const generate = async () => {
     if (!description.trim()) { setError('계약서 내용을 설명해 주세요.'); return }

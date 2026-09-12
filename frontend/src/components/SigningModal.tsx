@@ -34,7 +34,7 @@ export default function SigningModal({ contractId, contractName, contractHtml, d
     return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`
   }
 
-  const token = localStorage.getItem('cm_token')
+  const token = sessionStorage.getItem('cm_token')
 
   const handleSelfSign = async (e: React.FormEvent) => {
     e.preventDefault()

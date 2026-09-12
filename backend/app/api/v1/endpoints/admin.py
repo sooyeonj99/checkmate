@@ -1,6 +1,6 @@
 """어드민 패널 API — ghdiehddl@gmail.com 전용"""
 import secrets
-from datetime import datetime
+from datetime import date, datetime, timedelta
 
 from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel
@@ -112,6 +112,48 @@ def admin_stats(admin: User = Depends(_require_admin), db: Session = Depends(get
         warn_count=warn,
         safe_count=safe,
     )
+
+
+# ── 기간별 추이 (가입자 수 / 분석량) ─────────────────────────────────────────
+# 참고: 실제 결제/구독 시스템이 없어 매출 지표는 제공하지 않음
+# (Subscription 모델은 사용자가 본인의 구독을 기록하는 기능이며 플랫폼 매출과 무관)
+
+class TrendPoint(BaseModel):
+    date: str
+    signups: int
+    analyses: int
+
+
+@router.get("/trends", response_model=list[TrendPoint])
+def admin_trends(
+    days: int = 30,
+    admin: User = Depends(_require_admin),
+    db: Session = Depends(get_db),
+):
+    days = max(1, min(days, 365))
+    start_date = date.today() - timedelta(days=days - 1)
+    start_dt = datetime.combine(start_date, datetime.min.time())
+
+    signup_counts: dict[str, int] = {}
+    for (created_at,) in db.query(User.created_at).filter(User.created_at >= start_dt).all():
+        if created_at:
+            key = created_at.date().isoformat()
+            signup_counts[key] = signup_counts.get(key, 0) + 1
+
+    analysis_counts: dict[str, int] = {}
+    for (saved_at,) in db.query(SavedContract.saved_at).filter(SavedContract.saved_at >= start_dt).all():
+        if saved_at:
+            key = saved_at.date().isoformat()
+            analysis_counts[key] = analysis_counts.get(key, 0) + 1
+
+    return [
+        TrendPoint(
+            date=(start_date + timedelta(days=i)).isoformat(),
+            signups=signup_counts.get((start_date + timedelta(days=i)).isoformat(), 0),
+            analyses=analysis_counts.get((start_date + timedelta(days=i)).isoformat(), 0),
+        )
+        for i in range(days)
+    ]
 
 
 # ── 사용자 활성화/비활성화 ──────────────────────────────────────────────────

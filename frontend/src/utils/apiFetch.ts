@@ -6,7 +6,7 @@ export function registerLogout(fn: () => void) {
 }
 
 export async function apiFetch(input: RequestInfo, init: RequestInit = {}): Promise<Response> {
-  const token = localStorage.getItem('cm_token')
+  const token = sessionStorage.getItem('cm_token')
   const headers = new Headers(init.headers)
   if (token) headers.set('Authorization', `Bearer ${token}`)
 

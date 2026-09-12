@@ -363,7 +363,7 @@ async def analyze_with_gemini(
       2. 텍스트는 Presidio 마스킹 후 합산
       3. Gemini로 전체 분석 (이미지+텍스트 혼합 가능)
     """
-    from app.services.masking_service import mask_pii, detect_pii, mask_pii_selective, apply_custom_masks
+    from app.services.masking_service import mask_pii, mask_text
     from app.core.config import settings as _settings
 
     # 단일 파일도 리스트로 통일
@@ -392,14 +392,9 @@ async def analyze_with_gemini(
             if cached_text:
                 # OCR 캐시 사용 → 텍스트처럼 마스킹 처리
                 logger.info(f"OCR 캐시 사용: {Path(fp).name}")
-                if selected_ids is not None:
-                    _entities = detect_pii(cached_text)
-                    masking_result = mask_pii_selective(cached_text, _entities, selected_ids)
-                else:
-                    masking_result = mask_pii(cached_text)
-                masked = apply_custom_masks(masking_result.masked_text, custom_masks or [])
-                combined_texts.append(masked)
-                total_masked_count += masking_result.masked_count + (len(custom_masks) if custom_masks else 0)
+                masking_result = mask_text(cached_text, selected_ids, custom_masks)
+                combined_texts.append(masking_result.masked_text)
+                total_masked_count += masking_result.masked_count
                 logger.info(f"이미지 OCR 마스킹 완료 ({masking_result.masked_count}건)")
             else:
                 # 캐시 없음 → Gemini Vision 폴백
@@ -411,14 +406,9 @@ async def analyze_with_gemini(
             raw = _extract_pdf_text(fp)
             if not raw:
                 raise ValueError(f"PDF({Path(fp).name})에서 텍스트를 추출할 수 없습니다. 스캔 PDF는 JPG/PNG로 변환해 주세요.")
-            if selected_ids is not None:
-                entities = detect_pii(raw)
-                masking_result = mask_pii_selective(raw, entities, selected_ids)
-            else:
-                masking_result = mask_pii(raw)
+            masking_result = mask_text(raw, selected_ids, custom_masks)
             del raw
-            masked = apply_custom_masks(masking_result.masked_text, custom_masks or [])
-            combined_texts.append(masked)
+            combined_texts.append(masking_result.masked_text)
             total_masked_count += masking_result.masked_count
             logger.info(f"마스킹 완료 ({masking_result.masked_count}건)")
 
@@ -427,14 +417,9 @@ async def analyze_with_gemini(
             raw = _extract_docx_text(fp)
             if not raw:
                 raise ValueError(f"DOCX({Path(fp).name})에서 텍스트를 추출할 수 없습니다.")
-            if selected_ids is not None:
-                entities = detect_pii(raw)
-                masking_result = mask_pii_selective(raw, entities, selected_ids)
-            else:
-                masking_result = mask_pii(raw)
+            masking_result = mask_text(raw, selected_ids, custom_masks)
             del raw
-            masked = apply_custom_masks(masking_result.masked_text, custom_masks or [])
-            combined_texts.append(masked)
+            combined_texts.append(masking_result.masked_text)
             total_masked_count += masking_result.masked_count
             logger.info(f"마스킹 완료 ({masking_result.masked_count}건)")
 

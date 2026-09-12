@@ -35,7 +35,7 @@ export default function TemplateModal({ onClose, onDone }: Props) {
   const [sendError, setSendError] = useState('')
 
   useEffect(() => {
-    const token = localStorage.getItem('cm_token')
+    const token = sessionStorage.getItem('cm_token')
     fetch('/api/v1/templates', { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json())
       .then(data => { setTemplates(data); setLoading(false) })
@@ -45,7 +45,7 @@ export default function TemplateModal({ onClose, onDone }: Props) {
   const handleSelectTemplate = async (tpl: Template) => {
     setSelected(tpl)
     setValues({})
-    const token = localStorage.getItem('cm_token')
+    const token = sessionStorage.getItem('cm_token')
     try {
       const res = await fetch(`/api/v1/templates/${tpl.id}/content`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -79,7 +79,7 @@ export default function TemplateModal({ onClose, onDone }: Props) {
     setSending(true)
     setSendError('')
     try {
-      const token = localStorage.getItem('cm_token')
+      const token = sessionStorage.getItem('cm_token')
       const res = await fetch('/api/v1/templates/send', {
         method: 'POST',
         headers: {

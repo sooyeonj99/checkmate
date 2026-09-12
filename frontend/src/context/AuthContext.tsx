@@ -23,7 +23,7 @@ const INACTIVITY_MS = 30 * 60 * 1000   // 30분 미사용 시 자동 로그아�
 
 function readUser(): AuthUser | null {
   try {
-    const raw = localStorage.getItem(USER_KEY)
+    const raw = sessionStorage.getItem(USER_KEY)
     return raw ? JSON.parse(raw) : null
   } catch {
     return null
@@ -38,15 +38,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const lastActivityRef = useRef(Date.now())
 
   const logout = useCallback(() => {
-    localStorage.removeItem(TOKEN_KEY)
-    localStorage.removeItem(USER_KEY)
+    sessionStorage.removeItem(TOKEN_KEY)
+    sessionStorage.removeItem(USER_KEY)
     setUser(null)
     setSecondsLeft(INACTIVITY_MS / 1000)
   }, [])
 
   const login = useCallback((token: string, userData: AuthUser) => {
-    localStorage.setItem(TOKEN_KEY, token)
-    localStorage.setItem(USER_KEY, JSON.stringify(userData))
+    sessionStorage.setItem(TOKEN_KEY, token)
+    sessionStorage.setItem(USER_KEY, JSON.stringify(userData))
     lastActivityRef.current = Date.now()
     setSecondsLeft(INACTIVITY_MS / 1000)
     setUser(userData)

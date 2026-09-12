@@ -898,7 +898,7 @@ export default function ResultPage() {
     setSaving(true)
     setSaveError('')
     try {
-      const token = localStorage.getItem('cm_token')
+      const token = sessionStorage.getItem('cm_token')
       if (!token) {
         setSaveError('로그인이 필요합니다. 다시 로그인해주세요.')
         setSaving(false)
@@ -930,7 +930,7 @@ export default function ResultPage() {
   /* 저장 안 함 → 파일 삭제 후 대시보드 */
   const handleDiscard = useCallback(async () => {
     if (contractId) {
-      const token = localStorage.getItem('cm_token')
+      const token = sessionStorage.getItem('cm_token')
       fetch(`/api/v1/contracts/${contractId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
@@ -941,7 +941,7 @@ export default function ResultPage() {
 
   /* PDF: 저장된 리포트 HTML을 새 창에서 출력 */
   const handlePdf = useCallback(async () => {
-    const token = localStorage.getItem('cm_token')
+    const token = sessionStorage.getItem('cm_token')
     if (savedNumericId && token) {
       try {
         const res = await fetch(`/api/v1/contracts/saved/${savedNumericId}/report`, {
@@ -976,7 +976,7 @@ export default function ResultPage() {
         onSign={saveState === 'saved' ? async () => {
           if (savedNumericId) {
             try {
-              const tok = localStorage.getItem('cm_token')
+              const tok = sessionStorage.getItem('cm_token')
               const res = await fetch(`/api/v1/contracts/saved/${savedNumericId}/report`, {
                 headers: { Authorization: `Bearer ${tok}` },
               })
