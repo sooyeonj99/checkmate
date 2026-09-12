@@ -155,7 +155,6 @@ export default function TemplateEditorPage() {
 
           {step === 'upload' && (
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: '48px 40px', textAlign: 'center' }}>
-              <div style={{ fontSize: 56, marginBottom: 16 }}>📄</div>
               <h2 style={{ margin: '0 0 10px', fontSize: 20, color: 'var(--text)' }}>계약서 파일을 업로드하세요</h2>
               <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 32 }}>JPG, PNG, PDF 형식 지원 · 최대 10MB</p>
               <input ref={inputRef} type="file" accept=".jpg,.jpeg,.png,.pdf" style={{ display: 'none' }} onChange={handleFileChange} />
@@ -214,7 +213,7 @@ export default function TemplateEditorPage() {
                         fontSize: 11, fontWeight: 700, color: '#2563eb',
                         whiteSpace: 'nowrap', pointerEvents: 'none',
                       }}>
-                        ✍ 서명 위치
+                        서명 위치
                       </span>
                     </div>
                   )}

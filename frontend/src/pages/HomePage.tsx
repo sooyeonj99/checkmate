@@ -87,8 +87,7 @@ function PainPointSection() {
 /* ── Features ──────────────────────────────────────── */
 const FEATURES = [
   {
-    icon: '🔍',
-    color: 'rgba(239,68,68,0.15)',
+    color: 'var(--risk-high)',
     title: 'AI 위험 조항 분석',
     desc: '수백만 건의 계약 분쟁 데이터로 학습한 AI가 위험 / 주의 / 안전 3단계로 조항을 분류합니다.',
     badge: { text: 'AI 핵심 기능', color: 'var(--risk-high)', bg: 'var(--risk-high-bg)' },
@@ -111,8 +110,7 @@ const FEATURES = [
     ),
   },
   {
-    icon: '📊',
-    color: 'rgba(245,158,11,0.15)',
+    color: '#f59e0b',
     title: '위험도 점수 산출',
     desc: '계약 전체를 0~100점으로 수치화합니다. 점수가 높을수록 위험한 계약입니다.',
     badge: { text: '0~100점 수치화', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
@@ -134,32 +132,28 @@ const FEATURES = [
     ),
   },
   {
-    icon: '✏️',
-    color: 'rgba(16,185,129,0.15)',
+    color: '#10b981',
     title: '조항별 수정 제안',
     desc: '위험 조항마다 법률 전문가 수준의 수정 문구를 즉시 생성합니다. 협상 시 바로 활용 가능합니다.',
     badge: { text: '즉시 적용 가능', color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
     demo: null,
   },
   {
-    icon: '📁',
-    color: 'rgba(79,142,247,0.15)',
+    color: 'var(--accent)',
     title: '계약 이력 대시보드',
     desc: '분석한 모든 계약서를 대시보드에서 관리합니다. 만료 임박 알림, 구독·렌탈 현황도 한눈에 확인.',
     badge: { text: '반복 사용 핵심', color: 'var(--accent)', bg: 'rgba(37,99,235,0.08)' },
     demo: null,
   },
   {
-    icon: '🔒',
-    color: 'rgba(139,92,246,0.15)',
+    color: '#8b5cf6',
     title: '구독·렌탈 비용 관리',
     desc: '이용 중인 구독·렌탈 계약의 월 요금, 총 납부액, 해지 위약금을 자동으로 계산합니다.',
     badge: { text: '위약금 즉시 산출', color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)' },
     demo: null,
   },
   {
-    icon: '📋',
-    color: 'rgba(245,158,11,0.15)',
+    color: '#f59e0b',
     title: '분석 리포트 출력',
     desc: '조항별 위험도, 점수, 수정 제안을 정리한 리포트를 화면에서 바로 확인하고 활용하세요.',
     badge: { text: '공유 가능', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
@@ -185,7 +179,7 @@ function FeaturesSection() {
         <div className="features-grid">
           {FEATURES.map((f) => (
             <div key={f.title} className="feature-card">
-              <div className="feature-icon" style={{ background: f.color }}>{f.icon}</div>
+              <div className="feature-accent" style={{ background: f.color }} />
               <h3>{f.title}</h3>
               <p>{f.desc}</p>
               {f.badge && (
@@ -248,7 +242,6 @@ function HowItWorksSection() {
         <div className="report-preview">
           <div className="report-preview-header">
             <div className="report-title-group">
-              <span className="report-icon">📄</span>
               <div>
                 <div className="report-file-name">프리랜서_용역계약서.pdf</div>
                 <div className="report-file-type">분석 완료 · 2026.06.16</div>
@@ -259,7 +252,7 @@ function HowItWorksSection() {
                 <span className="score-value">73</span>
               </div>
               <div className="score-label-group">
-                <div className="score-label">⚠ 위험</div>
+                <div className="score-label">위험</div>
                 <div className="score-sub">위험도 73점</div>
               </div>
             </div>
@@ -299,7 +292,7 @@ function HowItWorksSection() {
           </div>
 
           <div className="report-suggestion">
-            <strong>✨ AI 수정 제안 · 제11조</strong>
+            <strong>AI 수정 제안 · 제11조</strong>
             "본 계약에 따라 제작된 결과물의 저작재산권은 잔금 지급 완료 시 발주자에게 이전하며, 수급인의 저작인격권은 침해되지 아니한다."
           </div>
         </div>
@@ -326,13 +319,12 @@ function SubscriptionSection() {
             </p>
             <div className="sub-mgmt-items">
               {[
-                { icon: '📅', title: '이용 기간 추적', desc: '계약 시작부터 오늘까지 정확한 이용 기간' },
-                { icon: '⏱️', title: '잔여 기간 확인', desc: '계약 종료까지 남은 일수 실시간 표시' },
-                { icon: '💰', title: '누적 납부 금액', desc: '지금까지 지불한 총액을 자동 계산' },
-                { icon: '🚫', title: '중도해지 위약금', desc: '지금 해지 시 발생하는 위약금 즉시 산출' },
+                { title: '이용 기간 추적', desc: '계약 시작부터 오늘까지 정확한 이용 기간' },
+                { title: '잔여 기간 확인', desc: '계약 종료까지 남은 일수 실시간 표시' },
+                { title: '누적 납부 금액', desc: '지금까지 지불한 총액을 자동 계산' },
+                { title: '중도해지 위약금', desc: '지금 해지 시 발생하는 위약금 즉시 산출' },
               ].map((item) => (
                 <div key={item.title} className="sub-mgmt-item">
-                  <span className="sub-mgmt-item-icon">{item.icon}</span>
                   <div>
                     <div className="sub-mgmt-item-title">{item.title}</div>
                     <div className="sub-mgmt-item-desc">{item.desc}</div>
@@ -345,12 +337,11 @@ function SubscriptionSection() {
           <div className="sub-mgmt-right">
             <div className="sub-mock-card">
               <div className="sub-mock-header">
-                <span style={{ fontSize: 20 }}>🔒</span>
                 <div>
                   <div className="sub-mock-name">정수기 렌탈 서비스</div>
                   <div className="sub-mock-type">렌탈·약정계약 · 10년</div>
                 </div>
-                <span className="dash-status-badge danger" style={{ marginLeft: 'auto' }}>⚠ 위험</span>
+                <span className="dash-status-badge danger" style={{ marginLeft: 'auto' }}>위험</span>
               </div>
               <div className="sub-mock-metrics">
                 <div className="sub-mock-metric">
@@ -372,11 +363,11 @@ function SubscriptionSection() {
               </div>
               <div className="sub-mock-totals">
                 <div className="sub-mock-total-row">
-                  <span className="sub-mock-total-label">💰 총 납부 금액</span>
+                  <span className="sub-mock-total-label">총 납부 금액</span>
                   <span className="sub-mock-total-value">2,940,000원</span>
                 </div>
                 <div className="sub-mock-total-row penalty">
-                  <span className="sub-mock-total-label">🚫 지금 해지 시 위약금</span>
+                  <span className="sub-mock-total-label">지금 해지 시 위약금</span>
                   <span className="sub-mock-total-value" style={{ color: 'var(--risk-high)' }}>1,260,000원</span>
                 </div>
               </div>
@@ -416,7 +407,7 @@ function CompetitionSection() {
             <thead>
               <tr>
                 <th>항목</th>
-                <th className="comp-us">✅ RespectCheck</th>
+                <th className="comp-us">RespectCheck</th>
                 <th>법률 사무소</th>
                 <th>유사 앱</th>
               </tr>
@@ -436,13 +427,12 @@ function CompetitionSection() {
 
         <div className="comp-diff-grid">
           {[
-            { icon: '⚡', title: '속도', desc: '법률 사무소 대비 100배 빠른 30초 분석' },
-            { icon: '💸', title: '비용', desc: '변호사 검토비 150만원 → 월 9,900원 구독' },
-            { icon: '🔄', title: '반복 사용', desc: '계약 대시보드로 매월 돌아오는 구조' },
-            { icon: '🏢', title: 'B2B 확장', desc: '개인 → 소상공인 → 기업 SaaS로 성장' },
+            { title: '속도', desc: '법률 사무소 대비 100배 빠른 30초 분석' },
+            { title: '비용', desc: '변호사 검토비 150만원 → 월 9,900원 구독' },
+            { title: '반복 사용', desc: '계약 대시보드로 매월 돌아오는 구조' },
+            { title: 'B2B 확장', desc: '개인 → 소상공인 → 기업 SaaS로 성장' },
           ].map((d) => (
             <div key={d.title} className="comp-diff-card">
-              <div className="comp-diff-icon">{d.icon}</div>
               <div className="comp-diff-title">{d.title}</div>
               <div className="comp-diff-desc">{d.desc}</div>
             </div>
@@ -455,11 +445,11 @@ function CompetitionSection() {
 
 /* ── Targets ───────────────────────────────────────── */
 const TARGETS = [
-  { emoji: '💻', title: '프리랜서', desc: '용역·외주 계약의 대금, IP 귀속 조항 분석', concern: '저작권 분쟁', pay: '계약 1건당 수입의 10~30% 손실 방지' },
-  { emoji: '👷', title: '직장인', desc: '근로계약서의 포괄임금, 경업금지 조항 검토', concern: '임금 체불', pay: '부당 조항 협상 근거 확보' },
-  { emoji: '🏪', title: '소상공인', desc: '가맹·입점·공급 계약의 불공정 조항 탐지', concern: '불공정 계약', pay: '법무팀 없이 전문 수준 검토' },
-  { emoji: '📱', title: '구독 이용자', desc: '구독·렌탈 계약 이용 현황과 위약금 관리', concern: '숨은 위약금', pay: '해지 전 위약금 미리 파악' },
-  { emoji: '🎓', title: '사회초년생', desc: '첫 계약서를 위한 쉬운 AI 해설과 수정 제안', concern: '계약 미숙', pay: '변호사 비용 없이 안전한 계약' },
+  { title: '프리랜서', desc: '용역·외주 계약의 대금, IP 귀속 조항 분석', concern: '저작권 분쟁', pay: '계약 1건당 수입의 10~30% 손실 방지' },
+  { title: '직장인', desc: '근로계약서의 포괄임금, 경업금지 조항 검토', concern: '임금 체불', pay: '부당 조항 협상 근거 확보' },
+  { title: '소상공인', desc: '가맹·입점·공급 계약의 불공정 조항 탐지', concern: '불공정 계약', pay: '법무팀 없이 전문 수준 검토' },
+  { title: '구독 이용자', desc: '구독·렌탈 계약 이용 현황과 위약금 관리', concern: '숨은 위약금', pay: '해지 전 위약금 미리 파악' },
+  { title: '사회초년생', desc: '첫 계약서를 위한 쉬운 AI 해설과 수정 제안', concern: '계약 미숙', pay: '변호사 비용 없이 안전한 계약' },
 ]
 
 function TargetsSection() {
@@ -480,7 +470,6 @@ function TargetsSection() {
         <div className="target-grid">
           {TARGETS.map((t) => (
             <div key={t.title} className="target-card">
-              <div className="target-emoji">{t.emoji}</div>
               <h3>{t.title}</h3>
               <p>{t.desc}</p>
               <div className="target-pay">{t.pay}</div>
@@ -543,7 +532,7 @@ function Footer() {
             <li><Link to="/sitemap">사이트맵</Link></li>
           </ul>
 
-          <p className="footer-copy">© 2026 RespectCheck. All rights reserved.</p>
+          <p className="footer-copy">2026 RespectCheck. All rights reserved.</p>
         </div>
       </div>
     </footer>

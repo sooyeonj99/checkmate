@@ -79,7 +79,10 @@ export default function Navbar() {
                 cursor: 'default',
               }}
             >
-              <span style={{ fontSize: 11 }}>{isDanger ? '🔴' : isWarning ? '🟠' : '🔒'}</span>
+              <span style={{
+                width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+                background: isDanger ? '#ef4444' : isWarning ? '#f59e0b' : 'var(--text-muted)',
+              }} />
               <span style={{
                 fontSize: 12, fontWeight: 700,
                 fontVariantNumeric: 'tabular-nums',
@@ -104,7 +107,7 @@ export default function Navbar() {
                     <div className="navbar-dropdown-name">{user!.username}</div>
                     <div className="navbar-dropdown-email">{user!.email}</div>
                     <div style={{ marginTop: 6, fontSize: 11, color: isDanger ? '#ef4444' : isWarning ? '#f59e0b' : 'var(--text-muted)' }}>
-                      {isDanger ? '⚠ 곧 자동 로그아웃됩니다' : isWarning ? `⏳ ${formatTime(secondsLeft)} 후 자동 로그아웃` : `🔒 ${formatTime(secondsLeft)} 후 자동 로그아웃`}
+                      {isDanger ? '곧 자동 로그아웃됩니다' : isWarning ? `${formatTime(secondsLeft)} 후 자동 로그아웃` : `${formatTime(secondsLeft)} 후 자동 로그아웃`}
                     </div>
                   </div>
                   <div className="navbar-dropdown-divider" />

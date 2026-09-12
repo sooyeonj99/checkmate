@@ -127,7 +127,7 @@ export default function TemplateModal({ onClose, onDone }: Props) {
         }}>
           <div>
             <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: 'var(--text)' }}>
-              📑 계약서 템플릿 발송
+              계약서 템플릿 발송
             </h2>
             <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--text-muted)' }}>
               {step === 'select' && '템플릿을 선택하세요'}
@@ -189,9 +189,8 @@ export default function TemplateModal({ onClose, onDone }: Props) {
                       onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--accent)')}
                       onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}
                     >
-                      <span style={{ fontSize: 32, flexShrink: 0 }}>{tpl.icon}</span>
                       <div>
-                        <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text)', marginBottom: 3 }}>
+                        <div style={{ fontWeight: 800, fontSize: 19, color: 'var(--text)', marginBottom: 4 }}>
                           {tpl.name}
                         </div>
                         <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{tpl.description}</div>
@@ -260,7 +259,7 @@ export default function TemplateModal({ onClose, onDone }: Props) {
                 borderRadius: 12, padding: '14px 18px', fontSize: 13,
                 color: 'var(--accent)', fontWeight: 600,
               }}>
-                📄 {selected?.name} — 계약서가 준비되었습니다.<br/>
+                {selected?.name} — 계약서가 준비되었습니다.<br/>
                 <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>
                   수신자에게 서명 요청 이메일이 발송됩니다. (유효기간 14일)
                 </span>
@@ -306,7 +305,7 @@ export default function TemplateModal({ onClose, onDone }: Props) {
                   borderRadius: 10, padding: '12px 16px', fontSize: 13,
                   color: '#dc2626', fontWeight: 600,
                 }}>
-                  ⚠ {sendError}
+                  {sendError}
                 </div>
               )}
             </div>
@@ -384,7 +383,7 @@ export default function TemplateModal({ onClose, onDone }: Props) {
                 cursor: recipientEmail ? 'pointer' : 'not-allowed',
               }}
             >
-              {sending ? '발송 중...' : '✉ 계약서 발송하기'}
+              {sending ? '발송 중...' : '계약서 발송하기'}
             </button>
           )}
         </div>

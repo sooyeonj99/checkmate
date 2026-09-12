@@ -25,10 +25,9 @@ export default function LawTrackerPage() {
         {/* 헤더 */}
         <div style={{ marginBottom: 40 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-            <span style={{ fontSize: 32 }}>⚖️</span>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <h1 style={{ fontSize: 28, fontWeight: 900, margin: 0 }}>법령 변경 추적</h1>
+                <h1 style={{ fontSize: 32, fontWeight: 900, margin: 0 }}>법령 변경 추적</h1>
                 <span style={{
                   fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20,
                   background: 'rgba(245,158,11,0.15)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.3)',
@@ -46,7 +45,6 @@ export default function LawTrackerPage() {
             borderRadius: 14, padding: '18px 22px',
             display: 'flex', alignItems: 'flex-start', gap: 14,
           }}>
-            <span style={{ fontSize: 22, flexShrink: 0 }}>🔔</span>
             <div>
               <div style={{ fontWeight: 700, fontSize: 14, color: '#2563eb', marginBottom: 6 }}>국가법령정보공단 API 연동 예정</div>
               <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
@@ -133,20 +131,17 @@ export default function LawTrackerPage() {
 
         {/* 예정 기능 */}
         <div style={{ marginTop: 40, background: 'var(--bg-card)', borderRadius: 16, border: '1px solid var(--border)', padding: 28 }}>
-          <h3 style={{ fontSize: 16, fontWeight: 800, marginBottom: 18 }}>📋 정식 오픈 시 제공 기능</h3>
+          <h3 style={{ fontSize: 16, fontWeight: 800, marginBottom: 18 }}>정식 오픈 시 제공 기능</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
             {[
-              { icon: '🔔', title: '실시간 알림', desc: '분석한 계약서와 관련된 법령이 개정되면 즉시 알림' },
-              { icon: '📊', title: '영향도 분석', desc: '내 계약서에 개정 법령이 미치는 영향을 AI가 분석' },
-              { icon: '📅', title: '시행일 추적', desc: '개정 예정 법령의 시행일을 미리 캘린더에 등록' },
-              { icon: '🔍', title: '법령 검색', desc: '계약 유형별 관련 법령 전문 검색 및 조항 북마크' },
+              { title: '실시간 알림', desc: '분석한 계약서와 관련된 법령이 개정되면 즉시 알림' },
+              { title: '영향도 분석', desc: '내 계약서에 개정 법령이 미치는 영향을 AI가 분석' },
+              { title: '시행일 추적', desc: '개정 예정 법령의 시행일을 미리 캘린더에 등록' },
+              { title: '법령 검색', desc: '계약 유형별 관련 법령 전문 검색 및 조항 북마크' },
             ].map(f => (
-              <div key={f.title} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                <span style={{ fontSize: 22 }}>{f.icon}</span>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{f.title}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>{f.desc}</div>
-                </div>
+              <div key={f.title}>
+                <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 4 }}>{f.title}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>{f.desc}</div>
               </div>
             ))}
           </div>

@@ -111,7 +111,6 @@ export default function BulkPage() {
             background: dragOver ? 'rgba(37,99,235,0.04)' : 'var(--bg-card)',
             transition: 'all 0.2s', marginBottom: 24,
           }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>📁</div>
           <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>
             계약서 파일을 드래그하거나 클릭해 선택하세요
           </div>
@@ -147,9 +146,10 @@ export default function BulkPage() {
                   background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 20px',
                   display: 'flex', alignItems: 'center', gap: 16,
                 }}>
-                  <div style={{ fontSize: 24, flexShrink: 0 }}>
-                    {item.status === 'done' ? '✅' : item.status === 'error' ? '❌' : item.status === 'analyzing' ? '⏳' : '📄'}
-                  </div>
+                  <div style={{
+                    width: 10, height: 10, borderRadius: '50%', flexShrink: 0,
+                    background: item.status === 'done' ? '#22c55e' : item.status === 'error' ? '#ef4444' : item.status === 'analyzing' ? '#3b82f6' : 'var(--text-muted)',
+                  }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {item.filename}

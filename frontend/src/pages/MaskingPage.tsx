@@ -248,7 +248,6 @@ function EntityList({
         background: 'var(--bg-card)', borderRadius: 14,
         border: '1px solid var(--border)',
       }}>
-        <div style={{ fontSize: 32, marginBottom: 12 }}>✅</div>
         <p style={{ color: 'var(--text)', fontWeight: 700, marginBottom: 6 }}>
           개인정보가 감지되지 않았습니다
         </p>
@@ -504,7 +503,7 @@ export default function MaskingPage() {
             AI가 감지한 개인정보를 확인하고, 마스킹할 항목을 직접 선택하세요.
             체크된 항목만 <strong style={{ color: 'var(--accent)' }}>&lt;레이블&gt;</strong>로 가려진 채 분석됩니다.
             <span style={{ marginLeft: 8, color: '#7c3aed', fontWeight: 600 }}>
-              💡 텍스트를 드래그하면 원하는 부분을 직접 마스킹할 수 있습니다
+              텍스트를 드래그하면 원하는 부분을 직접 마스킹할 수 있습니다
             </span>
           </p>
           {filename && (
@@ -514,7 +513,7 @@ export default function MaskingPage() {
               background: 'rgba(37,99,235,0.08)', border: '1px solid rgba(37,99,235,0.2)',
               borderRadius: 20, fontSize: 12, color: 'var(--accent)',
             }}>
-              📄 {filename}
+              {filename}
             </div>
           )}
         </div>
@@ -541,7 +540,7 @@ export default function MaskingPage() {
             border: '1px solid rgba(245,158,11,0.3)', borderRadius: 12,
             color: '#f59e0b', marginBottom: 20,
           }}>
-            ⚠ {error}
+            {error}
           </div>
         ) : imageOnly ? (
           <div style={{
@@ -549,7 +548,6 @@ export default function MaskingPage() {
             background: 'var(--bg-card)', borderRadius: 16,
             border: '1px solid var(--border)',
           }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🖼️</div>
             <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
               이미지 텍스트 추출 불가
             </h2>
@@ -558,7 +556,7 @@ export default function MaskingPage() {
               AI가 이미지를 직접 보면서 분석 및 개인정보 처리를 함께 진행합니다.
             </p>
             <p style={{ color: 'var(--text-muted)', fontSize: 12, marginBottom: 24 }}>
-              💡 PDF나 DOCX 파일로 변환하면 마스킹 검토 기능을 사용할 수 있습니다
+              PDF나 DOCX 파일로 변환하면 마스킹 검토 기능을 사용할 수 있습니다
             </p>
             <button onClick={handleStart} style={{
               background: 'var(--accent)', color: '#fff', border: 'none',
@@ -579,7 +577,6 @@ export default function MaskingPage() {
               color: '#06c3ff',
               display: 'flex', alignItems: 'flex-start', gap: 10,
             }}>
-              <span style={{ fontSize: 18, flexShrink: 0 }}>📸</span>
               <div>
                 <strong>이미지에서 AI OCR로 텍스트를 추출했습니다.</strong><br/>
                 <span style={{ opacity: 0.85 }}>
@@ -599,7 +596,6 @@ export default function MaskingPage() {
               padding: '20px 24px',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-                <span style={{ fontSize: 22 }}>✍️</span>
                 <div>
                   <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--text)' }}>
                     OCR이 읽지 못한 빈칸을 채워주세요
@@ -657,7 +653,7 @@ export default function MaskingPage() {
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               }}>
                 <span style={{ fontWeight: 700, fontSize: 14 }}>
-                  {fromOcr ? '📸 OCR 추출 텍스트' : '계약서 미리보기'}
+                  {fromOcr ? 'OCR 추출 텍스트' : '계약서 미리보기'}
                 </span>
                 <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                   강조된 텍스트 클릭 선택/해제 · <span style={{ color: '#7c3aed' }}>드래그로 직접 선택</span>

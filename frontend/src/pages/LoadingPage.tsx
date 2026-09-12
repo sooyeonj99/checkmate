@@ -446,7 +446,7 @@ export default function LoadingPage() {
           alignItems: 'center',
           gap: 8,
         }}>
-          🧪 베타 테스트 모드 · 샘플 분석 결과를 표시합니다
+          베타 테스트 모드 · 샘플 분석 결과를 표시합니다
         </div>
       )}
     </div>

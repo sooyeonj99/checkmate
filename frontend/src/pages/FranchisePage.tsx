@@ -260,7 +260,6 @@ export default function FranchisePage() {
           <div className="franchise-contracts-panel">
             {!selectedStore ? (
               <div className="fr-empty fr-empty-contracts">
-                <p style={{ fontSize: 32 }}>📋</p>
                 <p>가맹점을 선택하면<br/>계약서 목록이 표시됩니다.</p>
               </div>
             ) : (
@@ -311,7 +310,6 @@ export default function FranchisePage() {
             </div>
             {inviteDone ? (
               <div style={{ textAlign: 'center', padding: '24px 0' }}>
-                <div style={{ fontSize: 48, marginBottom: 12 }}>📧</div>
                 <p style={{ fontWeight: 700, marginBottom: 8 }}>초대 이메일을 발송했습니다!</p>
                 <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>가맹점주가 이메일의 링크를 클릭하면 자동으로 연결됩니다.</p>
                 <button className="fr-btn fr-btn-primary" onClick={() => setShowInviteModal(false)}>확인</button>

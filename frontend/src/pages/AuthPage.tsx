@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import EyeIcon from '../components/EyeIcon'
 
 type FieldStatus = 'idle' | 'checking' | 'available' | 'taken'
 
@@ -51,7 +52,12 @@ export default function AuthPage() {
       <div className="auth-grid" />
 
       <Link to="/" className="auth-logo">
-        <div className="auth-logo-icon">♟</div>
+        <div className="auth-logo-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2L3 7V12C3 16.97 6.84 21.61 12 23C17.16 21.61 21 16.97 21 12V7L12 2Z" fill="white" fillOpacity="0.95" />
+            <path d="M9 12L11 14L15 10" stroke="#1e3a8a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
         <span>리스펙체크</span>
       </Link>
 
@@ -77,7 +83,6 @@ export default function AuthPage() {
             background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)',
             color: '#b45309', fontSize: 13, fontWeight: 600,
           }}>
-            <span style={{ fontSize: 18 }}>🔒</span>
             <span>
               {reason === 'idle'
                 ? '30분 동안 활동이 없어 자동으로 로그아웃되었습니다.'
@@ -216,7 +221,7 @@ function LoginForm({ onSuccess, onFindId, onForgotPassword }: {
             placeholder="비밀번호를 입력하세요" value={password}
             onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
           <button type="button" className="auth-pw-toggle" onClick={() => setShowPw((v) => !v)}>
-            {showPw ? '🙈' : '👁'}
+            <EyeIcon open={!showPw} />
           </button>
         </div>
       </div>
@@ -439,25 +444,24 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
         <label className="auth-label">계정 유형</label>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 4 }}>
           {([
-            { key: 'personal',    icon: '👤', title: '개인 사용자',   desc: '계약서 분석 · AI 챗봇' },
-            { key: 'enterprise',  icon: '🏢', title: '기업/법인',     desc: '팀 관리 · 대량 분석' },
-            { key: 'franchisor',  icon: '🏪', title: '프랜차이즈 본사', desc: '가맹점 계약 통합 관리' },
-            { key: 'franchisee',  icon: '🛒', title: '가맹점주',      desc: '본사 연동 · 계약 분석' },
-          ] as const).map(({ key, icon, title, desc }) => (
+            { key: 'personal',    title: '개인 사용자',   desc: '계약서 분석 · AI 챗봇' },
+            { key: 'enterprise',  title: '기업/법인',     desc: '팀 관리 · 대량 분석' },
+            { key: 'franchisor',  title: '프랜차이즈 본사', desc: '가맹점 계약 통합 관리' },
+            { key: 'franchisee',  title: '가맹점주',      desc: '본사 연동 · 계약 분석' },
+          ] as const).map(({ key, title, desc }) => (
             <button
               key={key}
               type="button"
               onClick={() => setUserType(key)}
               style={{
-                padding: '12px 8px', borderRadius: 10,
+                padding: '14px 8px', borderRadius: 10,
                 border: `1.5px solid ${userType === key ? 'var(--accent)' : 'var(--border)'}`,
                 background: userType === key ? 'rgba(37,99,235,0.06)' : 'var(--bg-input)',
                 cursor: 'pointer', textAlign: 'center',
               }}
             >
-              <div style={{ fontSize: 22, marginBottom: 4 }}>{icon}</div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: userType === key ? 'var(--accent)' : 'var(--text-primary)' }}>{title}</div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>{desc}</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: userType === key ? 'var(--accent)' : 'var(--text-primary)' }}>{title}</div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3 }}>{desc}</div>
             </button>
           ))}
         </div>
@@ -491,7 +495,7 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
             placeholder="8자 이상 입력하세요" value={password}
             onChange={(e) => setPassword(e.target.value)} required minLength={8} autoComplete="new-password" />
           <button type="button" className="auth-pw-toggle" onClick={() => setShowPw((v) => !v)}>
-            {showPw ? '🙈' : '👁'}
+            <EyeIcon open={!showPw} />
           </button>
         </div>
       </div>
@@ -504,7 +508,7 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
             placeholder="비밀번호를 다시 입력하세요" value={confirm}
             onChange={(e) => setConfirm(e.target.value)} required autoComplete="new-password" />
           <button type="button" className="auth-pw-toggle" onClick={() => setShowConfirm((v) => !v)}>
-            {showConfirm ? '🙈' : '👁'}
+            <EyeIcon open={!showConfirm} />
           </button>
         </div>
         {confirm && !pwMatch && <p className="auth-field-error">비밀번호가 일치하지 않습니다.</p>}
@@ -546,10 +550,10 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
               active: '✓',
               checksum_only: '✓',
               closed: '✗',
-              suspended: '⚠',
+              suspended: '',
               invalid_checksum: '✗',
               not_found: '✗',
-              api_error: '⚠',
+              api_error: '',
               unknown: '?',
             }
             const color = colorMap[bizStatus.status] ?? '#6b7280'

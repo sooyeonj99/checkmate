@@ -63,7 +63,7 @@ export default function PrivacyPage() {
             </ul>
 
             <div className="legal-highlight">
-              <strong>📌 계약서 원본 파일은 수집하지 않습니다.</strong><br />
+              <strong>계약서 원본 파일은 수집하지 않습니다.</strong><br />
               업로드된 계약서 파일은 AI 분석 과정에만 일시적으로 사용되며, 분석 완료 즉시 서버에서 영구 삭제됩니다.
               계약서 내용은 저장·공유·AI 학습에 사용되지 않습니다.
             </div>

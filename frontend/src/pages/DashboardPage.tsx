@@ -86,13 +86,11 @@ interface SigningRecordOut {
 
 /* ── Sub-components ─────────────────────────────────── */
 function SummaryCard({
-  icon,
   label,
   value,
   sub,
   accent,
 }: {
-  icon: string
   label: string
   value: string | number
   sub?: string
@@ -106,9 +104,6 @@ function SummaryCard({
 
   return (
     <div className="dash-summary-card">
-      <div className="dash-summary-icon" style={{ color: accentColor }}>
-        {icon}
-      </div>
       <div className="dash-summary-value" style={{ color: accentColor }}>
         {value}
       </div>
@@ -548,7 +543,7 @@ export default function DashboardPage() {
                     marginTop: 4, fontSize: 11, fontWeight: 700,
                     color: user?.user_type === 'enterprise' ? 'var(--accent)' : '#2e8b2e',
                   }}>
-                    {user?.user_type === 'enterprise' ? '🏢 기업/법인' : '👤 개인 사용자'}
+                    {user?.user_type === 'enterprise' ? '기업/법인' : '개인 사용자'}
                   </div>
                 </div>
                 <div className="navbar-dropdown-divider" />
@@ -587,7 +582,7 @@ export default function DashboardPage() {
               background: 'rgba(37,99,235,0.06)', border: '1.5px solid rgba(37,99,235,0.2)',
             }}>
               <div>
-                <div style={{ fontWeight: 700, color: 'var(--accent)', marginBottom: 2 }}>🏪 프랜차이즈 본사 계정</div>
+                <div style={{ fontWeight: 700, color: 'var(--accent)', marginBottom: 2 }}>프랜차이즈 본사 계정</div>
                 <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>가맹점 계약서 현황을 통합 관리하세요</div>
               </div>
               <button className="btn-primary" style={{ padding: '10px 18px', fontSize: 13 }} onClick={() => navigate('/franchise')}>
@@ -601,7 +596,6 @@ export default function DashboardPage() {
               padding: '12px 20px', borderRadius: 14, marginBottom: 20,
               background: 'rgba(22,163,74,0.06)', border: '1.5px solid rgba(22,163,74,0.2)',
             }}>
-              <span style={{ fontSize: 20 }}>🛒</span>
               <div style={{ fontSize: 13, color: '#15803d', fontWeight: 600 }}>가맹점주 계정 — 분석한 계약서는 본사에서도 확인할 수 있습니다.</div>
             </div>
           )}
@@ -618,7 +612,7 @@ export default function DashboardPage() {
                   color: user?.user_type === 'enterprise' ? 'var(--accent)' : '#2e8b2e',
                   border: `1px solid ${user?.user_type === 'enterprise' ? 'rgba(37,99,235,0.25)' : 'rgba(46,139,46,0.25)'}`,
                 }}>
-                  {user?.user_type === 'enterprise' ? '🏢 기업/법인' : user?.user_type === 'franchisor' ? '🏪 프랜차이즈 본사' : user?.user_type === 'franchisee' ? '🛒 가맹점주' : '👤 개인'}
+                  {user?.user_type === 'enterprise' ? '기업/법인' : user?.user_type === 'franchisor' ? '프랜차이즈 본사' : user?.user_type === 'franchisee' ? '가맹점주' : '개인'}
                 </span>
               </div>
               <p className="dash-subtitle">분석된 계약서를 한눈에 관리하세요</p>
@@ -674,18 +668,17 @@ export default function DashboardPage() {
           {/* ── 퀵 액션 ── */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 24 }}>
             {[
-              { icon: '📊', label: '분석 통계', to: '/stats', color: '#8b5cf6' },
-              { icon: '⚖️', label: '계약서 비교', to: '/compare', color: '#3b82f6' },
-              { icon: '✨', label: 'AI 생성기', to: '/generate', color: '#f59e0b' },
-              { icon: '📦', label: '일괄 분석', to: '/bulk', color: '#10b981' },
-              ...(user?.email === 'ghdiehddl@gmail.com' ? [{ icon: '🛡️', label: '어드민', to: '/admin', color: '#ef4444' }] : []),
+              { label: '분석 통계', to: '/stats', color: '#8b5cf6' },
+              { label: '계약서 비교', to: '/compare', color: '#3b82f6' },
+              { label: 'AI 생성기', to: '/generate', color: '#f59e0b' },
+              { label: '일괄 분석', to: '/bulk', color: '#10b981' },
+              ...(user?.email === 'ghdiehddl@gmail.com' ? [{ label: '어드민', to: '/admin', color: '#ef4444' }] : []),
             ].map(a => (
               <Link key={a.to} to={a.to} style={{ textDecoration: 'none' }}>
-                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', transition: 'border-color 0.15s' }}
+                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: '18px 16px', display: 'flex', alignItems: 'center', cursor: 'pointer', transition: 'border-color 0.15s' }}
                   onMouseEnter={e => (e.currentTarget.style.borderColor = a.color)}
                   onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}>
-                  <span style={{ fontSize: 22 }}>{a.icon}</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{a.label}</span>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{a.label}</span>
                 </div>
               </Link>
             ))}
@@ -694,15 +687,15 @@ export default function DashboardPage() {
           {/* ── Summary cards ── */}
           <div className="dash-summary-grid">
             {user?.user_type === 'enterprise' ? (<>
-              <SummaryCard icon="📁" label="총 계약서" value={savedContracts.length} sub="저장된 분석 건수" accent="blue" />
-              <SummaryCard icon="👷" label="근무인원 계약" value={empContracts.length} sub="근로계약서" accent="safe" />
-              <SummaryCard icon="🏠" label="임대차 계약" value={leaseContracts.length} sub="임대차계약서" accent="warn" />
-              <SummaryCard icon="⚠️" label="위험 계약" value={enterpriseDangerCount} sub="즉시 검토 필요" accent="danger" />
+              <SummaryCard label="총 계약서" value={savedContracts.length} sub="저장된 분석 건수" accent="blue" />
+              <SummaryCard label="근무인원 계약" value={empContracts.length} sub="근로계약서" accent="safe" />
+              <SummaryCard label="임대차 계약" value={leaseContracts.length} sub="임대차계약서" accent="warn" />
+              <SummaryCard label="위험 계약" value={enterpriseDangerCount} sub="즉시 검토 필요" accent="danger" />
             </>) : (<>
-              <SummaryCard icon="📁" label="전체 계약" value={totalCount} sub="누적 분석 건수" accent="blue" />
-              <SummaryCard icon="⚠️" label="위험 계약" value={dangerCount} sub="즉시 검토 필요" accent="danger" />
-              <SummaryCard icon="📊" label="이번 달 분석" value={thisMonthCount} sub="2026년 6월 기준" accent="safe" />
-              <SummaryCard icon="⏰" label="만료 임박" value={expiringLocalContracts.length} sub="30일 이내 만료" accent="warn" />
+              <SummaryCard label="전체 계약" value={totalCount} sub="누적 분석 건수" accent="blue" />
+              <SummaryCard label="위험 계약" value={dangerCount} sub="즉시 검토 필요" accent="danger" />
+              <SummaryCard label="이번 달 분석" value={thisMonthCount} sub="2026년 6월 기준" accent="safe" />
+              <SummaryCard label="만료 임박" value={expiringLocalContracts.length} sub="30일 이내 만료" accent="warn" />
             </>)}
           </div>
 
@@ -716,7 +709,10 @@ export default function DashboardPage() {
                   borderColor: e.expired ? '#ef4444' : e.days_left <= 3 ? '#f59e0b' : '#3b82f6',
                   background: e.expired ? 'rgba(239,68,68,0.06)' : e.days_left <= 3 ? 'rgba(245,158,11,0.06)' : 'rgba(59,130,246,0.06)',
                 }}>
-                  <span style={{ fontSize: 20 }}>{e.expired ? '🔴' : e.days_left <= 3 ? '🟠' : '🔵'}</span>
+                  <span style={{
+                    width: 10, height: 10, borderRadius: '50%', flexShrink: 0,
+                    background: e.expired ? '#ef4444' : e.days_left <= 3 ? '#f59e0b' : '#3b82f6',
+                  }} />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{e.filename}</div>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
@@ -744,7 +740,6 @@ export default function DashboardPage() {
               <div className="saved-loading">불러오는 중...</div>
             ) : savedContracts.length === 0 ? (
               <div className="saved-empty">
-                <span style={{ fontSize: 32 }}>📋</span>
                 <p>저장된 분석 결과가 없습니다.</p>
                 <p style={{ fontSize: 13 }}>계약서를 분석한 후 결과 저장을 선택하면 여기에 표시됩니다.</p>
               </div>
@@ -786,7 +781,7 @@ export default function DashboardPage() {
                             if (res.ok) { const html = await res.text(); const w = window.open('', '_blank'); w?.document.write(html); w?.document.close() }
                           }}
                         >
-                          📄 리포트
+                          리포트
                         </button>
                         <button
                           className="saved-view-btn"
@@ -804,7 +799,7 @@ export default function DashboardPage() {
                           style={{ background: 'rgba(100,116,139,0.1)', color: 'var(--text-muted)', border: '1px solid var(--border)', fontSize: 11 }}
                           onClick={() => { setExpiryEditId(expiryEditId === item.id ? null : item.id); setExpiryDate('') }}
                         >
-                          📅 만료일
+                          만료일
                         </button>
                         <button
                           className="saved-delete-btn"
@@ -856,7 +851,6 @@ export default function DashboardPage() {
               const records = signingTab === 'sent' ? sentRecords : receivedRecords
               if (records.length === 0) return (
                 <div className="saved-empty">
-                  <span style={{ fontSize: 32 }}>✍️</span>
                   <p>{signingTab === 'sent' ? '보낸 서명 요청이 없습니다.' : '받은 서명 요청이 없습니다.'}</p>
                 </div>
               )
@@ -873,7 +867,7 @@ export default function DashboardPage() {
                       }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)', marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            📄 {r.contract_name}
+                            {r.contract_name}
                           </div>
                           <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                             {signingTab === 'sent'
@@ -911,7 +905,7 @@ export default function DashboardPage() {
                                 fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap', fontWeight: 700,
                               }}
                             >
-                              📄 서명된 문서
+                              서명된 문서
                             </button>
                             <button
                               onClick={async () => {
@@ -949,23 +943,22 @@ export default function DashboardPage() {
             <div className="saved-contracts-section" style={{ marginTop: 28 }}>
               <div className="saved-contracts-header" style={{ marginBottom: 20 }}>
                 <div>
-                  <h2 className="dash-title" style={{ fontSize: 18, marginBottom: 4 }}>📊 기업 분석 현황</h2>
+                  <h2 className="dash-title" style={{ fontSize: 18, marginBottom: 4 }}>기업 분석 현황</h2>
                   <p className="dash-subtitle" style={{ fontSize: 13 }}>이번 달 계약 분석 통계 및 위험도 분포</p>
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 14, marginBottom: 20 }}>
                 {[
-                  { icon: '📁', label: '총 계약서', value: b2bStats.total_contracts, color: 'var(--accent)' },
-                  { icon: '📅', label: '이번 달 분석', value: b2bStats.this_month, color: '#10b981' },
-                  { icon: '⚠️', label: '위험', value: b2bStats.danger_count, color: 'var(--risk-high)' },
-                  { icon: '△', label: '주의', value: b2bStats.warn_count, color: 'var(--risk-mid)' },
-                  { icon: '✓', label: '안전', value: b2bStats.safe_count, color: 'var(--risk-safe)' },
-                  { icon: '👥', label: '활성 팀원', value: b2bStats.team_members, color: '#8b5cf6' },
+                  { label: '총 계약서', value: b2bStats.total_contracts, color: 'var(--accent)' },
+                  { label: '이번 달 분석', value: b2bStats.this_month, color: '#10b981' },
+                  { label: '위험', value: b2bStats.danger_count, color: 'var(--risk-high)' },
+                  { label: '주의', value: b2bStats.warn_count, color: 'var(--risk-mid)' },
+                  { label: '안전', value: b2bStats.safe_count, color: 'var(--risk-safe)' },
+                  { label: '활성 팀원', value: b2bStats.team_members, color: '#8b5cf6' },
                 ].map(s => (
-                  <div key={s.label} style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 14, padding: '16px 14px', textAlign: 'center' }}>
-                    <div style={{ fontSize: 22, marginBottom: 6 }}>{s.icon}</div>
-                    <div style={{ fontSize: 24, fontWeight: 800, color: s.color }}>{s.value}</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{s.label}</div>
+                  <div key={s.label} style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 14, padding: '18px 14px', textAlign: 'center' }}>
+                    <div style={{ fontSize: 26, fontWeight: 800, color: s.color }}>{s.value}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', marginTop: 6 }}>{s.label}</div>
                   </div>
                 ))}
               </div>
@@ -1018,7 +1011,7 @@ export default function DashboardPage() {
             <div className="saved-contracts-section" style={{ marginTop: 28 }}>
               <div className="saved-contracts-header">
                 <div>
-                  <h2 className="dash-title" style={{ fontSize: 18, marginBottom: 4 }}>👥 팀 관리</h2>
+                  <h2 className="dash-title" style={{ fontSize: 18, marginBottom: 4 }}>팀 관리</h2>
                   <p className="dash-subtitle" style={{ fontSize: 13 }}>팀원을 초대하고 계약서 분석 권한을 부여하세요</p>
                 </div>
               </div>
@@ -1079,7 +1072,6 @@ export default function DashboardPage() {
               {/* 팀원 목록 */}
               {teamMembers.length === 0 ? (
                 <div className="saved-empty">
-                  <span style={{ fontSize: 32 }}>👥</span>
                   <p>아직 초대된 팀원이 없습니다.</p>
                   <p style={{ fontSize: 13 }}>이메일로 팀원을 초대하면 계약서 분석 기능을 공유할 수 있습니다.</p>
                 </div>
@@ -1100,8 +1092,8 @@ export default function DashboardPage() {
                         </div>
                         <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                           {m.invite_method === 'sms'
-                            ? `📱 ${m.member_phone}`
-                            : `✉️ ${m.member_email}`
+                            ? `${m.member_phone}`
+                            : `${m.member_email}`
                           } · {m.role === 'admin' ? '관리자' : '멤버'} · {m.status === 'active' ? '활성' : '초대 대기중'}
                         </div>
                       </div>
@@ -1111,7 +1103,7 @@ export default function DashboardPage() {
                         color: m.status === 'active' ? '#16a34a' : '#d97706',
                         whiteSpace: 'nowrap',
                       }}>
-                        {m.status === 'active' ? '✓ 활성' : '⏳ 대기'}
+                        {m.status === 'active' ? '✓ 활성' : '대기'}
                       </span>
                       <button onClick={() => handleRemoveMember(m.id)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.06)', color: '#dc2626', fontSize: 12, cursor: 'pointer', flexShrink: 0 }}>
                         삭제
@@ -1128,7 +1120,7 @@ export default function DashboardPage() {
             <div className="saved-contracts-section" style={{ marginTop: 28 }}>
               <div className="saved-contracts-header">
                 <div>
-                  <h2 className="dash-title" style={{ fontSize: 18, marginBottom: 4 }}>📑 계약서 템플릿 발송</h2>
+                  <h2 className="dash-title" style={{ fontSize: 18, marginBottom: 4 }}>계약서 템플릿 발송</h2>
                   <p className="dash-subtitle" style={{ fontSize: 13 }}>
                     미리 준비된 계약서 양식에 내용을 채워 상대방에게 바로 발송하고 전자서명을 받으세요
                   </p>
@@ -1138,22 +1130,21 @@ export default function DashboardPage() {
                   style={{ fontSize: 13, padding: '8px 18px' }}
                   onClick={() => setShowTemplateModal(true)}
                 >
-                  📝 템플릿으로 계약서 보내기
+                  템플릿으로 계약서 보내기
                 </button>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
                 {[
-                  { icon: '👷', name: '표준 근로계약서', desc: '고용노동부 표준 양식', color: '#3b82f6' },
-                  { icon: '🏢', name: '부동산 임대차계약서', desc: '사무실·창고·매장 임대', color: '#8b5cf6' },
-                  { icon: '📋', name: '업무위탁(용역)계약서', desc: '프리랜서·외주 업무 위탁', color: '#10b981' },
+                  { name: '표준 근로계약서', desc: '고용노동부 표준 양식', color: '#3b82f6' },
+                  { name: '부동산 임대차계약서', desc: '사무실·창고·매장 임대', color: '#8b5cf6' },
+                  { name: '업무위탁(용역)계약서', desc: '프리랜서·외주 업무 위탁', color: '#10b981' },
                 ].map(t => (
                   <div key={t.name} style={{
                     background: 'var(--bg)', border: '1px solid var(--border)',
                     borderRadius: 14, padding: '18px 16px',
                     display: 'flex', flexDirection: 'column', gap: 8,
                   }}>
-                    <span style={{ fontSize: 28 }}>{t.icon}</span>
-                    <div style={{ fontWeight: 700, fontSize: 14, color: t.color }}>{t.name}</div>
+                    <div style={{ fontWeight: 800, fontSize: 17, color: t.color }}>{t.name}</div>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t.desc}</div>
                     <button
                       onClick={() => setShowTemplateModal(true)}
@@ -1176,7 +1167,7 @@ export default function DashboardPage() {
             <div className="saved-contracts-section" style={{ marginTop: 28 }}>
               <div className="saved-contracts-header">
                 <div>
-                  <h2 className="dash-title" style={{ fontSize: 18, marginBottom: 4 }}>📁 내 계약서 템플릿</h2>
+                  <h2 className="dash-title" style={{ fontSize: 18, marginBottom: 4 }}>내 계약서 템플릿</h2>
                   <p className="dash-subtitle" style={{ fontSize: 13 }}>
                     계약서 파일을 업로드하고 서명 받을 위치를 지정해 저장하면, 다음에 바로 재사용할 수 있습니다
                   </p>
@@ -1191,7 +1182,6 @@ export default function DashboardPage() {
               </div>
               {userTemplates.length === 0 ? (
                 <div className="saved-empty">
-                  <span style={{ fontSize: 32 }}>📂</span>
                   <p>저장된 템플릿이 없습니다.</p>
                   <p style={{ fontSize: 13 }}>계약서 파일을 업로드하고 서명 위치를 지정해 템플릿으로 저장하세요.</p>
                   <button
@@ -1214,7 +1204,7 @@ export default function DashboardPage() {
                       display: 'flex', flexDirection: 'column', gap: 10,
                     }}>
                       <div style={{ fontSize: 28 }}>
-                        {t.content_type === 'image' ? '🖼️' : t.file_ext === '.pdf' ? '📄' : '📝'}
+                        {t.content_type === 'image' ? '' : t.file_ext === '.pdf' ? '' : ''}
                       </div>
                       <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {t.name}
@@ -1255,16 +1245,16 @@ export default function DashboardPage() {
           {user?.user_type === 'enterprise' && (
             <div style={{ marginTop: 8 }}>
               {[
-                { label: '근무인원 계약 관리', icon: '👷', contracts: empContracts, color: '#3b82f6', desc: '근로계약서, 고용계약서' },
-                { label: '임대차 계약 관리', icon: '🏠', contracts: leaseContracts, color: '#8b5cf6', desc: '사무실, 창고, 매장 임대 계약' },
-                { label: '렌탈·약정 관리', icon: '🔒', contracts: rentalContracts, color: '#f59e0b', desc: '장비, 차량, 설비 렌탈 계약' },
-                { label: '기타 계약', icon: '📝', contracts: otherEnterpriseContracts, color: '#64748b', desc: '용역계약, 구매계약 외 기타' },
-              ].map(({ label, icon, contracts, color, desc }) => (
+                { label: '근무인원 계약 관리', contracts: empContracts, color: '#3b82f6', desc: '근로계약서, 고용계약서' },
+                { label: '임대차 계약 관리', contracts: leaseContracts, color: '#8b5cf6', desc: '사무실, 창고, 매장 임대 계약' },
+                { label: '렌탈·약정 관리', contracts: rentalContracts, color: '#f59e0b', desc: '장비, 차량, 설비 렌탈 계약' },
+                { label: '기타 계약', contracts: otherEnterpriseContracts, color: '#64748b', desc: '용역계약, 구매계약 외 기타' },
+              ].map(({ label, contracts, color, desc }) => (
                 <div key={label} className="saved-contracts-section" style={{ marginTop: 24 }}>
                   <div className="saved-contracts-header">
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                        <h2 className="dash-title" style={{ fontSize: 18, marginBottom: 0, color }}>{icon} {label}</h2>
+                        <h2 className="dash-title" style={{ fontSize: 19, fontWeight: 800, marginBottom: 0, color }}>{label}</h2>
                         <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', background: 'var(--bg)', padding: '2px 8px', borderRadius: 10, border: '1px solid var(--border)' }}>{contracts.length}건</span>
                       </div>
                       <p className="dash-subtitle" style={{ fontSize: 13 }}>{desc}</p>
@@ -1275,8 +1265,7 @@ export default function DashboardPage() {
                   </div>
                   {contracts.length === 0 ? (
                     <div className="saved-empty">
-                      <span style={{ fontSize: 32 }}>{icon}</span>
-                      <p>저장된 {label}이 없습니다.</p>
+                      <p style={{ fontSize: 16, fontWeight: 700 }}>저장된 {label}이 없습니다.</p>
                       <p style={{ fontSize: 13 }}>계약서를 분석한 후 결과 저장을 선택하면 여기에 표시됩니다.</p>
                     </div>
                   ) : (
@@ -1325,14 +1314,13 @@ export default function DashboardPage() {
                 <div className="saved-contracts-header">
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                      <h2 className="dash-title" style={{ fontSize: 18, marginBottom: 0 }}>📅 종료된 계약 관리</h2>
+                      <h2 className="dash-title" style={{ fontSize: 18, marginBottom: 0 }}>종료된 계약 관리</h2>
                       <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: 'rgba(37,99,235,0.1)', color: 'var(--accent)' }}>준비중</span>
                     </div>
                     <p className="dash-subtitle" style={{ fontSize: 13 }}>계약 종료일 추적, 갱신 알림, 아카이브 관리</p>
                   </div>
                 </div>
                 <div className="saved-empty" style={{ padding: '32px 0' }}>
-                  <span style={{ fontSize: 32 }}>🔜</span>
                   <p>종료된 계약 관리 기능은 곧 출시됩니다.</p>
                   <p style={{ fontSize: 13 }}>계약 만료일 추적 및 자동 갱신 알림 기능이 추가될 예정입니다.</p>
                 </div>
@@ -1355,7 +1343,6 @@ export default function DashboardPage() {
 
             {subs.length === 0 ? (
               <div className="saved-empty" style={{ padding: '32px 0' }}>
-                <span style={{ fontSize: 32 }}>📋</span>
                 <p>등록된 구독/렌탈 서비스가 없습니다.</p>
                 <p style={{ fontSize: 13 }}>넷플릭스, 쿠팡, 렌탈 계약 등을 추가하면 지출 현황을 한눈에 파악할 수 있습니다.</p>
               </div>
@@ -1465,7 +1452,6 @@ export default function DashboardPage() {
           {!dismissedBanner && expiringLocalContracts.length > 0 && (
             <div className="dash-alert-banner">
               <div className="dash-alert-left">
-                <span className="dash-alert-icon">🔔</span>
                 <div>
                   <p className="dash-alert-title">만료 임박 계약서가 {expiringLocalContracts.length}건 있습니다</p>
                   <p className="dash-alert-desc">
@@ -1547,7 +1533,6 @@ export default function DashboardPage() {
 
               {filtered.length === 0 && (
                 <div className="dash-empty">
-                  <span className="dash-empty-icon">📂</span>
                   <p>해당 조건의 계약서가 없습니다</p>
                 </div>
               )}
@@ -1560,7 +1545,7 @@ export default function DashboardPage() {
           <div style={{ marginTop: 32 }}>
             <div style={{ marginBottom: 16 }}>
               <h2 className="dash-title" style={{ fontSize: 18, marginBottom: 4 }}>
-                {user?.user_type === 'enterprise' ? '🏢 기업 전용 기능' : '👤 내 플랜 기능'}
+                {user?.user_type === 'enterprise' ? '기업 전용 기능' : '내 플랜 기능'}
               </h2>
               <p className="dash-subtitle" style={{ fontSize: 13 }}>
                 {user?.user_type === 'enterprise'
@@ -1576,9 +1561,8 @@ export default function DashboardPage() {
                   opacity: f.comingSoon ? 0.55 : 1,
                   display: 'flex', flexDirection: 'column', gap: 8,
                 }}>
-                  <div style={{ fontSize: 26 }}>{f.icon}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontWeight: 700, color: 'var(--text)', fontSize: 14 }}>{f.title}</span>
+                    <span style={{ fontWeight: 800, color: 'var(--text)', fontSize: 17 }}>{f.title}</span>
                     {f.comingSoon && (
                       <span style={{
                         fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10,
@@ -1643,19 +1627,19 @@ export default function DashboardPage() {
 }
 
 const PERSONAL_FEATURES = [
-  { icon: '🔍', title: 'AI 위험 조항 탐지', sub: 'Gemini AI가 불리한 조항을 자동으로 찾아드립니다', comingSoon: false },
-  { icon: '🔒', title: '개인정보 마스킹', sub: '계약서 내 개인정보를 자동으로 보호합니다', comingSoon: false },
-  { icon: '📋', title: '판례 기반 대안 제시', sub: '법적 근거를 바탕으로 수정 제안을 드립니다', comingSoon: false },
-  { icon: '⚡', title: '빠른 분석', sub: '평균 30초 이내에 분석 결과를 받아보세요', comingSoon: false },
+  { title: 'AI 위험 조항 탐지', sub: 'Gemini AI가 불리한 조항을 자동으로 찾아드립니다', comingSoon: false },
+  { title: '개인정보 마스킹', sub: '계약서 내 개인정보를 자동으로 보호합니다', comingSoon: false },
+  { title: '판례 기반 대안 제시', sub: '법적 근거를 바탕으로 수정 제안을 드립니다', comingSoon: false },
+  { title: '빠른 분석', sub: '평균 30초 이내에 분석 결과를 받아보세요', comingSoon: false },
 ]
 
 const ENTERPRISE_FEATURES = [
-  { icon: '🔍', title: 'AI 위험 조항 탐지', sub: 'Gemini AI가 불리한 조항을 자동으로 찾아드립니다', comingSoon: false },
-  { icon: '👥', title: '팀 관리', sub: '멤버 초대 및 역할 기반 접근 권한 설정', comingSoon: false },
-  { icon: '📊', title: 'B2B 분석 대시보드', sub: '계약 유형 분포·위험도 통계 실시간 확인', comingSoon: false },
-  { icon: '📑', title: 'PDF 리포트 다운로드', sub: '계약서별 상세 분석 리포트 출력', comingSoon: false },
-  { icon: '📅', title: '계약 만료일 추적', sub: '만료 임박 알림 및 갱신 관리', comingSoon: false },
-  { icon: '🔐', title: '계약서 보안 저장', sub: '암호화된 계약서 클라우드 저장소', comingSoon: true },
+  { title: 'AI 위험 조항 탐지', sub: 'Gemini AI가 불리한 조항을 자동으로 찾아드립니다', comingSoon: false },
+  { title: '팀 관리', sub: '멤버 초대 및 역할 기반 접근 권한 설정', comingSoon: false },
+  { title: 'B2B 분석 대시보드', sub: '계약 유형 분포·위험도 통계 실시간 확인', comingSoon: false },
+  { title: 'PDF 리포트 다운로드', sub: '계약서별 상세 분석 리포트 출력', comingSoon: false },
+  { title: '계약 만료일 추적', sub: '만료 임박 알림 및 갱신 관리', comingSoon: false },
+  { title: '계약서 보안 저장', sub: '암호화된 계약서 클라우드 저장소', comingSoon: true },
 ]
 
 /* ── Contract row ───────────────────────────────────── */
@@ -1718,7 +1702,7 @@ function ContractRow({ contract: c, onView }: { contract: Contract; onView?: () 
       {/* 상태 뱃지 */}
       <td>
         <span className={`dash-status-badge ${c.status}`}>
-          {c.status === 'danger' ? '⚠ 위험' :
+          {c.status === 'danger' ? '위험' :
            c.status === 'warn'   ? '△ 주의' :
                                    '✓ 안전'}
         </span>

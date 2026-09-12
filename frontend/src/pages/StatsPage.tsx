@@ -71,16 +71,15 @@ export default function StatsPage() {
             {/* 요약 카드 */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 16, marginBottom: 28 }}>
               {[
-                { label: '총 분석', value: stats.total_analyzed, icon: '🔍', color: 'var(--accent)' },
-                { label: '저장된 계약', value: stats.total_saved, icon: '💾', color: '#10b981' },
-                { label: '평균 위험도', value: `${stats.avg_score}점`, icon: '📊', color: '#f59e0b' },
-                { label: '서명 보냄', value: stats.signing_sent, icon: '✉️', color: '#8b5cf6' },
-                { label: '서명 완료', value: stats.signing_completed, icon: '✅', color: '#22c55e' },
+                { label: '총 분석', value: stats.total_analyzed, color: 'var(--accent)' },
+                { label: '저장된 계약', value: stats.total_saved, color: '#10b981' },
+                { label: '평균 위험도', value: `${stats.avg_score}점`, color: '#f59e0b' },
+                { label: '서명 보냄', value: stats.signing_sent, color: '#8b5cf6' },
+                { label: '서명 완료', value: stats.signing_completed, color: '#22c55e' },
               ].map(s => (
-                <div key={s.label} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: '20px 16px', textAlign: 'center' }}>
-                  <div style={{ fontSize: 26, marginBottom: 8 }}>{s.icon}</div>
-                  <div style={{ fontSize: 24, fontWeight: 800, color: s.color }}>{s.value}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{s.label}</div>
+                <div key={s.label} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: '24px 16px', textAlign: 'center' }}>
+                  <div style={{ fontSize: 28, fontWeight: 800, color: s.color }}>{s.value}</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-muted)', marginTop: 6 }}>{s.label}</div>
                 </div>
               ))}
             </div>
@@ -153,7 +152,7 @@ export default function StatsPage() {
             {/* 만료 임박 */}
             {stats.expiring_soon.length > 0 && (
               <div style={{ background: 'var(--bg-card)', border: '1.5px solid rgba(245,158,11,0.3)', borderRadius: 14, padding: '20px 24px' }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: '#d97706', marginBottom: 14 }}>⏰ 만료 임박 계약서 (7일 이내)</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#d97706', marginBottom: 14 }}>만료 임박 계약서 (7일 이내)</div>
                 {stats.expiring_soon.map(e => (
                   <div key={e.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
                     <div style={{ fontSize: 13, color: 'var(--text)', fontWeight: 600 }}>{e.filename}</div>

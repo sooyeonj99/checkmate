@@ -241,7 +241,7 @@ function scoreColor(score: number): string {
 }
 
 function gradeLabel(grade: RiskLevel): string {
-  return grade === 'danger' ? '⚠ 위험' : grade === 'warn' ? '⚡ 주의' : '✓ 안전'
+  return grade === 'danger' ? '위험' : grade === 'warn' ? '주의' : '✓ 안전'
 }
 
 /* ── ResultNav ─────────────────────────────────────── */
@@ -476,7 +476,7 @@ function ClauseItem({ clause, isOpen, onToggle }: ClauseItemProps) {
 
           {/* Law ref */}
           <div className="result-law-ref">
-            📌 법적 근거: {clause.lawRef}
+            법적 근거: {clause.lawRef}
           </div>
         </div>
       </div>
@@ -647,7 +647,7 @@ function ChecklistSection({ contractType }: { contractType?: string }) {
       </div>
       {done === total && (
         <div style={{ textAlign: 'center', marginTop: 10, fontSize: 13, color: '#16a34a', fontWeight: 700 }}>
-          ✅ 모든 항목을 확인했습니다. 안전하게 계약을 진행하세요!
+          모든 항목을 확인했습니다. 안전하게 계약을 진행하세요!
         </div>
       )}
     </div>
@@ -659,7 +659,6 @@ function ChecklistSection({ contractType }: { contractType?: string }) {
 const AGENCIES = [
   {
     id: 'klac',
-    icon: '🏛',
     name: '대한법률구조공단',
     desc: '무료 법률 상담 · 소송 지원 · 계약 분쟁 대리',
     phone: '132',
@@ -669,7 +668,6 @@ const AGENCIES = [
   },
   {
     id: 'moel',
-    icon: '👷',
     name: '고용노동부',
     desc: '임금체불 · 부당해고 · 근로계약 위반 신고',
     phone: '1350',
@@ -679,7 +677,6 @@ const AGENCIES = [
   },
   {
     id: 'ftc',
-    icon: '⚖️',
     name: '공정거래위원회',
     desc: '불공정 약관 · 가맹점 분쟁 · 하도급 피해 신고',
     phone: '1372',
@@ -689,7 +686,6 @@ const AGENCIES = [
   },
   {
     id: 'kca',
-    icon: '🛡️',
     name: '한국소비자원',
     desc: '소비자 계약 피해 · 환급 거부 · 위약금 분쟁',
     phone: '1372',
@@ -699,7 +695,6 @@ const AGENCIES = [
   },
   {
     id: 'molit',
-    icon: '🏠',
     name: '국토교통부 임대차 분쟁',
     desc: '전월세 분쟁 · 임대차 3법 위반 · 보증금 반환',
     phone: '1599-0001',
@@ -709,7 +704,6 @@ const AGENCIES = [
   },
   {
     id: 'police',
-    icon: '🚨',
     name: '경찰청 사이버범죄신고',
     desc: '계약 사기 · 허위 계약 · 온라인 거래 피해 신고',
     phone: '182',
@@ -804,7 +798,7 @@ function ExpertCard({ grade, contractType }: { grade: RiskLevel; contractType?: 
                     border: '1px solid rgba(5,150,105,0.2)',
                   }}
                 >
-                  📞 {ag.phone}
+                  {ag.phone}
                 </a>
               </div>
             </div>
@@ -820,8 +814,8 @@ function ExpertCard({ grade, contractType }: { grade: RiskLevel; contractType?: 
         fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6,
       }}>
         {grade === 'danger'
-          ? '⚠️ 이 계약서는 위험도가 높습니다. 서명 전 반드시 전문가 검토를 권장합니다. 대한법률구조공단(132)에서 무료 상담을 받을 수 있습니다.'
-          : '💡 리스펙체크는 정보 제공 서비스로, 법률 자문을 대체하지 않습니다. 중요한 계약은 전문가 상담을 권장합니다.'}
+          ? '이 계약서는 위험도가 높습니다. 서명 전 반드시 전문가 검토를 권장합니다. 대한법률구조공단(132)에서 무료 상담을 받을 수 있습니다.'
+          : '리스펙체크는 정보 제공 서비스로, 법률 자문을 대체하지 않습니다. 중요한 계약은 전문가 상담을 권장합니다.'}
       </div>
     </div>
   )
@@ -1019,7 +1013,7 @@ export default function ResultPage() {
           fontSize: 13,
           color: 'rgba(79,142,247,0.95)',
         }}>
-          <span>🧪</span>
+          <span></span>
           <span>
             <strong>베타 테스트 버전</strong> · 현재 샘플 분석 결과를 표시하고 있습니다.
             실제 AI 분석은 서비스 정식 출시 후 이용 가능합니다.
@@ -1104,7 +1098,7 @@ export default function ResultPage() {
                 background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
                 borderRadius: 10, color: '#ef4444', fontSize: 13, fontWeight: 600,
               }}>
-                ⚠ {saveError}
+                {saveError}
               </div>
             )}
           </div>

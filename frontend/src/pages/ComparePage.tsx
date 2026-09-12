@@ -188,7 +188,7 @@ export default function ComparePage() {
                             <span style={{ fontSize: 11, fontWeight: 700, color: riskColor(c.risk_b) }}>{c.risk_b}</span>
                           </td>
                           <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                            {c.changed ? <span style={{ fontSize: 18 }}>⚠️</span> : <span style={{ fontSize: 16, color: '#22c55e' }}>✓</span>}
+                            {c.changed ? <span style={{ fontSize: 16, fontWeight: 700, color: '#f59e0b' }}>✗</span> : <span style={{ fontSize: 16, color: '#22c55e' }}>✓</span>}
                           </td>
                         </tr>
                       ))}

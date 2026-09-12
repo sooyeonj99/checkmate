@@ -34,15 +34,12 @@ export default function ComingSoonPage() {
 
         <div className="coming-soon-features">
           <div className="coming-soon-feature">
-            <span className="coming-soon-feature-icon">💛</span>
             <span>카카오 로그인</span>
           </div>
           <div className="coming-soon-feature">
-            <span className="coming-soon-feature-icon">🔵</span>
             <span>구글 로그인</span>
           </div>
           <div className="coming-soon-feature">
-            <span className="coming-soon-feature-icon">🍎</span>
             <span>애플 로그인</span>
           </div>
         </div>

@@ -71,7 +71,7 @@ export default function SigningPage() {
           background: 'linear-gradient(135deg, #1e3a8a, #2563eb)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 18,
-        }}>♟</div>
+        }}></div>
         <span style={{ fontWeight: 800, fontSize: 18, color: 'var(--text)', letterSpacing: 1 }}>RESPECTCHECK</span>
       </Link>
 
@@ -89,7 +89,6 @@ export default function SigningPage() {
 
         {error && (
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
             <h2 style={{ color: 'var(--text)', marginBottom: 8 }}>서명 링크 오류</h2>
             <p style={{ color: 'var(--text-muted)', fontSize: 15 }}>{error}</p>
           </div>
@@ -158,7 +157,7 @@ export default function SigningPage() {
                     color: 'var(--accent)', fontWeight: 700, fontSize: 14, cursor: 'pointer',
                   }}
                 >
-                  📄 {showContract ? '계약서 내용 접기 ▲' : '계약서 전문 보기 ▼'}
+                  {showContract ? '계약서 내용 접기 ▲' : '계약서 전문 보기 ▼'}
                 </button>
                 {showContract && (
                   <div style={{ marginTop: 12, border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
@@ -220,7 +219,6 @@ export default function SigningPage() {
 
         {done && (
           <div style={{ textAlign: 'center', padding: '20px 0' }}>
-            <div style={{ fontSize: 64, marginBottom: 20 }}>✅</div>
             <h2 style={{ color: 'var(--text)', marginBottom: 10 }}>서명이 완료되었습니다</h2>
             <p style={{ color: 'var(--text-muted)', fontSize: 15, lineHeight: 1.7 }}>
               서명 기록이 저장되었으며<br/>요청자에게 완료 알림이 발송되었습니다.

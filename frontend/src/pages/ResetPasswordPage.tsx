@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import EyeIcon from '../components/EyeIcon'
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams()
@@ -90,7 +91,6 @@ export default function ResetPasswordPage() {
           /* 폼 */
           <>
             <div style={{ textAlign: 'center', marginBottom: 28 }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>🔑</div>
               <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: 'var(--text)' }}>새 비밀번호 설정</h2>
               <p style={{ margin: '8px 0 0', fontSize: 13, color: 'var(--text-muted)' }}>새로 사용할 비밀번호를 입력해 주세요.</p>
             </div>
@@ -112,7 +112,7 @@ export default function ResetPasswordPage() {
                     required minLength={8} autoFocus
                   />
                   <button type="button" className="auth-pw-toggle" onClick={() => setShowPw(v => !v)}>
-                    {showPw ? '🙈' : '👁'}
+                    <EyeIcon open={!showPw} />
                   </button>
                 </div>
                 {password.length > 0 && password.length < 8 && (
@@ -132,7 +132,7 @@ export default function ResetPasswordPage() {
                     required
                   />
                   <button type="button" className="auth-pw-toggle" onClick={() => setShowConfirm(v => !v)}>
-                    {showConfirm ? '🙈' : '👁'}
+                    <EyeIcon open={!showConfirm} />
                   </button>
                 </div>
                 {confirm && !pwMatch && (

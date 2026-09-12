@@ -13,13 +13,13 @@ interface FileInfo {
   ext: string
 }
 
-const CONTRACT_TYPES: { id: ContractType; emoji: string; label: string; wide?: boolean }[] = [
-  { id: 'rental',       emoji: '🔒', label: '렌탈·약정계약' },
-  { id: 'subscription', emoji: '📋', label: '구독·이용약관' },
-  { id: 'employment',   emoji: '👷', label: '근로계약서' },
-  { id: 'freelance',    emoji: '💻', label: '프리랜서 계약서' },
-  { id: 'lease',        emoji: '🏠', label: '임대차계약서' },
-  { id: 'other',        emoji: '📝', label: '기타 계약서', wide: true },
+const CONTRACT_TYPES: { id: ContractType; label: string; wide?: boolean }[] = [
+  { id: 'rental',       label: '렌탈·약정계약' },
+  { id: 'subscription', label: '구독·이용약관' },
+  { id: 'employment',   label: '근로계약서' },
+  { id: 'freelance',    label: '프리랜서 계약서' },
+  { id: 'lease',        label: '임대차계약서' },
+  { id: 'other',        label: '기타 계약서', wide: true },
 ]
 
 const ACCEPT_TYPES = '.pdf,.jpg,.jpeg,.png,.hwp,.docx'
@@ -46,15 +46,15 @@ function getExt(name: string): string {
   return name.split('.').pop()?.toUpperCase() ?? 'FILE'
 }
 
-function getFileIconStyle(ext: string): { emoji: string; bg: string } {
+function getFileIconStyle(ext: string): { color: string; bg: string } {
   switch (ext) {
-    case 'PDF':  return { emoji: '📄', bg: 'rgba(239,68,68,0.12)' }
+    case 'PDF':  return { color: '#ef4444', bg: 'rgba(239,68,68,0.12)' }
     case 'JPG':
     case 'JPEG':
-    case 'PNG':  return { emoji: '🖼️', bg: 'rgba(79,142,247,0.12)' }
-    case 'HWP':  return { emoji: '📝', bg: 'rgba(6,195,255,0.12)' }
-    case 'DOCX': return { emoji: '📘', bg: 'rgba(99,102,241,0.12)' }
-    default:     return { emoji: '📎', bg: 'rgba(148,163,184,0.12)' }
+    case 'PNG':  return { color: '#4f8ef7', bg: 'rgba(79,142,247,0.12)' }
+    case 'HWP':  return { color: '#06c3ff', bg: 'rgba(6,195,255,0.12)' }
+    case 'DOCX': return { color: '#6366f1', bg: 'rgba(99,102,241,0.12)' }
+    default:     return { color: '#94a3b8', bg: 'rgba(148,163,184,0.12)' }
   }
 }
 
@@ -114,17 +114,19 @@ function DropZone({ onFiles }: { onFiles: (files: File[]) => void }) {
       onDrop={handleDrop}
     >
       <input ref={inputRef} type="file" accept={ACCEPT_TYPES} multiple style={{ display: 'none' }} onChange={handleChange} />
-      <div className="drop-zone-icon">{drag ? '📂' : '📁'}</div>
       <h2>{drag ? '파일을 놓아주세요' : '계약서를 드래그&드롭 하거나'}</h2>
       {!drag && <p className="drop-zone-sub">클릭하여 파일을 선택하세요 · <strong>여러 장</strong> 동시 선택 가능</p>}
       <div className="drop-zone-divider"><span>지원 형식</span></div>
       <div className="format-list">
-        {['PDF', 'JPG', 'PNG', 'HWP', 'DOCX'].map((fmt) => (
-          <span key={fmt} className="format-chip">
-            {fmt === 'PDF' && '🔴'}{(fmt === 'JPG' || fmt === 'PNG') && '🔵'}{fmt === 'HWP' && '🟢'}{fmt === 'DOCX' && '🟣'}
-            {fmt}
-          </span>
-        ))}
+        {['PDF', 'JPG', 'PNG', 'HWP', 'DOCX'].map((fmt) => {
+          const dotColor = fmt === 'PDF' ? '#ef4444' : (fmt === 'JPG' || fmt === 'PNG') ? '#3b82f6' : fmt === 'HWP' ? '#22c55e' : '#a855f7'
+          return (
+            <span key={fmt} className="format-chip">
+              <span className="format-chip-dot" style={{ background: dotColor }} />
+              {fmt}
+            </span>
+          )
+        })}
         <span className="format-chip" style={{ color: 'var(--text-muted)' }}>최대 20MB/개</span>
       </div>
     </div>
@@ -146,7 +148,7 @@ function FileListPreview({ files, onRemove, onAddMore }: {
     <div className="file-preview-card">
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
         <span style={{ fontWeight: 700, color: 'var(--text)', fontSize: 14 }}>
-          📋 선택된 파일 <span style={{ color: 'var(--accent)' }}>{files.length}장</span>
+          선택된 파일 <span style={{ color: 'var(--accent)' }}>{files.length}장</span>
         </span>
         <button
           onClick={() => inputRef.current?.click()}
@@ -155,11 +157,11 @@ function FileListPreview({ files, onRemove, onAddMore }: {
         <input ref={inputRef} type="file" accept={ACCEPT_TYPES} multiple style={{ display: 'none' }} onChange={handleChange} />
       </div>
       {files.map((info, idx) => {
-        const { emoji, bg } = getFileIconStyle(info.ext)
+        const { color, bg } = getFileIconStyle(info.ext)
         return (
           <div key={idx} className="file-preview-top" style={{ marginBottom: 8, background: 'var(--bg)', borderRadius: 10, padding: '10px 12px' }}>
             <div style={{ fontSize: 12, color: 'var(--text-muted)', marginRight: 4, minWidth: 18 }}>{idx + 1}</div>
-            <div className="file-type-icon" style={{ background: bg, width: 32, height: 32, fontSize: 16 }}>{emoji}</div>
+            <div className="file-type-icon" style={{ background: bg, color, width: 34, height: 34, fontSize: 9, fontWeight: 800 }}>{info.ext}</div>
             <div className="file-meta">
               <div className="file-name" title={info.name}>{truncateFilename(info.name, 28)}</div>
               <div className="file-size">{info.ext} · {info.sizeLabel}</div>
@@ -188,7 +190,6 @@ function FileListPreview({ files, onRemove, onAddMore }: {
 function PrivacyNotice() {
   return (
     <div className="privacy-notice">
-      <span className="privacy-icon">🔒</span>
       <div className="privacy-text">
         <strong>개인정보 보호 안내</strong><br />
         업로드된 파일은 분석 완료 즉시 서버에서 자동 삭제됩니다. 계약 내용은 저장·공유되지 않으며, AI 학습에도 사용되지 않습니다.
@@ -262,14 +263,13 @@ function ContractTypeModal({
         </div>
 
         <div className="contract-type-grid" style={{ marginBottom: 24 }}>
-          {CONTRACT_TYPES.map(({ id, emoji, label, wide }) => (
+          {CONTRACT_TYPES.map(({ id, label, wide }) => (
             <button
               key={id}
               className={`contract-type-btn${wide ? ' wide' : ''}${contractType === id ? ' selected' : ''}`}
               onClick={() => onSelect(id)}
               disabled={loading}
             >
-              <span className="contract-type-emoji">{emoji}</span>
               <span className="contract-type-label">{label}</span>
               {contractType === id && (
                 <svg style={{ marginLeft: 'auto' }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="3">
@@ -290,7 +290,6 @@ function ContractTypeModal({
             <><div className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }} /> 업로드 중...</>
           ) : (
             <>
-              <div className="ctype-action-icon">✏️</div>
               <div className="ctype-action-text">
                 <span className="ctype-action-title">글씨 추출 후 분석 시작</span>
                 <span className="ctype-action-desc">업로드 → OCR 텍스트 추출 → 마스킹 → AI 분석</span>
@@ -408,7 +407,7 @@ export default function UploadPage() {
                   borderRadius: 'var(--radius-md)', color: 'var(--risk-high)',
                   fontSize: 13, lineHeight: 1.5,
                 }}>
-                  ⚠ {uploadError}
+                  {uploadError}
                 </div>
               )}
             </div>

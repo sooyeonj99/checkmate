@@ -118,7 +118,6 @@ export default function AdminPage() {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
           <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>관리자 전용 페이지</div>
           <div style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 24 }}>접근 권한이 없습니다.</div>
           <Link to="/dashboard" style={{ color: 'var(--accent)', fontWeight: 700, fontSize: 14 }}>← 대시보드로</Link>
@@ -160,17 +159,16 @@ export default function AdminPage() {
           <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 16, marginBottom: 24 }}>
               {[
-                { label: '총 사용자', value: stats.total_users, icon: '👥', color: 'var(--accent)' },
-                { label: '개인 계정', value: stats.personal_users, icon: '👤', color: '#10b981' },
-                { label: '기업 계정', value: stats.enterprise_users, icon: '🏢', color: '#8b5cf6' },
-                { label: '총 계약서', value: stats.total_contracts, icon: '📄', color: '#f59e0b' },
-                { label: '전자서명', value: stats.total_signings, icon: '✍️', color: '#06b6d4' },
-                { label: '평균 점수', value: `${stats.avg_score}점`, icon: '📊', color: '#f43f5e' },
+                { label: '총 사용자', value: stats.total_users, color: 'var(--accent)' },
+                { label: '개인 계정', value: stats.personal_users, color: '#10b981' },
+                { label: '기업 계정', value: stats.enterprise_users, color: '#8b5cf6' },
+                { label: '총 계약서', value: stats.total_contracts, color: '#f59e0b' },
+                { label: '전자서명', value: stats.total_signings, color: '#06b6d4' },
+                { label: '평균 점수', value: `${stats.avg_score}점`, color: '#f43f5e' },
               ].map(s => (
-                <div key={s.label} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: '20px 16px', textAlign: 'center' }}>
-                  <div style={{ fontSize: 28, marginBottom: 8 }}>{s.icon}</div>
-                  <div style={{ fontSize: 26, fontWeight: 800, color: s.color }}>{s.value}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{s.label}</div>
+                <div key={s.label} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: '24px 16px', textAlign: 'center' }}>
+                  <div style={{ fontSize: 30, fontWeight: 800, color: s.color }}>{s.value}</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-muted)', marginTop: 6 }}>{s.label}</div>
                 </div>
               ))}
             </div>
@@ -247,7 +245,7 @@ export default function AdminPage() {
                 </>
               )}
               <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--border)', fontSize: 12, color: 'var(--text-muted)' }}>
-                💡 매출 지표는 제공하지 않습니다 — 현재 결제/구독 과금 시스템이 연결되어 있지 않습니다.
+                매출 지표는 제공하지 않습니다 — 현재 결제/구독 과금 시스템이 연결되어 있지 않습니다.
               </div>
             </div>
           </>

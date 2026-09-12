@@ -128,7 +128,7 @@ export default function SigningModal({ contractId, contractName, contractHtml, d
                 color: tab === t ? '#fff' : 'var(--text-secondary)',
                 transition: 'all 0.15s',
               }}>
-              {t === 'self' ? '✍️ 내가 서명' : '📨 서명 요청'}
+              {t === 'self' ? '내가 서명' : '서명 요청'}
             </button>
           ))}
         </div>
@@ -176,7 +176,7 @@ export default function SigningModal({ contractId, contractName, contractHtml, d
                     color: reqContactType === ct ? '#fff' : 'var(--text-secondary)',
                     transition: 'all 0.15s',
                   }}>
-                  {ct === 'email' ? '📧 이메일로 요청' : '📱 전화번호로 요청'}
+                  {ct === 'email' ? '이메일로 요청' : '전화번호로 요청'}
                 </button>
               ))}
             </div>
