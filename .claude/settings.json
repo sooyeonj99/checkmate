@@ -45,7 +45,8 @@
       "Bash(pkill -f \"expo start\")",
       "Bash(adb devices *)",
       "Bash(ls /mnt/c/Users/ 2>/dev/null)",
-      "Read(//mnt/c/Users/**)"
+      "Read(//mnt/c/Users/**)",
+      "Bash(git push *)"
     ]
   }
 }

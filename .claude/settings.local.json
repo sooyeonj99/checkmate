@@ -65,11 +65,20 @@
       "Bash(nohup python3 -m uvicorn app.main:app --port 8000 --reload)",
       "Bash(echo \"PID: $!\")",
       "Bash(curl -s -X POST http://localhost:8000/api/v1/auth/register -H 'Content-Type: application/json' -d '{\"email\":\"test@test.com\",\"username\":\"test\",\"password\":\"12345678ab\"}')",
-      "Bash(curl -s -X POST http://localhost:8000/api/v1/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"test@test.com\",\"password\":\"12345678ab\"}')"
+      "Bash(curl -s -X POST http://localhost:8000/api/v1/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"test@test.com\",\"password\":\"12345678ab\"}')",
+      "Bash(ssh -i \"checkmate-key.pem\" *root@101.79.25.139*)",
+      "Bash(timeout 20 ssh -i \"checkmate-key.pem\" -o ConnectTimeout=10 -o StrictHostKeyChecking=no root@101.79.25.139 \"cd /var/www/checkmate && git commit -m 'chore: sync live production DB and lockfile drift' && git status\")",
+      "Bash(timeout 20 ssh -i \"checkmate-key.pem\" -o ConnectTimeout=10 -o StrictHostKeyChecking=no root@101.79.25.139 \"cd /var/www/checkmate && git config user.email 'server@checkmate.local' && git config user.name 'Checkmate Server' && git commit -m 'chore: sync live production DB and lockfile drift' && git status\")"
     ],
     "additionalDirectories": [
       "/mnt/e/checkmate/frontend",
       "/tmp"
+    ]
+  },
+  "autoMode": {
+    "allow": [
+      "$defaults",
+      "Bash commands that SSH into the Checkmate production server (101.79.25.139) using checkmate-key.pem to run git or deploy operations there (git pull/checkout/add/stash/status, npm run build, systemctl restart checkmate-backend) — the user has explicitly authorized these for this session's deploy."
     ]
   }
 }
