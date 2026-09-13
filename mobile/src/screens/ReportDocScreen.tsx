@@ -32,7 +32,6 @@ export default function ReportDocScreen() {
 
   if (error) return (
     <View style={styles.center}>
-      <Text style={styles.errorIcon}>⚠️</Text>
       <Text style={styles.errorText}>{error}</Text>
       <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
         <Text style={styles.backBtnText}>돌아가기</Text>

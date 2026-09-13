@@ -30,10 +30,10 @@ export default function LawTrackerScreen() {
     <View style={{ flex: 1, backgroundColor: bg }}>
       <View style={{ backgroundColor: card, borderBottomWidth: 1, borderBottomColor: border, paddingTop: 52, paddingBottom: 16, paddingHorizontal: 20 }}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 12 }}>
-          <Text style={{ color: '#2563eb', fontSize: 14 }}>← 뒤로</Text>
+          <Text style={{ color: '#5a3fc0', fontSize: 14 }}>← 뒤로</Text>
         </TouchableOpacity>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <Text style={{ fontSize: 20, fontWeight: '800', color: text }}>⚖️ 법령 변경 추적</Text>
+          <Text style={{ fontSize: 20, fontWeight: '800', color: text }}>법령 변경 추적</Text>
           <View style={{ backgroundColor: 'rgba(245,158,11,0.15)', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3, borderWidth: 1, borderColor: 'rgba(245,158,11,0.3)' }}>
             <Text style={{ fontSize: 10, fontWeight: '700', color: '#f59e0b' }}>준비중</Text>
           </View>
@@ -43,8 +43,8 @@ export default function LawTrackerScreen() {
 
       <ScrollView contentContainerStyle={{ padding: 20, gap: 14 }}>
         {/* 준비중 배너 */}
-        <View style={{ backgroundColor: 'rgba(37,99,235,0.07)', borderRadius: 14, borderWidth: 1, borderColor: 'rgba(37,99,235,0.18)', padding: 18 }}>
-          <Text style={{ fontSize: 14, fontWeight: '700', color: '#2563eb', marginBottom: 6 }}>🔔 법제처 API 연동 예정</Text>
+        <View style={{ backgroundColor: 'rgba(90,63,192,0.07)', borderRadius: 14, borderWidth: 1, borderColor: 'rgba(90,63,192,0.18)', padding: 18 }}>
+          <Text style={{ fontSize: 14, fontWeight: '700', color: '#5a3fc0', marginBottom: 6 }}>법제처 API 연동 예정</Text>
           <Text style={{ fontSize: 13, color: muted, lineHeight: 20 }}>
             현재 샘플 데이터입니다. 정식 오픈 시 실시간 법령 개정 알림과 계약서 영향도 분석이 제공됩니다.
           </Text>
@@ -52,7 +52,6 @@ export default function LawTrackerScreen() {
 
         {/* 검색 */}
         <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: inputBg, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, borderWidth: 1, borderColor: border }}>
-          <Text style={{ color: muted, fontSize: 15, marginRight: 8 }}>🔍</Text>
           <TextInput
             value={keyword}
             onChangeText={setKeyword}
@@ -69,8 +68,8 @@ export default function LawTrackerScreen() {
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 15, fontWeight: '800', color: text, marginBottom: 4 }}>{law.name}</Text>
                 <View style={{ flexDirection: 'row', gap: 6 }}>
-                  <View style={{ backgroundColor: 'rgba(37,99,235,0.1)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 }}>
-                    <Text style={{ fontSize: 11, fontWeight: '700', color: '#2563eb' }}>{law.type}</Text>
+                  <View style={{ backgroundColor: 'rgba(90,63,192,0.1)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 }}>
+                    <Text style={{ fontSize: 11, fontWeight: '700', color: '#5a3fc0' }}>{law.type}</Text>
                   </View>
                   <View style={{ backgroundColor: 'rgba(124,58,237,0.1)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 }}>
                     <Text style={{ fontSize: 11, fontWeight: '700', color: '#7c3aed' }}>{law.relevance}</Text>
@@ -85,18 +84,15 @@ export default function LawTrackerScreen() {
 
         {/* 예정 기능 */}
         <View style={{ backgroundColor: card, borderRadius: 14, borderWidth: 1, borderColor: border, padding: 18 }}>
-          <Text style={{ fontSize: 14, fontWeight: '800', color: text, marginBottom: 14 }}>📋 정식 오픈 예정 기능</Text>
+          <Text style={{ fontSize: 14, fontWeight: '800', color: text, marginBottom: 14 }}>정식 오픈 예정 기능</Text>
           {[
-            { icon: '🔔', title: '실시간 알림', desc: '분석한 계약서와 관련 법령 개정 시 즉시 알림' },
-            { icon: '📊', title: '영향도 분석', desc: '내 계약서에 개정 법령이 미치는 영향 AI 분석' },
-            { icon: '📅', title: '시행일 추적', desc: '개정 예정 법령의 시행일 캘린더 등록' },
+            { title: '실시간 알림', desc: '분석한 계약서와 관련 법령 개정 시 즉시 알림' },
+            { title: '영향도 분석', desc: '내 계약서에 개정 법령이 미치는 영향 AI 분석' },
+            { title: '시행일 추적', desc: '개정 예정 법령의 시행일 캘린더 등록' },
           ].map(f => (
-            <View key={f.title} style={{ flexDirection: 'row', gap: 12, marginBottom: 12 }}>
-              <Text style={{ fontSize: 20 }}>{f.icon}</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 13, fontWeight: '700', color: text, marginBottom: 2 }}>{f.title}</Text>
-                <Text style={{ fontSize: 12, color: muted, lineHeight: 18 }}>{f.desc}</Text>
-              </View>
+            <View key={f.title} style={{ marginBottom: 12 }}>
+              <Text style={{ fontSize: 15, fontWeight: '800', color: text, marginBottom: 2 }}>{f.title}</Text>
+              <Text style={{ fontSize: 12, color: muted, lineHeight: 18 }}>{f.desc}</Text>
             </View>
           ))}
         </View>

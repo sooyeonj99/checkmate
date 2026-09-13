@@ -93,7 +93,7 @@ export default function ResultScreen() {
   const savedContractId = isSavedParam && rawResult?.id ? String(rawResult.id) : null
 
   const scoreColor = result.score >= 61 ? colors.danger : result.score >= 31 ? colors.warn : colors.safe
-  const gradeLabel = result.grade === 'danger' ? '⚠ 위험' : result.grade === 'warn' ? '⚡ 주의' : '✓ 안전'
+  const gradeLabel = result.grade === 'danger' ? '위험' : result.grade === 'warn' ? '주의' : '✓ 안전'
 
   const toggle = (id: number) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
@@ -213,7 +213,7 @@ export default function ResultScreen() {
                 </View>
               ) : null}
               <Text style={styles.fullTextBody}>{result.contractText}</Text>
-              <Text style={styles.maskingNote}>🔒 개인정보는 분석 전 자동 마스킹 처리되었습니다</Text>
+              <Text style={styles.maskingNote}>개인정보는 분석 전 자동 마스킹 처리되었습니다</Text>
             </View>
           ) : (
             <View style={styles.noClauseBox}>
@@ -289,7 +289,6 @@ export default function ResultScreen() {
         {result.summary ? (
           <View style={styles.summaryCard}>
             <View style={styles.summaryHeader}>
-              <Text style={styles.summaryHeaderIcon}>ℹ</Text>
               <Text style={styles.summaryHeaderText}>AI 계약서 요약</Text>
             </View>
             <Text style={styles.summaryBody}>{result.summary}</Text>
@@ -310,7 +309,7 @@ export default function ResultScreen() {
                 {result.contractText}
               </Text>
               <Text style={styles.maskingNote}>
-                🔒 개인정보는 분석 전 자동 마스킹 처리되었습니다
+                개인정보는 분석 전 자동 마스킹 처리되었습니다
               </Text>
             </View>
           </>
@@ -349,31 +348,31 @@ export default function ResultScreen() {
 /* ── 대응 기관 섹션 ──────────────────────────────────── */
 const AGENCIES_MOBILE = [
   {
-    id: 'klac', icon: '🏛', name: '대한법률구조공단',
+    id: 'klac', name: '대한법률구조공단',
     desc: '무료 법률 상담 · 소송 지원 · 계약 분쟁 대리',
     phone: '132', url: 'https://www.klac.or.kr',
     tags: [] as string[], always: true,
   },
   {
-    id: 'moel', icon: '👷', name: '고용노동부',
+    id: 'moel', name: '고용노동부',
     desc: '임금체불 · 부당해고 · 근로계약 위반 신고',
     phone: '1350', url: 'https://minwon.moel.go.kr',
     tags: ['근로', '임금', '채용', '프리랜서', '알바', '용역'], always: false,
   },
   {
-    id: 'ftc', icon: '⚖️', name: '공정거래위원회',
+    id: 'ftc', name: '공정거래위원회',
     desc: '불공정 약관 · 가맹점 분쟁 · 하도급 피해 신고',
     phone: '1372', url: 'https://www.ftc.go.kr',
     tags: ['가맹', '하도급', '대리점', '약관', '소비자', '유통'], always: false,
   },
   {
-    id: 'kca', icon: '🛡️', name: '한국소비자원',
+    id: 'kca', name: '한국소비자원',
     desc: '소비자 계약 피해 · 환급 거부 · 위약금 분쟁',
     phone: '1372', url: 'https://www.kca.go.kr',
     tags: ['소비자', '렌탈', '구독', '방문판매', '학원', '헬스'], always: false,
   },
   {
-    id: 'molit', icon: '🏠', name: '국토교통부 임대차 분쟁',
+    id: 'molit', name: '국토교통부 임대차 분쟁',
     desc: '전월세 분쟁 · 임대차 3법 위반 · 보증금 반환',
     phone: '1599-0001', url: 'https://www.molit.go.kr',
     tags: ['임대차', '전세', '월세', '주택', '상가', '임대'], always: false,
@@ -448,7 +447,7 @@ function ChecklistSection({ contractType }: { contractType?: string }) {
         </TouchableOpacity>
       ))}
       {done === total && (
-        <Text style={checkStyles.allDone}>✅ 모든 항목 확인 완료! 안전하게 계약을 진행하세요.</Text>
+        <Text style={checkStyles.allDone}>모든 항목 확인 완료! 안전하게 계약을 진행하세요.</Text>
       )}
     </View>
   )
@@ -514,7 +513,7 @@ function AgencySection({ grade, contractType }: { grade: string; contractType?: 
                 style={agencyStyles.phoneBtn}
                 onPress={() => Linking.openURL(`tel:${ag.phone}`)}
               >
-                <Text style={agencyStyles.phoneBtnText}>📞 {ag.phone}</Text>
+                <Text style={agencyStyles.phoneBtnText}>{ag.phone}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -524,8 +523,8 @@ function AgencySection({ grade, contractType }: { grade: string; contractType?: 
       <View style={[agencyStyles.notice, { borderColor: grade === 'danger' ? '#ef444433' : '#f59e0b33', backgroundColor: grade === 'danger' ? '#ef44440a' : '#f59e0b0a' }]}>
         <Text style={agencyStyles.noticeText}>
           {grade === 'danger'
-            ? '⚠️ 위험도가 높은 계약서입니다. 서명 전 반드시 전문가 검토를 권장합니다.'
-            : '💡 체크메이트는 정보 제공 서비스로, 법률 자문을 대체하지 않습니다.'}
+            ? '위험도가 높은 계약서입니다. 서명 전 반드시 전문가 검토를 권장합니다.'
+            : '리스펙체크는 정보 제공 서비스로, 법률 자문을 대체하지 않습니다.'}
         </Text>
       </View>
     </View>
@@ -555,7 +554,7 @@ const agencyStyles = StyleSheet.create({
   },
   cardHighlight: {
     borderColor: colors.borderAccent,
-    backgroundColor: 'rgba(37,99,235,0.04)',
+    backgroundColor: 'rgba(90,63,192,0.04)',
   },
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
   cardIcon: { fontSize: 18 },
@@ -621,21 +620,21 @@ function ClauseItem({
 
           {/* 원문 */}
           <View style={[styles.quoteBlock, { borderLeftColor: levelColor }]}>
-            <Text style={styles.quoteLabel}>📄 계약서 원문</Text>
+            <Text style={styles.quoteLabel}>계약서 원문</Text>
             <Text style={styles.quoteText}>"{clause.original}"</Text>
           </View>
 
           {/* 쉬운 설명 */}
           {clause.simpleExplanation ? (
             <View style={[styles.quoteBlock, { borderLeftColor: colors.primary, backgroundColor: 'rgba(79,142,247,0.05)' }]}>
-              <Text style={[styles.quoteLabel, { color: colors.primary }]}>💬 쉽게 풀어보면</Text>
+              <Text style={[styles.quoteLabel, { color: colors.primary }]}>쉽게 풀어보면</Text>
               <Text style={[styles.quoteText, { color: colors.text }]}>{clause.simpleExplanation}</Text>
             </View>
           ) : null}
 
           {clause.problem && (
             <View style={styles.problemRow}>
-              <Text style={styles.problemText}>⚠ 문제점: {clause.problem}</Text>
+              <Text style={styles.problemText}>문제점: {clause.problem}</Text>
             </View>
           )}
           <View style={[styles.quoteBlock, { borderLeftColor: colors.safe }]}>
@@ -643,7 +642,7 @@ function ClauseItem({
             <Text style={styles.quoteText}>"{clause.suggestion}"</Text>
           </View>
           {clause.lawRef && (
-            <Text style={styles.lawRef}>📌 법적 근거: {clause.lawRef}</Text>
+            <Text style={styles.lawRef}>법적 근거: {clause.lawRef}</Text>
           )}
         </View>
       )}
@@ -756,7 +755,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border, padding: 16, marginBottom: 20,
   },
   contractTypeBadge: {
-    alignSelf: 'flex-start', backgroundColor: 'rgba(37,99,235,0.1)',
+    alignSelf: 'flex-start', backgroundColor: 'rgba(90,63,192,0.1)',
     borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4, marginBottom: 10,
   },
   contractTypeText: { color: colors.primary, fontSize: 12, fontWeight: '700' },

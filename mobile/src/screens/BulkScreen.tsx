@@ -66,7 +66,7 @@ export default function BulkScreen() {
     <View style={{ flex: 1, backgroundColor: bg }}>
       <View style={{ backgroundColor: card, borderBottomWidth: 1, borderBottomColor: border, paddingTop: 52, paddingBottom: 16, paddingHorizontal: 20 }}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 12 }}>
-          <Text style={{ color: '#2563eb', fontSize: 14 }}>← 뒤로</Text>
+          <Text style={{ color: '#5a3fc0', fontSize: 14 }}>← 뒤로</Text>
         </TouchableOpacity>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <View>
@@ -74,7 +74,7 @@ export default function BulkScreen() {
             <Text style={{ fontSize: 13, color: muted, marginTop: 4 }}>최대 10개 파일 동시 분석</Text>
           </View>
           {items.some(x => x.status === 'queued') && (
-            <TouchableOpacity onPress={analyzeAll} style={{ backgroundColor: '#2563eb', borderRadius: 10, paddingHorizontal: 16, paddingVertical: 10 }}>
+            <TouchableOpacity onPress={analyzeAll} style={{ backgroundColor: '#5a3fc0', borderRadius: 10, paddingHorizontal: 16, paddingVertical: 10 }}>
               <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>전체 분석</Text>
             </TouchableOpacity>
           )}
@@ -86,11 +86,10 @@ export default function BulkScreen() {
         <TouchableOpacity
           onPress={pickFiles}
           disabled={uploading}
-          style={{ backgroundColor: card, borderRadius: 16, borderWidth: 2, borderColor: '#2563eb', borderStyle: 'dashed', padding: 36, alignItems: 'center' }}
+          style={{ backgroundColor: card, borderRadius: 16, borderWidth: 2, borderColor: '#5a3fc0', borderStyle: 'dashed', padding: 36, alignItems: 'center' }}
         >
-          {uploading ? <ActivityIndicator color="#2563eb" /> : (
+          {uploading ? <ActivityIndicator color="#5a3fc0" /> : (
             <>
-              <Text style={{ fontSize: 36, marginBottom: 10 }}>📁</Text>
               <Text style={{ fontSize: 15, fontWeight: '700', color: text, marginBottom: 6 }}>파일 선택하기</Text>
               <Text style={{ fontSize: 12, color: muted }}>PDF, DOCX, TXT, JPG, PNG · 최대 10개</Text>
             </>
@@ -106,9 +105,10 @@ export default function BulkScreen() {
         {/* 파일 목록 */}
         {items.map((item, idx) => (
           <View key={idx} style={{ backgroundColor: card, borderRadius: 12, borderWidth: 1, borderColor: border, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-            <Text style={{ fontSize: 24 }}>
-              {item.status === 'done' ? '✅' : item.status === 'error' ? '❌' : item.status === 'analyzing' ? '⏳' : '📄'}
-            </Text>
+            <View style={{
+              width: 10, height: 10, borderRadius: 5,
+              backgroundColor: item.status === 'done' ? '#22c55e' : item.status === 'error' ? '#ef4444' : item.status === 'analyzing' ? '#5a3fc0' : muted,
+            }} />
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 14, fontWeight: '700', color: text }} numberOfLines={1}>{item.filename}</Text>
               <Text style={{ fontSize: 12, color: muted, marginTop: 3 }}>
@@ -119,11 +119,11 @@ export default function BulkScreen() {
               </Text>
             </View>
             {item.status === 'queued' && (
-              <TouchableOpacity onPress={() => analyzeOne(idx)} style={{ backgroundColor: 'rgba(37,99,235,0.1)', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8, borderWidth: 1, borderColor: '#2563eb' }}>
-                <Text style={{ color: '#2563eb', fontWeight: '700', fontSize: 13 }}>분석</Text>
+              <TouchableOpacity onPress={() => analyzeOne(idx)} style={{ backgroundColor: 'rgba(90,63,192,0.1)', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8, borderWidth: 1, borderColor: '#5a3fc0' }}>
+                <Text style={{ color: '#5a3fc0', fontWeight: '700', fontSize: 13 }}>분석</Text>
               </TouchableOpacity>
             )}
-            {item.status === 'analyzing' && <ActivityIndicator color="#2563eb" />}
+            {item.status === 'analyzing' && <ActivityIndicator color="#5a3fc0" />}
           </View>
         ))}
 

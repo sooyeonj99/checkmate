@@ -135,7 +135,6 @@ export default function SigningScreen() {
 
   if (error) return (
     <View style={styles.center}>
-      <Text style={styles.errorIcon}>⚠️</Text>
       <Text style={styles.errorText}>{error}</Text>
       <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
         <Text style={styles.backBtnText}>돌아가기</Text>
@@ -145,7 +144,6 @@ export default function SigningScreen() {
 
   if (info?.is_expired || info?.status === 'expired') return (
     <View style={styles.center}>
-      <Text style={styles.errorIcon}>⏰</Text>
       <Text style={styles.errorText}>서명 링크가 만료되었습니다.</Text>
       <Text style={styles.errorSub}>발송자에게 새 서명 요청을 보내달라고 요청해주세요.</Text>
       <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
@@ -156,7 +154,6 @@ export default function SigningScreen() {
 
   if (info?.status === 'signed' || done) return (
     <View style={styles.center}>
-      <Text style={styles.doneIcon}>✅</Text>
       <Text style={styles.doneTitle}>서명이 완료되었습니다</Text>
       <Text style={styles.doneSub}>
         {done
@@ -184,7 +181,7 @@ export default function SigningScreen() {
         {/* 계약서 정보 */}
         <View style={styles.infoCard}>
           <View style={styles.infoBadge}>
-            <Text style={styles.infoBadgeText}>📄 서명 요청</Text>
+            <Text style={styles.infoBadgeText}>서명 요청</Text>
           </View>
           <Text style={styles.contractName}>{info?.contract_name}</Text>
           <Text style={styles.infoFrom}>{info?.requester_name}님이 서명을 요청했습니다</Text>
@@ -279,14 +276,14 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: colors.border,
   },
   infoBadge: {
-    backgroundColor: 'rgba(37,99,235,0.1)', borderRadius: 20,
+    backgroundColor: 'rgba(90,63,192,0.1)', borderRadius: 20,
     paddingHorizontal: 12, paddingVertical: 4, alignSelf: 'flex-start', marginBottom: 10,
   },
   infoBadgeText: { color: colors.primary, fontSize: 12, fontWeight: '700' },
   contractName: { color: colors.text, fontSize: 16, fontWeight: '800', marginBottom: 6 },
   infoFrom: { color: colors.textMuted, fontSize: 13, marginBottom: 4 },
   messageBubble: {
-    backgroundColor: 'rgba(37,99,235,0.06)', borderLeftWidth: 3, borderLeftColor: colors.primary,
+    backgroundColor: 'rgba(90,63,192,0.06)', borderLeftWidth: 3, borderLeftColor: colors.primary,
     borderRadius: 8, padding: 12, marginTop: 12,
   },
   messageText: { color: colors.textSecondary, fontSize: 13, lineHeight: 20 },

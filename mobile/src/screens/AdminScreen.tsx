@@ -41,10 +41,9 @@ export default function AdminScreen() {
   if (user?.email !== ADMIN_EMAIL) {
     return (
       <View style={{ flex: 1, backgroundColor: bg, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-        <Text style={{ fontSize: 40, marginBottom: 16 }}>🛡️</Text>
         <Text style={{ fontSize: 18, fontWeight: '800', color: text, textAlign: 'center' }}>관리자 전용 페이지</Text>
         <Text style={{ fontSize: 14, color: muted, textAlign: 'center', marginTop: 8 }}>ghdiehddl@gmail.com 계정만 접근 가능합니다.</Text>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginTop: 24, backgroundColor: '#2563eb', borderRadius: 12, paddingHorizontal: 24, paddingVertical: 12 }}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginTop: 24, backgroundColor: '#5a3fc0', borderRadius: 12, paddingHorizontal: 24, paddingVertical: 12 }}>
           <Text style={{ color: '#fff', fontWeight: '700' }}>뒤로</Text>
         </TouchableOpacity>
       </View>
@@ -84,22 +83,22 @@ export default function AdminScreen() {
     ])
   }
 
-  const TABS = [{ id: 'stats', label: '📊 통계' }, { id: 'users', label: '👥 사용자' }, { id: 'keys', label: '🔑 API 키' }] as const
+  const TABS = [{ id: 'stats', label: '통계' }, { id: 'users', label: '사용자' }, { id: 'keys', label: 'API 키' }] as const
 
   return (
     <View style={{ flex: 1, backgroundColor: bg }}>
       <View style={{ backgroundColor: card, borderBottomWidth: 1, borderBottomColor: border, paddingTop: 52, paddingBottom: 0, paddingHorizontal: 20 }}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 12 }}>
-          <Text style={{ color: '#2563eb', fontSize: 14 }}>← 뒤로</Text>
+          <Text style={{ color: '#5a3fc0', fontSize: 14 }}>← 뒤로</Text>
         </TouchableOpacity>
-        <Text style={{ fontSize: 20, fontWeight: '800', color: text, marginBottom: 16 }}>🛡️ 어드민 패널</Text>
+        <Text style={{ fontSize: 20, fontWeight: '800', color: text, marginBottom: 16 }}>어드민 패널</Text>
         <View style={{ flexDirection: 'row', gap: 4 }}>
           {TABS.map(t => (
             <TouchableOpacity key={t.id} onPress={() => setTab(t.id)} style={{
               flex: 1, paddingVertical: 10, alignItems: 'center', borderBottomWidth: 2,
-              borderBottomColor: tab === t.id ? '#2563eb' : 'transparent',
+              borderBottomColor: tab === t.id ? '#5a3fc0' : 'transparent',
             }}>
-              <Text style={{ fontSize: 12, fontWeight: '700', color: tab === t.id ? '#2563eb' : muted }}>{t.label}</Text>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: tab === t.id ? '#5a3fc0' : muted }}>{t.label}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -107,7 +106,7 @@ export default function AdminScreen() {
 
       {loading ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator color="#2563eb" size="large" />
+          <ActivityIndicator color="#5a3fc0" size="large" />
         </View>
       ) : (
         <ScrollView contentContainerStyle={{ padding: 20, gap: 12 }}>
@@ -117,7 +116,7 @@ export default function AdminScreen() {
             <>
               <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
                 {[
-                  { label: '전체 사용자', value: stats.total_users, color: '#2563eb' },
+                  { label: '전체 사용자', value: stats.total_users, color: '#5a3fc0' },
                   { label: '전체 계약서', value: stats.total_contracts, color: '#7c3aed' },
                   { label: '전자서명', value: stats.total_signings, color: '#059669' },
                   { label: 'B2B API 키', value: stats.total_api_keys, color: '#f59e0b' },
@@ -138,7 +137,7 @@ export default function AdminScreen() {
                 ].map(r => (
                   <View key={r.label} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: border }}>
                     <Text style={{ fontSize: 13, color: text }}>{r.label}</Text>
-                    <Text style={{ fontSize: 13, fontWeight: '700', color: '#2563eb' }}>{r.value}명</Text>
+                    <Text style={{ fontSize: 13, fontWeight: '700', color: '#5a3fc0' }}>{r.value}명</Text>
                   </View>
                 ))}
               </View>
@@ -156,7 +155,7 @@ export default function AdminScreen() {
                 ))}
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 10 }}>
                   <Text style={{ fontSize: 13, fontWeight: '700', color: muted }}>평균 점수</Text>
-                  <Text style={{ fontSize: 13, fontWeight: '800', color: '#2563eb' }}>{stats.avg_score}점</Text>
+                  <Text style={{ fontSize: 13, fontWeight: '800', color: '#5a3fc0' }}>{stats.avg_score}점</Text>
                 </View>
               </View>
             </>
@@ -165,7 +164,7 @@ export default function AdminScreen() {
           {/* 사용자 탭 */}
           {tab === 'users' && users.map(u => (
             <View key={u.id} style={{ backgroundColor: card, borderRadius: 12, borderWidth: 1, borderColor: border, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-              <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#2563eb', alignItems: 'center', justifyContent: 'center' }}>
+              <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#5a3fc0', alignItems: 'center', justifyContent: 'center' }}>
                 <Text style={{ color: '#fff', fontWeight: '800', fontSize: 16 }}>{u.username.charAt(0).toUpperCase()}</Text>
               </View>
               <View style={{ flex: 1 }}>
@@ -197,7 +196,7 @@ export default function AdminScreen() {
                   placeholderTextColor={muted}
                   style={{ backgroundColor: inputBg, borderRadius: 10, padding: 12, fontSize: 14, color: text, borderWidth: 1, borderColor: border }}
                 />
-                <TouchableOpacity onPress={createKey} style={{ backgroundColor: '#2563eb', borderRadius: 10, padding: 12, alignItems: 'center' }}>
+                <TouchableOpacity onPress={createKey} style={{ backgroundColor: '#5a3fc0', borderRadius: 10, padding: 12, alignItems: 'center' }}>
                   <Text style={{ color: '#fff', fontWeight: '700' }}>생성</Text>
                 </TouchableOpacity>
               </View>

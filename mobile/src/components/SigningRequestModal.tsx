@@ -168,7 +168,7 @@ export default function SigningRequestModal({ visible, contractId, contractName,
                   onPress={() => setContactType(ct)}
                 >
                   <Text style={[styles.toggleBtnText, contactType === ct && styles.toggleBtnTextActive]}>
-                    {ct === 'email' ? '📧 이메일' : '📱 전화번호'}
+                    {ct === 'email' ? '이메일' : '전화번호'}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -224,7 +224,7 @@ export default function SigningRequestModal({ visible, contractId, contractName,
               onPress={() => setShowSigPad(!showSigPad)}
             >
               <Text style={styles.sigToggleBtnText}>
-                {mySig ? '✅ 내 서명 완료 (탭해서 다시 서명)' : `✏️ 내 서명 추가 (선택)`}
+                {mySig ? '내 서명 완료 (탭해서 다시 서명)' : `내 서명 추가 (선택)`}
               </Text>
             </TouchableOpacity>
 
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg, borderWidth: 1.5, borderColor: colors.border,
     alignItems: 'center',
   },
-  toggleBtnActive: { backgroundColor: 'rgba(37,99,235,0.1)', borderColor: colors.primary },
+  toggleBtnActive: { backgroundColor: 'rgba(90,63,192,0.1)', borderColor: colors.primary },
   toggleBtnText: { color: colors.textSecondary, fontWeight: '700', fontSize: 13 },
   toggleBtnTextActive: { color: colors.primary },
   label: { color: colors.textSecondary, fontSize: 13, fontWeight: '600', marginBottom: 6 },

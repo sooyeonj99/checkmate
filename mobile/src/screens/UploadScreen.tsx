@@ -147,12 +147,10 @@ export default function UploadScreen() {
             <Text style={styles.choiceTitle}>계약서를 업로드하거나{'\n'}사진으로 촬영하세요</Text>
             <View style={styles.choiceRow}>
               <TouchableOpacity style={styles.choiceBtn} onPress={pickFiles} activeOpacity={0.8}>
-                <Text style={styles.choiceBtnIcon}>📁</Text>
                 <Text style={styles.choiceBtnLabel}>파일 업로드</Text>
                 <Text style={styles.choiceBtnSub}>PDF · DOCX · JPG · PNG</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.choiceBtn, styles.choiceBtnCamera]} onPress={takePicture} activeOpacity={0.8}>
-                <Text style={styles.choiceBtnIcon}>📷</Text>
                 <Text style={styles.choiceBtnLabel}>사진 촬영</Text>
                 <Text style={styles.choiceBtnSub}>계약서를 직접 촬영</Text>
               </TouchableOpacity>
@@ -174,7 +172,7 @@ export default function UploadScreen() {
               <View key={idx} style={styles.fileRow}>
                 <Text style={styles.fileRowNum}>{idx + 1}</Text>
                 <Text style={styles.fileRowIcon}>
-                  {f.name.match(/\.(jpg|jpeg|png)$/i) ? '🖼️' : f.name.endsWith('.pdf') ? '📄' : '📝'}
+                  {(f.name.split('.').pop() ?? 'FILE').toUpperCase()}
                 </Text>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.fileRowName} numberOfLines={1}>{f.name}</Text>
@@ -270,10 +268,9 @@ const styles = StyleSheet.create({
   },
   choiceBtnCamera: {
     borderColor: colors.borderAccent,
-    backgroundColor: 'rgba(37,99,235,0.04)',
+    backgroundColor: 'rgba(90,63,192,0.04)',
   },
-  choiceBtnIcon: { fontSize: 36 },
-  choiceBtnLabel: { color: colors.text, fontSize: 15, fontWeight: '700' },
+  choiceBtnLabel: { color: colors.text, fontSize: 18, fontWeight: '800' },
   choiceBtnSub: { color: colors.textMuted, fontSize: 12 },
   choiceNote: { color: colors.textMuted, fontSize: 12 },
 
@@ -287,7 +284,7 @@ const styles = StyleSheet.create({
   },
   fileListTitle: { color: colors.text, fontSize: 15, fontWeight: '700' },
   addMoreBtn: {
-    backgroundColor: 'rgba(37,99,235,0.1)', borderRadius: 8,
+    backgroundColor: 'rgba(90,63,192,0.1)', borderRadius: 8,
     paddingHorizontal: 12, paddingVertical: 5,
   },
   addMoreText: { color: colors.primary, fontSize: 13, fontWeight: '700' },
@@ -296,7 +293,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10, borderTopWidth: 1, borderTopColor: colors.border,
   },
   fileRowNum: { color: colors.textMuted, fontSize: 12, width: 18, textAlign: 'center' },
-  fileRowIcon: { fontSize: 20 },
+  fileRowIcon: { fontSize: 9, fontWeight: '800', color: colors.primary },
   fileRowName: { color: colors.text, fontSize: 13, fontWeight: '600' },
   fileRowSize: { color: colors.textMuted, fontSize: 11, marginTop: 1 },
   fileRowRemove: { paddingHorizontal: 8, paddingVertical: 4 },
@@ -312,7 +309,7 @@ const styles = StyleSheet.create({
   },
   addRowBtnCamera: {
     borderColor: colors.borderAccent,
-    backgroundColor: 'rgba(37,99,235,0.06)',
+    backgroundColor: 'rgba(90,63,192,0.06)',
   },
   addRowBtnText: { color: colors.textSecondary, fontSize: 14, fontWeight: '600' },
 

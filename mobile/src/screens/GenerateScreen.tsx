@@ -8,14 +8,14 @@ import { useTheme } from '../context/ThemeContext'
 import api from '../services/api'
 
 const CONTRACT_TEMPLATES = [
-  { type: '근로계약서', icon: '👷', desc: '월급, 근무시간, 계약기간을 알려주세요.' },
-  { type: '임대차계약서', icon: '🏠', desc: '임대인, 임차인, 보증금, 월세, 기간을 입력해주세요.' },
-  { type: '프리랜서 계약서', icon: '💻', desc: '업무 범위, 납기일, 금액, 지급 조건을 알려주세요.' },
-  { type: '용역계약서', icon: '🔧', desc: '용역 내용, 금액, 이행 기간을 입력해주세요.' },
-  { type: '물품공급계약서', icon: '📦', desc: '공급 품목, 수량, 단가, 납기를 알려주세요.' },
-  { type: '비밀유지계약서', icon: '🔒', desc: '기밀 정보 범위와 보호 기간을 알려주세요.' },
-  { type: '동업계약서', icon: '🤝', desc: '지분 비율, 역할 분담, 수익 배분을 입력해주세요.' },
-  { type: '전대차계약서', icon: '🏢', desc: '전대 조건, 기간, 임대료를 알려주세요.' },
+  { type: '근로계약서', desc: '월급, 근무시간, 계약기간을 알려주세요.' },
+  { type: '임대차계약서', desc: '임대인, 임차인, 보증금, 월세, 기간을 입력해주세요.' },
+  { type: '프리랜서 계약서', desc: '업무 범위, 납기일, 금액, 지급 조건을 알려주세요.' },
+  { type: '용역계약서', desc: '용역 내용, 금액, 이행 기간을 입력해주세요.' },
+  { type: '물품공급계약서', desc: '공급 품목, 수량, 단가, 납기를 알려주세요.' },
+  { type: '비밀유지계약서', desc: '기밀 정보 범위와 보호 기간을 알려주세요.' },
+  { type: '동업계약서', desc: '지분 비율, 역할 분담, 수익 배분을 입력해주세요.' },
+  { type: '전대차계약서', desc: '전대 조건, 기간, 임대료를 알려주세요.' },
 ]
 
 export default function GenerateScreen() {
@@ -66,7 +66,7 @@ export default function GenerateScreen() {
       {/* 헤더 */}
       <View style={{ backgroundColor: card, borderBottomWidth: 1, borderBottomColor: border, paddingTop: 52, paddingBottom: 16, paddingHorizontal: 20 }}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 12 }}>
-          <Text style={{ color: '#2563eb', fontSize: 14 }}>← 뒤로</Text>
+          <Text style={{ color: '#5a3fc0', fontSize: 14 }}>← 뒤로</Text>
         </TouchableOpacity>
         <Text style={{ fontSize: 20, fontWeight: '800', color: text }}>AI 계약서 생성기</Text>
         <Text style={{ fontSize: 13, color: muted, marginTop: 4 }}>설명만 입력하면 AI가 계약서를 작성합니다</Text>
@@ -84,13 +84,12 @@ export default function GenerateScreen() {
                 style={{
                   paddingHorizontal: 14, paddingVertical: 10, borderRadius: 20,
                   borderWidth: 1.5,
-                  backgroundColor: contractType === tpl.type ? '#2563eb' : card,
-                  borderColor: contractType === tpl.type ? '#2563eb' : border,
+                  backgroundColor: contractType === tpl.type ? '#5a3fc0' : card,
+                  borderColor: contractType === tpl.type ? '#5a3fc0' : border,
                   flexDirection: 'row', alignItems: 'center', gap: 6,
                 }}
               >
-                <Text style={{ fontSize: 14 }}>{tpl.icon}</Text>
-                <Text style={{ fontSize: 13, fontWeight: '700', color: contractType === tpl.type ? '#fff' : text }}>{tpl.type}</Text>
+                <Text style={{ fontSize: 14, fontWeight: '700', color: contractType === tpl.type ? '#fff' : text }}>{tpl.type}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -133,13 +132,13 @@ export default function GenerateScreen() {
           onPress={generate}
           disabled={loading}
           style={{
-            backgroundColor: '#2563eb', borderRadius: 14, padding: 16,
+            backgroundColor: '#5a3fc0', borderRadius: 14, padding: 16,
             alignItems: 'center', opacity: loading ? 0.7 : 1,
           }}
         >
           {loading
             ? <ActivityIndicator color="#fff" />
-            : <Text style={{ color: '#fff', fontWeight: '800', fontSize: 16 }}>✨ AI 계약서 생성</Text>
+            : <Text style={{ color: '#fff', fontWeight: '800', fontSize: 16 }}>AI 계약서 생성</Text>
           }
         </TouchableOpacity>
 
@@ -149,10 +148,10 @@ export default function GenerateScreen() {
             <View style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: border, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 15, fontWeight: '800', color: text }}>{result.suggested_title}</Text>
-                <Text style={{ fontSize: 12, color: '#2563eb', fontWeight: '700', marginTop: 4 }}>{result.contract_type}</Text>
+                <Text style={{ fontSize: 12, color: '#5a3fc0', fontWeight: '700', marginTop: 4 }}>{result.contract_type}</Text>
               </View>
-              <TouchableOpacity onPress={shareResult} style={{ backgroundColor: 'rgba(37,99,235,0.1)', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8 }}>
-                <Text style={{ color: '#2563eb', fontWeight: '700', fontSize: 13 }}>공유</Text>
+              <TouchableOpacity onPress={shareResult} style={{ backgroundColor: 'rgba(90,63,192,0.1)', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8 }}>
+                <Text style={{ color: '#5a3fc0', fontWeight: '700', fontSize: 13 }}>공유</Text>
               </TouchableOpacity>
             </View>
             <ScrollView style={{ maxHeight: 400 }}>

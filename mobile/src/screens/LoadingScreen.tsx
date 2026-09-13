@@ -131,7 +131,7 @@ export default function LoadingScreen() {
       <View style={styles.bgGlow} />
 
       {/* Logo */}
-      <Text style={styles.logo}>CHECKMATE</Text>
+      <Text style={styles.logo}>RESPECTCHECK</Text>
 
       {/* Pulse ring */}
       <Animated.View style={[styles.pulseRing, { transform: [{ scale: pulseAnim }] }]}>
@@ -181,7 +181,7 @@ export default function LoadingScreen() {
         </View>
       </View>
 
-      <Text style={styles.privacy}>🔒 분석 완료 후 파일이 즉시 삭제됩니다</Text>
+      <Text style={styles.privacy}>분석 완료 후 파일이 즉시 삭제됩니다</Text>
     </View>
   )
 }

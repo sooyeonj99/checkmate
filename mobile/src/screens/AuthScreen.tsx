@@ -36,7 +36,7 @@ export default function AuthScreen() {
           <View style={styles.logoIcon}>
             <Text style={styles.logoCheck}>✓</Text>
           </View>
-          <Text style={styles.logoText}>CHECKMATE</Text>
+          <Text style={styles.logoText}>RESPECTCHECK</Text>
         </View>
         <Text style={styles.subtitle}>AI 계약서 분석 서비스</Text>
 
@@ -306,7 +306,6 @@ function SignupForm({ onLogin }: { onLogin: (token: string, user: any) => Promis
           style={[styles.typeCard, userType === 'personal' && styles.typeCardActive]}
           onPress={() => setUserType('personal')}
         >
-          <Text style={styles.typeCardIcon}>👤</Text>
           <View style={styles.typeCardContent}>
             <Text style={[styles.typeCardTitle, userType === 'personal' && styles.typeCardTitleActive]}>개인 사용자</Text>
             <Text style={styles.typeCardDesc}>계약서 분석 · 저장 관리 · AI 챗봇</Text>
@@ -320,7 +319,6 @@ function SignupForm({ onLogin }: { onLogin: (token: string, user: any) => Promis
           style={[styles.typeCard, userType === 'enterprise' && styles.typeCardActive]}
           onPress={() => setUserType('enterprise')}
         >
-          <Text style={styles.typeCardIcon}>🏢</Text>
           <View style={styles.typeCardContent}>
             <Text style={[styles.typeCardTitle, userType === 'enterprise' && styles.typeCardTitleActive]}>기업/법인</Text>
             <Text style={styles.typeCardDesc}>팀 관리 · 대량 분석 · 리포트 다운로드</Text>
@@ -456,7 +454,6 @@ function SocialButtons({ label = '또는 소셜 계정으로 계속하기' }: { 
       >
         <View style={styles.socialBtnIcon}>
           {/* 카카오 말풍선 아이콘 */}
-          <Text style={styles.kakaoBtnIcon}>💬</Text>
         </View>
         <Text style={styles.kakaoBtnText}>카카오로 계속하기</Text>
         <View style={styles.comingSoonPill}>
@@ -491,10 +488,9 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, borderColor: colors.border,
     padding: 16, marginBottom: 10, gap: 12,
   },
-  typeCardActive: { borderColor: colors.primary, backgroundColor: 'rgba(37,99,235,0.04)' },
-  typeCardIcon: { fontSize: 28 },
+  typeCardActive: { borderColor: colors.primary, backgroundColor: 'rgba(90,63,192,0.04)' },
   typeCardContent: { flex: 1 },
-  typeCardTitle: { color: colors.text, fontSize: 15, fontWeight: '700', marginBottom: 3 },
+  typeCardTitle: { color: colors.text, fontSize: 17, fontWeight: '800', marginBottom: 3 },
   typeCardTitleActive: { color: colors.primary },
   typeCardDesc: { color: colors.textMuted, fontSize: 12 },
   typeRadio: {
@@ -579,7 +575,7 @@ const styles = StyleSheet.create({
     borderRadius: 8, paddingHorizontal: 7, paddingVertical: 2,
   },
   comingSoonPillText: { color: '#3C1E1E', fontSize: 10, fontWeight: '700' },
-  comingSoonPillGoogle: { backgroundColor: 'rgba(37,99,235,0.1)' },
+  comingSoonPillGoogle: { backgroundColor: 'rgba(90,63,192,0.1)' },
   comingSoonPillTextGoogle: { color: colors.primary },
 
   forgotBtn: { alignSelf: 'flex-end', marginTop: 8 },

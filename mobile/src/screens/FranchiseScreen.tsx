@@ -83,7 +83,6 @@ export default function FranchiseScreen() {
           <Text style={styles.headerTitle}>프랜차이즈 관리</Text>
         </View>
         <View style={styles.accessDenied}>
-          <Text style={styles.accessDeniedIcon}>🏢</Text>
           <Text style={styles.accessDeniedTitle}>기업 계정 전용 기능</Text>
           <Text style={styles.accessDeniedDesc}>
             프랜차이즈 관리 기능은{'\n'}기업/법인 계정에서만 사용할 수 있습니다.
@@ -149,7 +148,6 @@ export default function FranchiseScreen() {
           <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
         ) : stores.length === 0 ? (
           <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>🏪</Text>
             <Text style={styles.emptyTitle}>등록된 가맹점이 없습니다</Text>
             <Text style={styles.emptyDesc}>위의 "가맹점 추가" 버튼으로 가맹점을 등록하세요.</Text>
           </View>

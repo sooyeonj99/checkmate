@@ -303,7 +303,7 @@ export default function ProfileScreen() {
           <Text style={styles.logoutText}>로그아웃</Text>
         </TouchableOpacity>
 
-        <Text style={styles.version}>Checkmate v1.0.0</Text>
+        <Text style={styles.version}>RespectCheck v1.0.0</Text>
         <View style={{ height: 32 }} />
       </ScrollView>
     </View>
@@ -373,7 +373,7 @@ function makeStyles(c: typeof lightColors) {
     username: { color: c.text, fontSize: 20, fontWeight: '700', marginBottom: 4 },
     email: { color: c.textMuted, fontSize: 13, marginBottom: 12 },
     typeBadge: { backgroundColor: c.bgInput, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 5, borderWidth: 1, borderColor: c.border },
-    typeBadgeEnterprise: { backgroundColor: 'rgba(37,99,235,0.08)', borderColor: c.borderAccent },
+    typeBadgeEnterprise: { backgroundColor: 'rgba(90,63,192,0.08)', borderColor: c.borderAccent },
     typeBadgeText: { color: c.textSecondary, fontSize: 13, fontWeight: '600' },
     typeBadgeTextEnterprise: { color: c.primary },
     section: { marginBottom: 24 },
@@ -388,7 +388,7 @@ function makeStyles(c: typeof lightColors) {
     infoLabel: { color: c.textSecondary, fontSize: 14 },
     infoValue: { color: c.text, fontSize: 14, fontWeight: '600' },
     planCard: { backgroundColor: c.bgCard, borderRadius: 14, borderWidth: 1, borderColor: c.border, padding: 16 },
-    planCardEnterprise: { backgroundColor: 'rgba(37,99,235,0.04)', borderColor: c.borderAccent },
+    planCardEnterprise: { backgroundColor: 'rgba(90,63,192,0.04)', borderColor: c.borderAccent },
     planName: { color: c.text, fontSize: 15, fontWeight: '700', marginBottom: 4 },
     planDesc: { color: c.textMuted, fontSize: 12, lineHeight: 17 },
     featureRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: c.bgCard, borderRadius: 12, borderWidth: 1, borderColor: c.border, padding: 14, marginBottom: 8, gap: 12 },

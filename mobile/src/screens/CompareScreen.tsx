@@ -29,7 +29,7 @@ function ContractPicker({
     <>
       <TouchableOpacity
         onPress={() => setOpen(true)}
-        style={{ backgroundColor: card, borderRadius: 14, borderWidth: 1, borderColor: selected ? '#2563eb' : border, padding: 14 }}
+        style={{ backgroundColor: card, borderRadius: 14, borderWidth: 1, borderColor: selected ? '#5a3fc0' : border, padding: 14 }}
       >
         <Text style={{ fontSize: 12, color: muted, marginBottom: 6 }}>계약서 {label}</Text>
         <Text style={{ fontSize: 14, color: current ? text : muted, fontWeight: current ? '700' : '400' }}>
@@ -60,7 +60,7 @@ function ContractPicker({
                       <Text style={{ fontSize: 14, fontWeight: '600', color: text }} numberOfLines={2}>{item.filename}</Text>
                       <Text style={{ fontSize: 12, color: muted, marginTop: 2 }}>{item.grade} · {item.score}점</Text>
                     </View>
-                    {item.id === selected && <Text style={{ color: '#2563eb', fontSize: 18 }}>✓</Text>}
+                    {item.id === selected && <Text style={{ color: '#5a3fc0', fontSize: 18 }}>✓</Text>}
                   </TouchableOpacity>
                 )}
               />
@@ -110,7 +110,7 @@ export default function CompareScreen() {
     <View style={{ flex: 1, backgroundColor: bg }}>
       <View style={{ backgroundColor: card, borderBottomWidth: 1, borderBottomColor: border, paddingTop: 52, paddingBottom: 16, paddingHorizontal: 20 }}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 12 }}>
-          <Text style={{ color: '#2563eb', fontSize: 14 }}>← 뒤로</Text>
+          <Text style={{ color: '#5a3fc0', fontSize: 14 }}>← 뒤로</Text>
         </TouchableOpacity>
         <Text style={{ fontSize: 20, fontWeight: '800', color: text }}>계약서 비교</Text>
         <Text style={{ fontSize: 13, color: muted, marginTop: 4 }}>두 계약서를 AI로 비교 분석합니다</Text>
@@ -126,7 +126,7 @@ export default function CompareScreen() {
           onPress={compare}
           disabled={loading || !selectedA || !selectedB}
           style={{
-            backgroundColor: selectedA && selectedB ? '#2563eb' : (isDark ? '#2a2d3e' : '#e5e7eb'),
+            backgroundColor: selectedA && selectedB ? '#5a3fc0' : (isDark ? '#2a2d3e' : '#e5e7eb'),
             borderRadius: 14, padding: 16, alignItems: 'center', opacity: loading ? 0.7 : 1,
           }}
         >
@@ -153,8 +153,8 @@ export default function CompareScreen() {
               ))}
             </View>
 
-            <View style={{ backgroundColor: 'rgba(37,99,235,0.08)', borderRadius: 14, borderWidth: 1.5, borderColor: 'rgba(37,99,235,0.2)', padding: 18 }}>
-              <Text style={{ fontSize: 13, fontWeight: '700', color: '#2563eb', marginBottom: 8 }}>AI 분석 의견</Text>
+            <View style={{ backgroundColor: 'rgba(90,63,192,0.08)', borderRadius: 14, borderWidth: 1.5, borderColor: 'rgba(90,63,192,0.2)', padding: 18 }}>
+              <Text style={{ fontSize: 13, fontWeight: '700', color: '#5a3fc0', marginBottom: 8 }}>AI 분석 의견</Text>
               <Text style={{ fontSize: 14, color: text, lineHeight: 22 }}>{result.ai_verdict}</Text>
             </View>
 
@@ -162,7 +162,7 @@ export default function CompareScreen() {
               <View key={i} style={{ backgroundColor: diff.changed ? 'rgba(245,158,11,0.06)' : card, borderRadius: 12, borderWidth: 1, borderColor: diff.changed ? 'rgba(245,158,11,0.25)' : border, padding: 14 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 }}>
                   <Text style={{ fontSize: 12, fontWeight: '700', color: muted }}>{diff.article}</Text>
-                  {diff.changed && <Text style={{ fontSize: 14 }}>⚠️</Text>}
+                  {diff.changed && <Text style={{ fontSize: 11, fontWeight: '800', color: '#f59e0b' }}>변경됨</Text>}
                 </View>
                 <View style={{ flexDirection: 'row', gap: 10 }}>
                   {[{ label: 'A', title: diff.title_a, risk: diff.risk_a }, { label: 'B', title: diff.title_b, risk: diff.risk_b }].map(s => (

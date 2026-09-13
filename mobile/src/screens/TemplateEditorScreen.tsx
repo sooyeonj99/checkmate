@@ -21,10 +21,10 @@ interface TemplateField {
   required: boolean
 }
 
-const FIELD_TYPES: { type: TemplateField['type']; label: string; icon: string }[] = [
-  { type: 'text', label: '텍스트', icon: '✏️' },
-  { type: 'date', label: '날짜', icon: '📅' },
-  { type: 'signature', label: '서명', icon: '✍️' },
+const FIELD_TYPES: { type: TemplateField['type']; label: string }[] = [
+  { type: 'text', label: '텍스트' },
+  { type: 'date', label: '날짜' },
+  { type: 'signature', label: '서명' },
 ]
 
 export default function TemplateEditorScreen() {
@@ -161,8 +161,8 @@ export default function TemplateEditorScreen() {
               {fields.map((f, i) => (
                 <View key={f.id} style={styles.fieldRow}>
                   <View style={styles.fieldTypeTag}>
-                    <Text style={styles.fieldTypeIcon}>
-                      {FIELD_TYPES.find(t => t.type === f.type)?.icon ?? '📝'}
+                    <Text style={styles.fieldTypeLabel}>
+                      {FIELD_TYPES.find(t => t.type === f.type)?.label ?? '필드'}
                     </Text>
                   </View>
                   <TextInput
@@ -188,9 +188,8 @@ export default function TemplateEditorScreen() {
 
               <Text style={styles.addFieldTitle}>필드 추가</Text>
               <View style={styles.addFieldRow}>
-                {FIELD_TYPES.map(({ type, label, icon }) => (
+                {FIELD_TYPES.map(({ type, label }) => (
                   <TouchableOpacity key={type} style={styles.addFieldBtn} onPress={() => addField(type)}>
-                    <Text style={styles.addFieldIcon}>{icon}</Text>
                     <Text style={styles.addFieldLabel}>{label}</Text>
                   </TouchableOpacity>
                 ))}
@@ -225,7 +224,6 @@ export default function TemplateEditorScreen() {
           <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
         ) : templates.length === 0 ? (
           <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>📝</Text>
             <Text style={styles.emptyTitle}>서명 템플릿이 없습니다</Text>
             <Text style={styles.emptyDesc}>
               전자서명 시 반복적으로 사용할{'\n'}서식을 미리 만들어두세요.
@@ -264,7 +262,7 @@ function TemplateCard({ template, onEdit, onDelete }: { template: Template; onEd
         {template.fields.slice(0, 4).map(f => (
           <View key={f.id} style={styles.fieldTag}>
             <Text style={styles.fieldTagText}>
-              {FIELD_TYPES.find(t => t.type === f.type)?.icon} {f.label}
+              {f.label}
               {f.required ? ' *' : ''}
             </Text>
           </View>
@@ -328,10 +326,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8,
   },
   fieldTypeTag: {
-    width: 36, height: 36, borderRadius: 8, backgroundColor: colors.bgInput,
+    paddingHorizontal: 10, height: 36, borderRadius: 8, backgroundColor: colors.bgInput,
     borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center',
   },
-  fieldTypeIcon: { fontSize: 16 },
+  fieldTypeLabel: { fontSize: 12, fontWeight: '700', color: colors.textSecondary },
   fieldInput: {
     flex: 1, borderWidth: 1, borderColor: colors.border, borderRadius: 8,
     paddingVertical: 8, paddingHorizontal: 10, color: colors.text, fontSize: 14,
@@ -351,8 +349,7 @@ const styles = StyleSheet.create({
     flex: 1, backgroundColor: colors.bgInput, borderWidth: 1, borderColor: colors.border,
     borderRadius: 10, paddingVertical: 10, alignItems: 'center', gap: 4,
   },
-  addFieldIcon: { fontSize: 20 },
-  addFieldLabel: { color: colors.textSecondary, fontSize: 11, fontWeight: '600' },
+  addFieldLabel: { color: colors.textSecondary, fontSize: 13, fontWeight: '700' },
   modalActions: { flexDirection: 'row', gap: 10, marginTop: 20 },
   cancelBtn: {
     flex: 1, borderWidth: 1, borderColor: colors.border,

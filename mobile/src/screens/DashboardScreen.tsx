@@ -4,6 +4,7 @@ import {
   ScrollView, Alert, ActivityIndicator, RefreshControl, TextInput, Modal,
 } from 'react-native'
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
+import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
 import { colors } from '../theme/colors'
@@ -246,7 +247,7 @@ export default function DashboardScreen() {
             <Text style={styles.viewBtnText}>결과 보기</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.viewBtn, { backgroundColor: 'rgba(37,99,235,0.12)', flex: 0.7 }]}
+            style={[styles.viewBtn, { backgroundColor: 'rgba(90,63,192,0.12)', flex: 0.7 }]}
             onPress={() => navigation.navigate('ReportDoc' as any, { savedId: item.id, filename: item.filename })}
           >
             <Text style={[styles.viewBtnText, { color: colors.primary }]}>리포트</Text>
@@ -372,7 +373,7 @@ export default function DashboardScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.logoText}>CHECKMATE</Text>
+          <Text style={styles.logoText}>RESPECTCHECK</Text>
           <Text style={styles.greeting}>안녕하세요, {user?.username}님</Text>
         </View>
         <TouchableOpacity style={styles.avatar} onPress={() => navigation.navigate('마이페이지')}>
@@ -383,7 +384,7 @@ export default function DashboardScreen() {
       {/* 검색 바 */}
       <View style={{ paddingHorizontal: 20, paddingBottom: 12 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.bgInput, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, borderWidth: 1, borderColor: colors.border }}>
-          <Text style={{ color: colors.textMuted, fontSize: 15, marginRight: 8 }}>🔍</Text>
+          <Ionicons name="search" size={16} color={colors.textMuted} style={{ marginRight: 8 }} />
           <TextInput
             value={searchQ}
             onChangeText={setSearchQ}
@@ -422,19 +423,18 @@ export default function DashboardScreen() {
           <Text style={{ fontSize: 12, fontWeight: '700', color: colors.textMuted, marginBottom: 8, letterSpacing: 0.5 }}>AI 기능</Text>
           <View style={{ flexDirection: 'row', gap: 8 }}>
             {[
-              { label: 'AI 생성', icon: '✨', screen: 'Generate' },
-              { label: '비교 분석', icon: '⚖️', screen: 'Compare' },
-              { label: '일괄 분석', icon: '📦', screen: 'Bulk' },
-              { label: '법령 추적', icon: '📜', screen: 'LawTracker' },
-              ...(user?.email === 'ghdiehddl@gmail.com' ? [{ label: '어드민', icon: '🛡️', screen: 'Admin' }] : []),
+              { label: 'AI 생성', screen: 'Generate' },
+              { label: '비교 분석', screen: 'Compare' },
+              { label: '일괄 분석', screen: 'Bulk' },
+              { label: '법령 추적', screen: 'LawTracker' },
+              ...(user?.email === 'ghdiehddl@gmail.com' ? [{ label: '어드민', screen: 'Admin' }] : []),
             ].map(btn => (
               <TouchableOpacity
                 key={btn.screen}
                 onPress={() => navigation.navigate(btn.screen as any)}
-                style={{ flex: 1, backgroundColor: colors.bgCard, borderRadius: 12, paddingVertical: 12, alignItems: 'center', borderWidth: 1, borderColor: colors.border }}
+                style={{ flex: 1, backgroundColor: colors.bgCard, borderRadius: 12, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.border }}
               >
-                <Text style={{ fontSize: 20, marginBottom: 4 }}>{btn.icon}</Text>
-                <Text style={{ fontSize: 11, fontWeight: '700', color: colors.text }}>{btn.label}</Text>
+                <Text style={{ fontSize: 13, fontWeight: '800', color: colors.text }}>{btn.label}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -519,7 +519,6 @@ export default function DashboardScreen() {
               </View>
             ) : filteredSaved.length === 0 ? (
               <View style={styles.emptyBox}>
-                <Text style={styles.emptyIcon}>📋</Text>
                 <Text style={styles.emptyTitle}>{filter !== 'all' ? `${filter} 등급 계약이 없습니다` : '저장된 분석 결과가 없습니다'}</Text>
                 <Text style={styles.emptySub}>계약서 분석 후 결과를 저장해보세요</Text>
               </View>
@@ -547,14 +546,12 @@ export default function DashboardScreen() {
             {sigTab === 'received' ? (
               receivedRecords.length === 0 ? (
                 <View style={styles.emptyBox}>
-                  <Text style={styles.emptyIcon}>✉️</Text>
                   <Text style={styles.emptyTitle}>받은 서명 요청이 없습니다</Text>
                 </View>
               ) : receivedRecords.map((r) => renderSigningRecord(r, false))
             ) : (
               sentRecords.length === 0 ? (
                 <View style={styles.emptyBox}>
-                  <Text style={styles.emptyIcon}>📤</Text>
                   <Text style={styles.emptyTitle}>보낸 서명 요청이 없습니다</Text>
                 </View>
               ) : sentRecords.map((r) => renderSigningRecord(r, true))
@@ -657,7 +654,7 @@ const styles = StyleSheet.create({
   },
   enterpriseStatValue: { fontSize: 22, fontWeight: '800', marginBottom: 3 },
   enterpriseStatLabel: { fontSize: 11, color: colors.textSecondary, fontWeight: '600' },
-  signBtn: { backgroundColor: 'rgba(37,99,235,0.1)', flex: 0.7 },
+  signBtn: { backgroundColor: 'rgba(90,63,192,0.1)', flex: 0.7 },
   signBtnText: { color: colors.primary, fontWeight: '700', fontSize: 13 },
   sigTabRow: { flexDirection: 'row', marginBottom: 16, gap: 8 },
   sigTab: {

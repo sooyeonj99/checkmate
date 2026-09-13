@@ -22,7 +22,7 @@ const TYPE_COLORS: Record<string, string> = {
   KR_RESIDENT_ID:  '#dc2626',
   KR_BANK_ACCOUNT: '#e11d48',
   KR_BUSINESS_REG: '#7c3aed',
-  KR_ADDRESS:      '#2563eb',
+  KR_ADDRESS:      '#5a3fc0',
   PERSON:          '#059669',
   ORGANIZATION:    '#0891b2',
   LOCATION:        '#0284c7',
@@ -148,7 +148,6 @@ export default function MaskingReviewScreen() {
       {imageOnly ? (
         /* 이미지 OCR 불가 안내 */
         <View style={styles.imageOnlyBox}>
-          <Text style={{ fontSize: 48, marginBottom: 16 }}>🖼️</Text>
           <Text style={styles.imageOnlyTitle}>이미지 텍스트 추출 불가</Text>
           <Text style={styles.imageOnlyDesc}>
             Gemini API 키가 없거나 OCR에 실패했습니다.{'\n'}
@@ -168,7 +167,6 @@ export default function MaskingReviewScreen() {
               borderRadius: 10, borderLeftWidth: 3, borderLeftColor: '#06c3ff',
               flexDirection: 'row', alignItems: 'flex-start', gap: 8,
             }}>
-              <Text style={{ fontSize: 18 }}>📸</Text>
               <View style={{ flex: 1 }}>
                 <Text style={{ color: '#06c3ff', fontWeight: '700', fontSize: 13 }}>
                   이미지 AI OCR 완료
@@ -225,7 +223,6 @@ export default function MaskingReviewScreen() {
 
                 {entities.length === 0 ? (
                   <View style={styles.emptyBox}>
-                    <Text style={{ fontSize: 36, marginBottom: 12 }}>✅</Text>
                     <Text style={styles.emptyTitle}>감지된 개인정보 없음</Text>
                     <Text style={styles.emptyDesc}>바로 AI 분석을 진행하세요</Text>
                   </View>
