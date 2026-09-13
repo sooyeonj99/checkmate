@@ -2285,29 +2285,6 @@ img, svg {
   flex-shrink: 0;
 }
 
-/* Outer decorative rotating ring */
-@keyframes ring-rotate {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-
-@keyframes ring-rotate-reverse {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(-360deg); }
-}
-
-.loading-ring-outer {
-  position: absolute;
-  inset: -16px;
-  animation: ring-rotate 12s linear infinite;
-}
-
-.loading-ring-outer-rev {
-  position: absolute;
-  inset: -6px;
-  animation: ring-rotate-reverse 20s linear infinite;
-}
-
 /* Center icon pulse */
 @keyframes center-pulse {
   0%, 100% { transform: scale(1);   opacity: 1; }

@@ -118,36 +118,6 @@ function ProgressRing({ progress }: RingProps) {
 
   return (
     <div className="loading-ring-container">
-      {/* Outer dashed rotating ring */}
-      <svg
-        className="loading-ring-outer"
-        viewBox="0 0 292 292"
-        style={{ position: 'absolute', inset: -16, width: '100%', height: '100%' }}
-      >
-        <circle
-          cx="146" cy="146" r="138"
-          fill="none"
-          stroke="rgba(79,142,247,0.18)"
-          strokeWidth="1"
-          strokeDasharray="3 10"
-        />
-      </svg>
-
-      {/* Inner counter-rotating ring */}
-      <svg
-        className="loading-ring-outer-rev"
-        viewBox="0 0 272 272"
-        style={{ position: 'absolute', inset: -6, width: '100%', height: '100%' }}
-      >
-        <circle
-          cx="136" cy="136" r="128"
-          fill="none"
-          stroke="rgba(79,142,247,0.1)"
-          strokeWidth="1"
-          strokeDasharray="2 16"
-        />
-      </svg>
-
       {/* Main SVG */}
       <svg viewBox="0 0 260 260" width="260" height="260" style={{ display: 'block' }}>
         <defs>
@@ -190,7 +160,6 @@ function ProgressRing({ progress }: RingProps) {
           filter="url(#arc-glow)"
           style={{ transition: 'stroke-dashoffset 0.6s cubic-bezier(0.4,0,0.2,1)' }}
         />
-
       </svg>
 
       {/* Center glow */}
