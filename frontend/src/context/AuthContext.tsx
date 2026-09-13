@@ -78,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSecondsLeft(secs)
       if (secs === 0) {
         logout()
-        window.location.href = '/checkmate/auth?reason=idle'
+        window.location.href = `${import.meta.env.BASE_URL}auth?reason=idle`
       }
     }, 1000)
     return () => clearInterval(tick)

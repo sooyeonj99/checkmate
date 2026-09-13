@@ -75,9 +75,12 @@ function AppRoutes() {
   )
 }
 
+// 빌드 시 --base 값을 그대로 반영 (예: /checkmate/ 또는 / )
+const BASENAME = import.meta.env.BASE_URL.replace(/\/$/, '') || '/'
+
 export default function App() {
   return (
-    <BrowserRouter basename="/checkmate">
+    <BrowserRouter basename={BASENAME}>
       <ThemeProvider>
         <AuthProvider>
           <AppRoutes />

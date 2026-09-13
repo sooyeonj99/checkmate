@@ -15,7 +15,7 @@ export async function apiFetch(input: RequestInfo, init: RequestInit = {}): Prom
   if (res.status === 401) {
     _logoutFn?.()
     const redirect = encodeURIComponent(window.location.pathname + window.location.search)
-    window.location.href = `/checkmate/auth?reason=token&redirect=${redirect}`
+    window.location.href = `${import.meta.env.BASE_URL}auth?reason=token&redirect=${redirect}`
   }
 
   return res
