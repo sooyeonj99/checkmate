@@ -53,7 +53,17 @@ CONTRACT_TYPE_LABELS = {
     "lease":        "임대차계약서",
     "freelance":    "프리랜서 계약서",
     "subscription": "구독·이용약관",
+    "rental":       "렌탈·약정계약",
     "other":        "기타 계약서",
+}
+
+# 업로드 시 선택한 계약 유형 → Gemini 전문 프롬프트(user_type) 자동 매핑.
+# 대응하는 전문 프롬프트가 없는 유형(lease, other)은 매핑하지 않고 기본 프롬프트를 사용한다.
+CONTRACT_TYPE_TO_PROMPT = {
+    "employment":   "employee",
+    "freelance":    "freelancer",
+    "subscription": "subscription",
+    "rental":       "subscription",  # _PROMPT_SUBSCRIPTION이 구독·렌탈을 함께 다룸
 }
 
 
@@ -120,6 +130,7 @@ async def upload_contract(
         "file_list": saved_filenames,
         "file_count": len(files),
         "contract_type": type_label,
+        "contract_type_id": contract_type or "other",
         "uploaded_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     }
     async with aiofiles.open(os.path.join(save_dir, "meta.json"), "w", encoding="utf-8") as f:
@@ -255,6 +266,8 @@ async def analyze_contract(
     original_filename = meta.get("original_filename", os.path.basename(file_paths[0]))
     selected_ids = body.selected_ids if body else None
     user_type = body.user_type if body else None
+    if not user_type:
+        user_type = CONTRACT_TYPE_TO_PROMPT.get(meta.get("contract_type_id", ""))
     custom_masks = [m.dict() for m in body.custom_masks] if body and body.custom_masks else None
 
     # 빈칸 채우기로 완성된 OCR 텍스트 → ocr_cache에 반영
