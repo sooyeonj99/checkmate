@@ -37,6 +37,9 @@ class Settings(BaseSettings):
     # ── 국세청 사업자등록정보 API ──────────────────────────
     NTS_API_KEY: Optional[str] = None
 
+    # ── 구글 소셜 로그인 ──────────────────────────────────
+    GOOGLE_CLIENT_ID: Optional[str] = None
+
     # ── NCP SMS (네이버 클라우드 플랫폼) ─────────────────
     NCP_ACCESS_KEY: Optional[str] = None
     NCP_SECRET_KEY: Optional[str] = None

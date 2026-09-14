@@ -39,6 +39,40 @@ def create_user(db: Session, user_in: UserCreate) -> User:
     return user
 
 
+def _unique_username(db: Session, base: str) -> str:
+    """base 닉네임이 이미 사용 중이면 뒤에 숫자를 붙여 유니크하게 만든다."""
+    candidate = base.strip() or "user"
+    suffix = 0
+    while db.query(User).filter(User.username == candidate).first():
+        suffix += 1
+        candidate = f"{base}{suffix}"
+    return candidate
+
+
+def get_or_create_google_user(db: Session, email: str, name: str) -> User:
+    """
+    구글 계정으로 로그인/가입. 이미 같은 이메일의 계정이 있으면 그대로 로그인 처리하고,
+    없으면 새로 생성한다 (비밀번호는 임의값 — 구글 로그인 전용 계정).
+    구글이 이미 이메일을 검증했으므로 is_verified=True로 생성한다.
+    """
+    user = get_user_by_email(db, email)
+    if user:
+        return user
+
+    username = _unique_username(db, name or email.split("@")[0])
+    user = User(
+        email=email,
+        username=username,
+        hashed_password=hash_password(secrets.token_urlsafe(32)),
+        is_verified=True,
+        user_type="personal",
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
 def authenticate_user(db: Session, email: str, password: str) -> User | None:
     user = get_user_by_email(db, email)
     if not user or not verify_password(password, user.hashed_password):

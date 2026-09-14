@@ -4,12 +4,14 @@ from datetime import datetime
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.security import create_access_token
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.user import (
     FindIdRequest,
     ForgotPasswordRequest,
+    GoogleAuthRequest,
     LoginRequest,
     RegisterResponse,
     ResendVerificationRequest,
@@ -26,6 +28,7 @@ from app.services.user_service import (
     authenticate_user,
     create_password_reset_token,
     create_user,
+    get_or_create_google_user,
     get_user_by_email,
     get_user_by_reset_token,
     get_user_by_verification_token,
@@ -67,6 +70,35 @@ def login(credentials: LoginRequest, db: Session = Depends(get_db)):
             status_code=status.HTTP_403_FORBIDDEN,
             detail="이메일 인증이 필요합니다. 메일함을 확인해 주세요.",
         )
+    return Token(
+        access_token=create_access_token({"sub": str(user.id)}),
+        user=user,
+    )
+
+
+@router.post("/google", response_model=Token)
+def google_login(body: GoogleAuthRequest, db: Session = Depends(get_db)):
+    if not settings.GOOGLE_CLIENT_ID:
+        raise HTTPException(status_code=503, detail="구글 로그인이 아직 설정되지 않았습니다.")
+
+    from google.auth.transport import requests as google_requests
+    from google.oauth2 import id_token as google_id_token
+
+    try:
+        payload = google_id_token.verify_oauth2_token(
+            body.credential, google_requests.Request(), settings.GOOGLE_CLIENT_ID,
+        )
+    except ValueError:
+        raise HTTPException(status_code=401, detail="구글 인증에 실패했습니다. 다시 시도해 주세요.")
+
+    email = payload.get("email")
+    if not email or not payload.get("email_verified"):
+        raise HTTPException(status_code=401, detail="이메일 인증이 확인되지 않은 구글 계정입니다.")
+
+    user = get_or_create_google_user(db, email, payload.get("name", ""))
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="비활성화된 계정입니다. 관리자에게 문의해 주세요.")
+
     return Token(
         access_token=create_access_token({"sub": str(user.id)}),
         user=user,

@@ -37,6 +37,10 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class GoogleAuthRequest(BaseModel):
+    credential: str  # Google Identity Services가 발급한 ID 토큰(JWT)
+
+
 class RegisterResponse(BaseModel):
     message: str
     email: str

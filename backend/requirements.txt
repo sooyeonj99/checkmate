@@ -16,6 +16,7 @@ pydantic-settings==2.3.0
 # ── 인증 ──────────────────────────────────────────────────
 passlib[bcrypt]==1.7.4
 python-jose[cryptography]==3.3.0
+google-auth>=2.35.0       # 구글 소셜 로그인 (ID 토큰 검증) — google-generativeai가 이미 설치함
 
 # ── 파일 처리 ─────────────────────────────────────────────
 aiofiles==23.2.1          # 비동기 파일 I/O
