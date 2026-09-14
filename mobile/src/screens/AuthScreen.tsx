@@ -315,18 +315,13 @@ function SignupForm({ onLogin }: { onLogin: (token: string, user: any) => Promis
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.typeCard, userType === 'enterprise' && styles.typeCardActive]}
-          onPress={() => setUserType('enterprise')}
-        >
+        <View style={[styles.typeCard, styles.typeCardDisabled]}>
           <View style={styles.typeCardContent}>
-            <Text style={[styles.typeCardTitle, userType === 'enterprise' && styles.typeCardTitleActive]}>기업/법인</Text>
+            <Text style={styles.typeCardTitle}>기업/법인</Text>
             <Text style={styles.typeCardDesc}>팀 관리 · 대량 분석 · 리포트 다운로드</Text>
           </View>
-          <View style={[styles.typeRadio, userType === 'enterprise' && styles.typeRadioActive]}>
-            {userType === 'enterprise' && <View style={styles.typeRadioDot} />}
-          </View>
-        </TouchableOpacity>
+          <Text style={styles.typeComingSoon}>준비중</Text>
+        </View>
 
         <TouchableOpacity style={styles.submitBtn} onPress={() => setStep('info')}>
           <Text style={styles.submitText}>다음 →</Text>
@@ -489,6 +484,12 @@ const styles = StyleSheet.create({
     padding: 16, marginBottom: 10, gap: 12,
   },
   typeCardActive: { borderColor: colors.primary, backgroundColor: 'rgba(90,63,192,0.04)' },
+  typeCardDisabled: { opacity: 0.5 },
+  typeComingSoon: {
+    fontSize: 10, fontWeight: '700', color: colors.textMuted,
+    backgroundColor: colors.bgInput, borderWidth: 1, borderColor: colors.border,
+    borderRadius: 20, paddingHorizontal: 8, paddingVertical: 3,
+  },
   typeCardContent: { flex: 1 },
   typeCardTitle: { color: colors.text, fontSize: 17, fontWeight: '800', marginBottom: 3 },
   typeCardTitleActive: { color: colors.primary },

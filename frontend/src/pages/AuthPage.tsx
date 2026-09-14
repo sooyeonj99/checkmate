@@ -444,22 +444,34 @@ function SignupForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
         <label className="auth-label">계정 유형</label>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 4 }}>
           {([
-            { key: 'personal',    title: '개인 사용자',   desc: '계약서 분석 · AI 챗봇' },
-            { key: 'enterprise',  title: '기업/법인',     desc: '팀 관리 · 대량 분석' },
-            { key: 'franchisor',  title: '프랜차이즈 본사', desc: '가맹점 계약 통합 관리' },
-            { key: 'franchisee',  title: '가맹점주',      desc: '본사 연동 · 계약 분석' },
-          ] as const).map(({ key, title, desc }) => (
+            { key: 'personal',    title: '개인 사용자',   desc: '계약서 분석 · AI 챗봇', disabled: false },
+            { key: 'enterprise',  title: '기업/법인',     desc: '팀 관리 · 대량 분석', disabled: true },
+            { key: 'franchisor',  title: '프랜차이즈 본사', desc: '가맹점 계약 통합 관리', disabled: true },
+            { key: 'franchisee',  title: '가맹점주',      desc: '본사 연동 · 계약 분석', disabled: true },
+          ] as const).map(({ key, title, desc, disabled }) => (
             <button
               key={key}
               type="button"
-              onClick={() => setUserType(key)}
+              disabled={disabled}
+              onClick={() => !disabled && setUserType(key)}
               style={{
+                position: 'relative',
                 padding: '14px 8px', borderRadius: 10,
                 border: `1.5px solid ${userType === key ? 'var(--accent)' : 'var(--border)'}`,
-                background: userType === key ? 'rgba(37,99,235,0.06)' : 'var(--bg-input)',
-                cursor: 'pointer', textAlign: 'center',
+                background: disabled ? 'var(--bg)' : userType === key ? 'rgba(37,99,235,0.06)' : 'var(--bg-input)',
+                cursor: disabled ? 'not-allowed' : 'pointer',
+                textAlign: 'center',
+                opacity: disabled ? 0.5 : 1,
               }}
             >
+              {disabled && (
+                <span style={{
+                  position: 'absolute', top: 6, right: 6,
+                  fontSize: 9, fontWeight: 700, color: 'var(--text-muted)',
+                  background: 'var(--bg-input)', border: '1px solid var(--border)',
+                  borderRadius: 20, padding: '1px 6px',
+                }}>준비중</span>
+              )}
               <div style={{ fontSize: 15, fontWeight: 800, color: userType === key ? 'var(--accent)' : 'var(--text-primary)' }}>{title}</div>
               <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3 }}>{desc}</div>
             </button>
