@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
+import GoogleSignInButton from '../components/GoogleSignInButton'
 
 export default function ComingSoonPage() {
   const navigate = useNavigate()
@@ -28,8 +29,8 @@ export default function ComingSoonPage() {
         <h1 className="coming-soon-title">소셜 로그인 준비 중입니다</h1>
 
         <p className="coming-soon-desc">
-          카카오, 구글 소셜 로그인 기능을 준비하고 있습니다.<br />
-          현재는 <strong>이메일 회원가입</strong>을 이용해 주세요.
+          카카오, 네이버, 애플 소셜 로그인 기능을 준비하고 있습니다.<br />
+          <strong>구글 로그인</strong>은 지금 바로 이용하실 수 있어요.
         </p>
 
         <div className="coming-soon-features">
@@ -37,11 +38,15 @@ export default function ComingSoonPage() {
             <span>카카오 로그인</span>
           </div>
           <div className="coming-soon-feature">
-            <span>구글 로그인</span>
+            <span>네이버 로그인</span>
           </div>
           <div className="coming-soon-feature">
             <span>애플 로그인</span>
           </div>
+        </div>
+
+        <div style={{ marginBottom: 20 }}>
+          <GoogleSignInButton />
         </div>
 
         <div className="coming-soon-actions">
