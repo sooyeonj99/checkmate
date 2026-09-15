@@ -1334,6 +1334,17 @@ img, svg {
   background: var(--bg-card-hover);
 }
 
+.auth-naver {
+  background: #03C75A;
+  border-color: #03C75A;
+  color: #fff;
+}
+
+.auth-naver:hover {
+  background: #02b350;
+  border-color: #02b350;
+}
+
 /* Agreement box */
 .auth-agree-box {
   background: var(--bg-input);

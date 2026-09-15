@@ -835,12 +835,6 @@ function SocialButtons({ onGoogleSuccess }: { onGoogleSuccess: (token: string, u
 
   return (
     <div className="auth-social-btns">
-      <button type="button" className="auth-social-btn auth-kakao" onClick={goComingSoon}>
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-          <path d="M9 1.5C4.858 1.5 1.5 4.134 1.5 7.379c0 2.093 1.393 3.933 3.504 5.004l-.894 3.268c-.08.29.254.52.504.348l3.807-2.518A8.97 8.97 0 009 13.258c4.142 0 7.5-2.634 7.5-5.879C16.5 4.134 13.142 1.5 9 1.5z" fill="currentColor"/>
-        </svg>
-        카카오로 계속하기
-      </button>
       {googleClientId ? (
         <div ref={googleBtnRef} style={{ display: 'flex', justifyContent: 'center', minHeight: 40 }} />
       ) : (
@@ -854,6 +848,19 @@ function SocialButtons({ onGoogleSuccess }: { onGoogleSuccess: (token: string, u
           Google로 계속하기
         </button>
       )}
+      <button type="button" className="auth-social-btn auth-naver" onClick={goComingSoon}>
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <rect width="18" height="18" rx="4" fill="#03C75A"/>
+          <path d="M10.4 9.6L7.2 5H5v8h2.6V8.4L10.8 13H13V5h-2.6v4.6z" fill="white"/>
+        </svg>
+        네이버로 계속하기
+      </button>
+      <button type="button" className="auth-social-btn auth-kakao" onClick={goComingSoon}>
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M9 1.5C4.858 1.5 1.5 4.134 1.5 7.379c0 2.093 1.393 3.933 3.504 5.004l-.894 3.268c-.08.29.254.52.504.348l3.807-2.518A8.97 8.97 0 009 13.258c4.142 0 7.5-2.634 7.5-5.879C16.5 4.134 13.142 1.5 9 1.5z" fill="currentColor"/>
+        </svg>
+        카카오로 계속하기
+      </button>
     </div>
   )
 }
