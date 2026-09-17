@@ -27,7 +27,7 @@ export default function HomeScreen() {
           안녕하세요, {user?.username}님{'\n'}
           <Text style={{ color: colors.primary }}>계약서를 분석</Text>해드릴게요
         </Text>
-        <Text style={styles.heroSub}>AI가 위험 조항을 30초 안에 찾아드립니다</Text>
+        <Text style={styles.heroSub}>AI가 위험 조항을 3분 이내에 찾아드립니다</Text>
       </View>
 
       {/* 빠른 시작 */}

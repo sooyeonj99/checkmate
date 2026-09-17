@@ -375,7 +375,7 @@ export default function UploadPage() {
           {/* Header */}
           <div className="upload-page-header">
             <h1>계약서를 <span className="gradient-text">업로드</span>하세요</h1>
-            <p>PDF, 이미지, HWP, DOCX 파일을 업로드하면 AI가 30초 안에 위험 조항을 찾아드립니다. <strong>여러 장 동시 업로드</strong> 가능합니다.</p>
+            <p>PDF, 이미지, HWP, DOCX 파일을 업로드하면 AI가 3분 이내에 위험 조항을 찾아드립니다. <strong>여러 장 동시 업로드</strong> 가능합니다.</p>
           </div>
 
           {/* Progress */}

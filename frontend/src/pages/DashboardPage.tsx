@@ -1630,7 +1630,7 @@ const PERSONAL_FEATURES = [
   { title: 'AI 위험 조항 탐지', sub: 'Gemini AI가 불리한 조항을 자동으로 찾아드립니다', comingSoon: false },
   { title: '개인정보 마스킹', sub: '계약서 내 개인정보를 자동으로 보호합니다', comingSoon: false },
   { title: '판례 기반 대안 제시', sub: '법적 근거를 바탕으로 수정 제안을 드립니다', comingSoon: false },
-  { title: '빠른 분석', sub: '평균 30초 이내에 분석 결과를 받아보세요', comingSoon: false },
+  { title: '빠른 분석', sub: '평균 3분 이내에 분석 결과를 받아보세요', comingSoon: false },
 ]
 
 const ENTERPRISE_FEATURES = [

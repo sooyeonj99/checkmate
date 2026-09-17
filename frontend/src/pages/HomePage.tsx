@@ -17,7 +17,7 @@ function HeroSection() {
         </h1>
 
         <p className="hero-slogan">
-          <strong>서명 전 30초</strong>로 위험 조항을 찾고,<br />
+          <strong>서명 전 3분</strong>이면 위험 조항을 찾고,<br />
           구독·렌탈 계약은 대시보드로 한눈에 관리하세요.
         </p>
 
@@ -36,7 +36,7 @@ function HeroSection() {
             <div className="hero-stat-label">분석 정확도</div>
           </div>
           <div className="hero-stat">
-            <div className="hero-stat-value">30초</div>
+            <div className="hero-stat-value">3분 이내</div>
             <div className="hero-stat-label">평균 분석 시간</div>
           </div>
           <div className="hero-stat">
@@ -70,7 +70,7 @@ function PainPointSection() {
             { stat: '78%', desc: '계약서를 제대로 읽지 않고 서명하는 직장인 비율', src: '고용노동부 실태조사' },
             { stat: '연 4.2조', desc: '계약서 분쟁으로 발생하는 사회적 손실 추정액', src: '법무부 통계' },
             { stat: '평균 150만원', desc: '변호사 계약서 검토 비용 (1건 기준)', src: '대한변협' },
-            { stat: '30초', desc: 'RespectCheck AI가 동일한 검토를 완료하는 시간', src: 'RespectCheck', accent: true },
+            { stat: '3분 이내', desc: 'RespectCheck AI가 동일한 검토를 완료하는 시간', src: 'RespectCheck', accent: true },
           ].map((p) => (
             <div key={p.stat} className={`pain-card${p.accent ? ' accent' : ''}`}>
               <div className="pain-stat">{p.stat}</div>
@@ -204,7 +204,7 @@ const STEPS = [
   },
   {
     title: 'AI 실시간 분석',
-    desc: '30초 내로 모든 조항을 위험 / 주의 / 안전으로 분류하고 위험도 점수를 산출합니다.',
+    desc: '3분 이내로 모든 조항을 위험 / 주의 / 안전으로 분류하고 위험도 점수를 산출합니다.',
   },
   {
     title: '리포트 확인 및 활용',
@@ -223,7 +223,7 @@ function HowItWorksSection() {
             <span className="gradient-text">계약서 검토</span>
           </h2>
           <p className="section-desc" style={{ marginBottom: 48 }}>
-            복잡한 법률 지식 없이도 30초 만에 계약서의 위험을 파악하세요.
+            복잡한 법률 지식 없이도 3분 이내에 계약서의 위험을 파악하세요.
           </p>
 
           <div className="steps">
@@ -383,7 +383,7 @@ function SubscriptionSection() {
 /* ── Competition ───────────────────────────────────── */
 function CompetitionSection() {
   const rows = [
-    { feature: '분석 속도', checkmate: '30초', lawyer: '3~7일', others: '1~2일' },
+    { feature: '분석 속도', checkmate: '3분 이내', lawyer: '3~7일', others: '1~2일' },
     { feature: '비용(1건)', checkmate: '무료', lawyer: '50~150만원', others: '건당 과금' },
     { feature: '조항별 수정 제안', checkmate: '✓', lawyer: '✓', others: '✗' },
     { feature: '구독·렌탈 관리', checkmate: '✓', lawyer: '✗', others: '✗' },
@@ -427,7 +427,7 @@ function CompetitionSection() {
 
         <div className="comp-diff-grid">
           {[
-            { title: '속도', desc: '법률 사무소 대비 100배 빠른 30초 분석' },
+            { title: '속도', desc: '법률 사무소 대비 훨씬 빠른 3분 이내 분석' },
             { title: '비용', desc: '변호사 검토비 150만원 → 월 9,900원 구독' },
             { title: '반복 사용', desc: '계약 대시보드로 매월 돌아오는 구조' },
             { title: 'B2B 확장', desc: '개인 → 소상공인 → 기업 SaaS로 성장' },
@@ -491,7 +491,7 @@ function CTASection() {
         <div className="section-tag" style={{ margin: '0 auto 20px' }}>지금 바로 시작</div>
         <h2 className="section-title" style={{ margin: '0 auto 16px' }}>
           서명하기 전,<br />
-          <span className="gradient-text">30초만 투자하세요</span>
+          <span className="gradient-text">3분만 투자하세요</span>
         </h2>
         <p>무료로 첫 계약서를 분석해 드립니다. 회원가입 없이 바로 시작 가능합니다.</p>
         <div className="cta-actions">
