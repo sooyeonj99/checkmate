@@ -84,6 +84,15 @@ function useCountdown(from: number) {
   return seconds
 }
 
+/* ── "약 N분 M초" / "약 N초" 형태로 표시 ─────────────── */
+function formatCountdown(seconds: number): string {
+  if (seconds <= 0) return '완료 중...'
+  if (seconds < 60) return `약 ${seconds}초`
+  const m = Math.floor(seconds / 60)
+  const s = seconds % 60
+  return s === 0 ? `약 ${m}분` : `약 ${m}분 ${s}초`
+}
+
 /* ── Components ────────────────────────────────────── */
 function Logo() {
   return (
@@ -253,7 +262,7 @@ export default function LoadingPage() {
   const [stepIndex, setStepIndex] = useState(0)
   const [msgKey, setMsgKey] = useState(0)
   const [elapsed, setElapsed] = useState(0)
-  const countdown = useCountdown(30)
+  const countdown = useCountdown(180)
 
   // 애니메이션 완료 & API 완료를 각각 추적
   const animDoneRef = useRef(false)
@@ -379,7 +388,7 @@ export default function LoadingPage() {
         <div className="loading-time-divider" />
         <div className="loading-time-item">
           <div className="loading-time-value" style={{ color: 'var(--text-secondary)' }}>
-            {countdown > 0 ? `약 ${countdown}초` : '완료 중...'}
+            {formatCountdown(countdown)}
           </div>
           <div className="loading-time-label">예상 잔여 시간</div>
         </div>
