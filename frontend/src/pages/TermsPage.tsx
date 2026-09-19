@@ -171,7 +171,7 @@ export default function TermsPage() {
 
           <div className="legal-footer-box">
             <p><strong>리스펙체크 (RespectCheck)</strong></p>
-            <p>서비스 문의: support@checkmate.kr</p>
+            <p>서비스 문의: support@respectcheck.kr</p>
             <p>본 약관은 2026년 06월 23일부터 시행됩니다.</p>
           </div>
         </div>

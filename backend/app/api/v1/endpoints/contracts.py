@@ -459,16 +459,16 @@ def _send_support_alert(
 
     _send_smtp(
         to_email=to_email,
-        subject=f"[CHECKMATE] {store_name} 가맹점 계약서 개선 안내",
+        subject=f"[RESPECTCHECK] {store_name} 가맹점 계약서 개선 안내",
         html_body=f"""안녕하세요, {franchisor_name}님!<br><br>
 <b>{store_name}</b> 가맹점에서 <b style="color:{grade_color}">{grade}</b> 등급 계약서가 분석되었습니다.<br><br>
 <b>발견된 위험 조항 유형:</b>
 <ul style="margin:8px 0; padding-left:20px;">{categories_html}</ul>
 <br>
 <b>※ 계약서 원문 및 근로자 개인정보는 본사에 공유되지 않습니다.</b><br><br>
-가맹점에 개선 안내가 필요하시면 CHECKMATE 대시보드의
+가맹점에 개선 안내가 필요하시면 RESPECTCHECK 대시보드의
 <b>[지원 안내 발송]</b> 기능을 활용해 주세요.<br><br>
-감사합니다, CHECKMATE 팀""",
+감사합니다, RESPECTCHECK 팀""",
     )
 
 
@@ -651,7 +651,7 @@ async def get_report(
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>CHECKMATE 분석 리포트 — {row.filename}</title>
+<title>RESPECTCHECK 분석 리포트 — {row.filename}</title>
 <style>
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
   body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif;
@@ -689,7 +689,7 @@ async def get_report(
 </head>
 <body>
 <div class="card">
-  <div class="logo">CHECKMATE — AI 계약서 분석 리포트</div>
+  <div class="logo">RESPECTCHECK — AI 계약서 분석 리포트</div>
   <h1>{row.filename}</h1>
   <div class="meta">{contract_type} &nbsp;·&nbsp; 분석 저장일: {saved_at}</div>
 
@@ -724,8 +724,8 @@ async def get_report(
   {clauses_html}
 
   <div class="footer">
-    본 리포트는 CHECKMATE AI 계약서 분석 서비스를 통해 생성되었습니다.<br/>
-    법적 효력은 없으며 참고 목적으로만 사용하세요. · ⓒ 2026 CHECKMATE
+    본 리포트는 RESPECTCHECK AI 계약서 분석 서비스를 통해 생성되었습니다.<br/>
+    법적 효력은 없으며 참고 목적으로만 사용하세요. · ⓒ 2026 RESPECTCHECK
   </div>
 </div>
 </body>

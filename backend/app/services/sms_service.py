@@ -70,7 +70,7 @@ def _send_sms(to_phone: str, content: str) -> bool:
 def send_team_invite_sms(phone: str, inviter_name: str, invite_link: str) -> bool:
     """팀 초대 SMS 발송. 성공 여부 반환."""
     content = (
-        f"[CHECKMATE] {inviter_name}님이 계약서 분석 팀에 초대했습니다.\n"
+        f"[RESPECTCHECK] {inviter_name}님이 계약서 분석 팀에 초대했습니다.\n"
         f"아래 링크를 눌러 팀에 합류하세요.\n"
         f"{invite_link}\n"
         f"(유효기간 7일)"
@@ -82,7 +82,7 @@ def send_signing_request_sms_new_user(phone: str, requester_name: str, contract_
     """앱 미가입자에게 서명 요청 SMS (앱 다운로드 + 웹 서명 링크 포함)."""
     signing_url = f"{settings.FRONTEND_URL}/sign/{token}"
     content = (
-        f"[CHECKMATE] {requester_name}님이 '{contract_name}' 전자서명을 요청했습니다.\n"
+        f"[RESPECTCHECK] {requester_name}님이 '{contract_name}' 전자서명을 요청했습니다.\n"
         f"✍ 서명하기: {signing_url}\n"
         f"📱 앱 다운로드(iOS): {settings.APP_STORE_URL}\n"
         f"📱 앱 다운로드(Android): {settings.PLAY_STORE_URL}"
@@ -94,7 +94,7 @@ def send_signing_request_sms_existing_user(phone: str, requester_name: str, cont
     """앱 가입자(푸시 토큰 없음) 에게 서명 요청 SMS."""
     signing_url = f"{settings.FRONTEND_URL}/sign/{token}"
     content = (
-        f"[CHECKMATE] {requester_name}님이 '{contract_name}' 전자서명을 요청했습니다.\n"
+        f"[RESPECTCHECK] {requester_name}님이 '{contract_name}' 전자서명을 요청했습니다.\n"
         f"앱을 실행하거나 아래 링크에서 서명해주세요.\n"
         f"✍ 서명하기: {signing_url}"
     )

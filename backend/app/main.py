@@ -1,5 +1,5 @@
 """
-Checkmate API 서버
+RespectCheck API 서버
 AI 기반 계약서 분석 서비스 백엔드
 """
 import os
@@ -74,7 +74,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Checkmate API",
+    title="RespectCheck API",
     description="AI 기반 계약서 분석 서비스 API",
     version="0.1.0",
     lifespan=lifespan,
@@ -104,7 +104,7 @@ async def health_check():
     """서버 상태 확인 엔드포인트"""
     return {
         "status": "정상",
-        "service": "Checkmate API",
+        "service": "RespectCheck API",
         "version": "0.1.0",
     }
 

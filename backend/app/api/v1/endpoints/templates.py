@@ -31,7 +31,7 @@ DEFAULT_TEMPLATES = [
         "description": "고용노동부 표준 근로계약서 양식",
         "icon": "👷",
         "variables": [
-            {"key": "company",      "label": "사업장명",       "placeholder": "예) (주)체크메이트"},
+            {"key": "company",      "label": "사업장명",       "placeholder": "예) (주)리스펙체크"},
             {"key": "employer",     "label": "대표자(사용자)", "placeholder": "예) 홍길동"},
             {"key": "worker",       "label": "근로자 성명",    "placeholder": "예) 김철수"},
             {"key": "work_place",   "label": "근무장소",       "placeholder": "예) 서울시 강남구 테헤란로"},
@@ -60,7 +60,7 @@ DEFAULT_TEMPLATES = [
   .watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-30deg);font-size:80px;color:rgba(30,58,138,0.05);pointer-events:none;white-space:nowrap}
 </style></head>
 <body>
-<div class="watermark">CHECKMATE</div>
+<div class="watermark">RESPECTCHECK</div>
 <h1>표 준 근 로 계 약 서</h1>
 <div class="subtitle">고용노동부 고시 표준 양식</div>
 
@@ -125,7 +125,7 @@ DEFAULT_TEMPLATES = [
             {"key": "property_type",    "label": "부동산 종류",    "placeholder": "예) 사무실 / 창고 / 상가"},
             {"key": "area",             "label": "면적",           "placeholder": "예) 전용 50㎡"},
             {"key": "landlord",         "label": "임대인 성명",    "placeholder": "예) 이영희"},
-            {"key": "tenant",           "label": "임차인 성명",    "placeholder": "예) (주)체크메이트 대표 홍길동"},
+            {"key": "tenant",           "label": "임차인 성명",    "placeholder": "예) (주)리스펙체크 대표 홍길동"},
             {"key": "deposit",          "label": "보증금",         "placeholder": "예) 50,000,000"},
             {"key": "monthly_rent",     "label": "월 임대료",      "placeholder": "예) 1,500,000 (없으면 0)"},
             {"key": "rent_day",         "label": "임대료 납부일",  "placeholder": "예) 매월 25일"},
@@ -151,7 +151,7 @@ DEFAULT_TEMPLATES = [
   .watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-30deg);font-size:80px;color:rgba(30,58,138,0.05);pointer-events:none;white-space:nowrap}
 </style></head>
 <body>
-<div class="watermark">CHECKMATE</div>
+<div class="watermark">RESPECTCHECK</div>
 <h1>부동산 임대차계약서</h1>
 <div class="subtitle">임대인과 임차인은 아래 표시 부동산에 대하여 다음과 같이 임대차 계약을 체결한다.</div>
 
@@ -211,7 +211,7 @@ DEFAULT_TEMPLATES = [
         "description": "프리랜서·외주 업무 위탁 표준 계약서",
         "icon": "📋",
         "variables": [
-            {"key": "client",         "label": "위탁자(갑) 상호",  "placeholder": "예) (주)체크메이트"},
+            {"key": "client",         "label": "위탁자(갑) 상호",  "placeholder": "예) (주)리스펙체크"},
             {"key": "client_rep",     "label": "위탁자 대표자",    "placeholder": "예) 홍길동"},
             {"key": "contractor",     "label": "수탁자(을) 성명",  "placeholder": "예) 김프리랜서"},
             {"key": "work_content",   "label": "위탁 업무 내용",   "placeholder": "예) 웹사이트 디자인 및 개발"},
@@ -237,7 +237,7 @@ DEFAULT_TEMPLATES = [
   .watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-30deg);font-size:80px;color:rgba(30,58,138,0.05);pointer-events:none;white-space:nowrap}
 </style></head>
 <body>
-<div class="watermark">CHECKMATE</div>
+<div class="watermark">RESPECTCHECK</div>
 <h1>업 무 위 탁 계 약 서</h1>
 <div class="subtitle">위탁자(갑)와 수탁자(을)는 아래와 같이 업무위탁계약을 체결한다.</div>
 

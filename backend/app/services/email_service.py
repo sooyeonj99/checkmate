@@ -23,7 +23,7 @@ def _send_smtp(to_email: str, subject: str, html_body: str) -> None:
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
-    msg["From"] = f"CHECKMATE <{from_addr}>"
+    msg["From"] = f"RESPECTCHECK <{from_addr}>"
     msg["To"] = to_email
     msg.attach(MIMEText(html_body, "html", "utf-8"))
 
@@ -46,7 +46,7 @@ def _send_smtp(to_email: str, subject: str, html_body: str) -> None:
 
 def send_verification_email(to_email: str, username: str, token: str) -> None:
     verify_url = f"{settings.FRONTEND_URL}/verify-email?token={token}"
-    subject = "[CHECKMATE] 이메일 인증을 완료해 주세요"
+    subject = "[RESPECTCHECK] 이메일 인증을 완료해 주세요"
     html = f"""<!DOCTYPE html>
 <html lang="ko">
 <head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
@@ -60,7 +60,7 @@ def send_verification_email(to_email: str, username: str, token: str) -> None:
           <path d="M12 2L3 7V12C3 16.97 6.84 21.61 12 23C17.16 21.61 21 16.97 21 12V7L12 2Z" fill="white" fill-opacity="0.95"/>
           <path d="M9 12L11 14L15 10" stroke="#1e3a8a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        <span style="color:#fff;font-size:20px;font-weight:800;letter-spacing:1.5px;">CHECKMATE</span>
+        <span style="color:#fff;font-size:20px;font-weight:800;letter-spacing:1.5px;">RESPECTCHECK</span>
       </div>
       <p style="color:rgba(255,255,255,0.75);font-size:13px;margin:8px 0 0;">AI 계약서 분석 서비스</p>
     </div>
@@ -69,7 +69,7 @@ def send_verification_email(to_email: str, username: str, token: str) -> None:
     <div style="padding:40px;">
       <h2 style="margin:0 0 16px;font-size:22px;color:#1e3a8a;font-weight:700;">안녕하세요, {username}님! 👋</h2>
       <p style="color:#475569;font-size:15px;line-height:1.75;margin:0 0 32px;">
-        CHECKMATE에 가입해 주셔서 감사합니다.<br/>
+        RESPECTCHECK에 가입해 주셔서 감사합니다.<br/>
         아래 버튼을 클릭해 <strong>이메일 인증을 완료</strong>하시면<br/>
         모든 서비스를 이용하실 수 있습니다.
       </p>
@@ -97,14 +97,14 @@ def send_verification_email(to_email: str, username: str, token: str) -> None:
         <p style="color:#94a3b8;font-size:12px;line-height:1.6;margin:0;">
           ⏰ 이 링크는 <strong>24시간</strong> 후 만료됩니다.<br/>
           🔒 본인이 가입하지 않으셨다면 이 메일을 무시해 주세요.<br/>
-          📧 문의: support@checkmate.kr
+          📧 문의: support@respectcheck.kr
         </p>
       </div>
     </div>
 
     <!-- 푸터 -->
     <div style="background:#f8faff;padding:20px 40px;text-align:center;border-top:1px solid #e2e8f0;">
-      <p style="margin:0;font-size:12px;color:#94a3b8;">ⓒ 2026 CHECKMATE · AI 계약서 분석 서비스</p>
+      <p style="margin:0;font-size:12px;color:#94a3b8;">ⓒ 2026 RESPECTCHECK · AI 계약서 분석 서비스</p>
     </div>
   </div>
 </body>
@@ -113,14 +113,14 @@ def send_verification_email(to_email: str, username: str, token: str) -> None:
 
 
 def send_find_id_email(to_email: str, username: str) -> None:
-    subject = "[CHECKMATE] 아이디(닉네임) 확인 안내"
+    subject = "[RESPECTCHECK] 아이디(닉네임) 확인 안내"
     html = f"""<!DOCTYPE html>
 <html lang="ko">
 <head><meta charset="utf-8"/></head>
 <body style="margin:0;padding:0;background:#f0f4ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
   <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
     <div style="background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);padding:32px 40px;text-align:center;">
-      <span style="color:#fff;font-size:20px;font-weight:800;letter-spacing:1.5px;">CHECKMATE</span>
+      <span style="color:#fff;font-size:20px;font-weight:800;letter-spacing:1.5px;">RESPECTCHECK</span>
       <p style="color:rgba(255,255,255,0.75);font-size:13px;margin:8px 0 0;">AI 계약서 분석 서비스</p>
     </div>
     <div style="padding:40px;">
@@ -143,12 +143,12 @@ def send_find_id_email(to_email: str, username: str) -> None:
       <div style="border-top:1px solid #e2e8f0;padding-top:20px;">
         <p style="color:#94a3b8;font-size:12px;line-height:1.6;margin:0;">
           🔒 본인이 요청하지 않으셨다면 이 메일을 무시해 주세요.<br/>
-          📧 문의: support@checkmate.kr
+          📧 문의: support@respectcheck.kr
         </p>
       </div>
     </div>
     <div style="background:#f8faff;padding:20px 40px;text-align:center;border-top:1px solid #e2e8f0;">
-      <p style="margin:0;font-size:12px;color:#94a3b8;">ⓒ 2026 CHECKMATE · AI 계약서 분석 서비스</p>
+      <p style="margin:0;font-size:12px;color:#94a3b8;">ⓒ 2026 RESPECTCHECK · AI 계약서 분석 서비스</p>
     </div>
   </div>
 </body>
@@ -158,14 +158,14 @@ def send_find_id_email(to_email: str, username: str) -> None:
 
 def send_password_reset_email(to_email: str, username: str, token: str) -> None:
     reset_url = f"{settings.FRONTEND_URL}/reset-password?token={token}"
-    subject = "[CHECKMATE] 비밀번호 재설정 안내"
+    subject = "[RESPECTCHECK] 비밀번호 재설정 안내"
     html = f"""<!DOCTYPE html>
 <html lang="ko">
 <head><meta charset="utf-8"/></head>
 <body style="margin:0;padding:0;background:#f0f4ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
   <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
     <div style="background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);padding:32px 40px;text-align:center;">
-      <span style="color:#fff;font-size:20px;font-weight:800;letter-spacing:1.5px;">CHECKMATE</span>
+      <span style="color:#fff;font-size:20px;font-weight:800;letter-spacing:1.5px;">RESPECTCHECK</span>
       <p style="color:rgba(255,255,255,0.75);font-size:13px;margin:8px 0 0;">AI 계약서 분석 서비스</p>
     </div>
     <div style="padding:40px;">
@@ -192,12 +192,12 @@ def send_password_reset_email(to_email: str, username: str, token: str) -> None:
         <p style="color:#94a3b8;font-size:12px;line-height:1.6;margin:0;">
           ⏰ 이 링크는 <strong>1시간</strong> 후 만료됩니다.<br/>
           🔒 본인이 요청하지 않으셨다면 이 메일을 무시해 주세요.<br/>
-          📧 문의: support@checkmate.kr
+          📧 문의: support@respectcheck.kr
         </p>
       </div>
     </div>
     <div style="background:#f8faff;padding:20px 40px;text-align:center;border-top:1px solid #e2e8f0;">
-      <p style="margin:0;font-size:12px;color:#94a3b8;">ⓒ 2026 CHECKMATE · AI 계약서 분석 서비스</p>
+      <p style="margin:0;font-size:12px;color:#94a3b8;">ⓒ 2026 RESPECTCHECK · AI 계약서 분석 서비스</p>
     </div>
   </div>
 </body>
@@ -213,7 +213,7 @@ def send_signing_request_email(
     message: str | None = None,
 ) -> None:
     sign_url = f"{settings.FRONTEND_URL}/sign/{token}"
-    subject = f"[CHECKMATE] {requester_name}님이 계약서 서명을 요청했습니다"
+    subject = f"[RESPECTCHECK] {requester_name}님이 계약서 서명을 요청했습니다"
     msg_block = f"""
       <div style="background:#f8faff;border-left:4px solid #2563eb;border-radius:0 10px 10px 0;
                   padding:14px 18px;margin:16px 0 28px;font-size:14px;color:#334155;line-height:1.7;">
@@ -226,7 +226,7 @@ def send_signing_request_email(
 <body style="margin:0;padding:0;background:#f0f4ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
   <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
     <div style="background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);padding:32px 40px;text-align:center;">
-      <span style="color:#fff;font-size:20px;font-weight:800;letter-spacing:1.5px;">CHECKMATE</span>
+      <span style="color:#fff;font-size:20px;font-weight:800;letter-spacing:1.5px;">RESPECTCHECK</span>
       <p style="color:rgba(255,255,255,0.75);font-size:13px;margin:8px 0 0;">AI 계약서 분석 서비스</p>
     </div>
     <div style="padding:40px;">
@@ -259,7 +259,7 @@ def send_signing_request_email(
       </div>
     </div>
     <div style="background:#f8faff;padding:20px 40px;text-align:center;border-top:1px solid #e2e8f0;">
-      <p style="margin:0;font-size:12px;color:#94a3b8;">ⓒ 2026 CHECKMATE · AI 계약서 분석 서비스</p>
+      <p style="margin:0;font-size:12px;color:#94a3b8;">ⓒ 2026 RESPECTCHECK · AI 계약서 분석 서비스</p>
     </div>
   </div>
 </body>
@@ -276,14 +276,14 @@ def send_expiry_alert_email(
 ) -> None:
     urgency_color = "#dc2626" if days_left <= 3 else "#d97706" if days_left <= 7 else "#2563eb"
     urgency_label = "오늘 만료" if days_left == 0 else f"{days_left}일 후 만료"
-    subject = f"[CHECKMATE] ⚠️ '{filename}' 계약 만료 {days_left}일 전"
+    subject = f"[RESPECTCHECK] ⚠️ '{filename}' 계약 만료 {days_left}일 전"
     html = f"""<!DOCTYPE html>
 <html lang="ko">
 <head><meta charset="utf-8"/></head>
 <body style="margin:0;padding:0;background:#f0f4ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
   <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
     <div style="background:{urgency_color};padding:28px 40px;text-align:center;">
-      <span style="color:#fff;font-size:20px;font-weight:800;letter-spacing:1.5px;">CHECKMATE</span>
+      <span style="color:#fff;font-size:20px;font-weight:800;letter-spacing:1.5px;">RESPECTCHECK</span>
       <p style="color:rgba(255,255,255,0.85);font-size:13px;margin:8px 0 0;">계약 만료 알림</p>
     </div>
     <div style="padding:40px;">
@@ -306,12 +306,12 @@ def send_expiry_alert_email(
       </div>
       <div style="border-top:1px solid #e2e8f0;padding-top:18px;">
         <p style="color:#94a3b8;font-size:12px;line-height:1.6;margin:0;">
-          📧 문의: support@checkmate.kr · 수신 거부는 마이페이지에서 설정하실 수 있습니다.
+          📧 문의: support@respectcheck.kr · 수신 거부는 마이페이지에서 설정하실 수 있습니다.
         </p>
       </div>
     </div>
     <div style="background:#f8faff;padding:20px 40px;text-align:center;border-top:1px solid #e2e8f0;">
-      <p style="margin:0;font-size:12px;color:#94a3b8;">ⓒ 2026 CHECKMATE · AI 계약서 분석 서비스</p>
+      <p style="margin:0;font-size:12px;color:#94a3b8;">ⓒ 2026 RESPECTCHECK · AI 계약서 분석 서비스</p>
     </div>
   </div>
 </body>
@@ -325,14 +325,14 @@ def send_signing_complete_email(
     requestee_name: str,
     contract_name: str,
 ) -> None:
-    subject = f"[CHECKMATE] {contract_name} 서명이 완료되었습니다"
+    subject = f"[RESPECTCHECK] {contract_name} 서명이 완료되었습니다"
     html = f"""<!DOCTYPE html>
 <html lang="ko">
 <head><meta charset="utf-8"/></head>
 <body style="margin:0;padding:0;background:#f0f4ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
   <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
     <div style="background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);padding:32px 40px;text-align:center;">
-      <span style="color:#fff;font-size:20px;font-weight:800;letter-spacing:1.5px;">CHECKMATE</span>
+      <span style="color:#fff;font-size:20px;font-weight:800;letter-spacing:1.5px;">RESPECTCHECK</span>
     </div>
     <div style="padding:40px;">
       <h2 style="margin:0 0 10px;font-size:20px;color:#16a34a;font-weight:700;">✓ 서명이 완료되었습니다</h2>
@@ -347,7 +347,7 @@ def send_signing_complete_email(
       </p>
     </div>
     <div style="background:#f8faff;padding:20px 40px;text-align:center;border-top:1px solid #e2e8f0;">
-      <p style="margin:0;font-size:12px;color:#94a3b8;">ⓒ 2026 CHECKMATE</p>
+      <p style="margin:0;font-size:12px;color:#94a3b8;">ⓒ 2026 RESPECTCHECK</p>
     </div>
   </div>
 </body>

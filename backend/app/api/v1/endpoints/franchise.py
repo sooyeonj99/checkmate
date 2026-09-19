@@ -179,14 +179,14 @@ def invite_store(
     try:
         _send_smtp(
             to_email=str(body.franchisee_email),
-            subject=f"[CHECKMATE] {current_user.username}(본사)에서 가맹점으로 초대했습니다",
+            subject=f"[RESPECTCHECK] {current_user.username}(본사)에서 가맹점으로 초대했습니다",
             html_body=f"""안녕하세요!<br><br>
 <b>{current_user.username}</b> 프랜차이즈 본사에서 가맹점주로 초대했습니다.<br><br>
 가맹점명: <b>{body.store_name}</b>{f'<br>지역: {body.region}' if body.region else ''}<br><br>
 아래 링크를 클릭하여 가맹점으로 합류하세요:<br>
 <a href="{invite_link}">{invite_link}</a><br><br>
 초대 링크는 7일간 유효합니다.<br><br>
-감사합니다, CHECKMATE 팀""",
+감사합니다, RESPECTCHECK 팀""",
         )
     except Exception as e:
         print(f"[WARN] 가맹점 초대 이메일 발송 실패: {e}")
@@ -354,7 +354,7 @@ def send_support_email(
 
     guide_messages = {
         "risk_improvement": {
-            "subject": f"[CHECKMATE] {store.store_name} 계약서 개선 안내",
+            "subject": f"[RESPECTCHECK] {store.store_name} 계약서 개선 안내",
             "body": f"""안녕하세요, {franchisee.username}님!<br><br>
 {current_user.username} 본사에서 계약서 관리를 지원드리고자 연락드립니다.<br><br>
 최근 분석된 계약서에서 <b>개선이 필요한 조항</b>이 발견되었습니다.<br>
@@ -363,16 +363,16 @@ def send_support_email(
 • 위약금 조항: 근로기준법상 허용 범위 내인지 확인<br>
 • 4대보험: 가입 및 명시 여부 확인<br>
 • 근무시간·휴게: 법정 기준 준수 여부 확인<br><br>
-CHECKMATE 대시보드에서 상세 분석 결과를 확인하실 수 있습니다.<br><br>
+RESPECTCHECK 대시보드에서 상세 분석 결과를 확인하실 수 있습니다.<br><br>
 궁금한 사항은 본사로 문의해 주세요.<br><br>
-감사합니다,<br>{current_user.username} 본사 / CHECKMATE 팀""",
+감사합니다,<br>{current_user.username} 본사 / RESPECTCHECK 팀""",
         },
         "general_guide": {
-            "subject": f"[CHECKMATE] {store.store_name} 계약서 관리 안내",
+            "subject": f"[RESPECTCHECK] {store.store_name} 계약서 관리 안내",
             "body": f"""안녕하세요, {franchisee.username}님!<br><br>
 {current_user.username} 본사에서 계약서 관리 안내를 드립니다.<br><br>
-정기적으로 CHECKMATE를 통해 계약서를 점검하시면 법적 리스크를 사전에 예방할 수 있습니다.<br><br>
-감사합니다,<br>{current_user.username} 본사 / CHECKMATE 팀""",
+정기적으로 RESPECTCHECK를 통해 계약서를 점검하시면 법적 리스크를 사전에 예방할 수 있습니다.<br><br>
+감사합니다,<br>{current_user.username} 본사 / RESPECTCHECK 팀""",
         },
     }
 
@@ -429,7 +429,7 @@ def request_worker_consent(
     try:
         _send_smtp(
             to_email=str(body.worker_email),
-            subject="[CHECKMATE] 계약서 분석 결과 공유 동의 요청",
+            subject="[RESPECTCHECK] 계약서 분석 결과 공유 동의 요청",
             html_body=f"""안녕하세요!<br><br>
 귀하가 서명한 계약서의 AI 분석 결과(위험도 점수·등급)를 프랜차이즈 본사와
 <b>익명화된 형태로 공유</b>하는 데 동의를 요청드립니다.<br><br>
@@ -452,7 +452,7 @@ def request_worker_consent(
 </table>
 동의하지 않으셔도 귀하의 계약서 분석 결과는 <b>통계 집계에만 반영</b>되며,
 개별 식별은 불가합니다.<br><br>
-감사합니다, CHECKMATE 팀""",
+감사합니다, RESPECTCHECK 팀""",
         )
     except Exception as e:
         raise HTTPException(500, f"동의 요청 이메일 발송 실패: {e}")

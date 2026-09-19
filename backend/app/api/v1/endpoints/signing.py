@@ -150,7 +150,7 @@ def _build_certificate_html(record: SigningRecord) -> str:
 <div class="card">
   <div class="header">
     <div class="badge">✓ 전자서명 완료</div>
-    <h1>CHECKMATE 전자서명 인증서</h1>
+    <h1>RESPECTCHECK 전자서명 인증서</h1>
     <p style="color:#64748b;font-size:14px;margin:0">AI 계약서 분석 서비스</p>
   </div>
 
@@ -178,8 +178,8 @@ def _build_certificate_html(record: SigningRecord) -> str:
   </div>
 
   <div class="footer">
-    본 인증서는 CHECKMATE 플랫폼을 통해 전자적으로 서명된 문서입니다.<br/>
-    법적 효력은 당사자 간 합의에 따릅니다. · ⓒ 2026 CHECKMATE
+    본 인증서는 RESPECTCHECK 플랫폼을 통해 전자적으로 서명된 문서입니다.<br/>
+    법적 효력은 당사자 간 합의에 따릅니다. · ⓒ 2026 RESPECTCHECK
     <div style="margin-top:12px">
       <button onclick="window.print()" style="padding:10px 24px;background:#1e3a8a;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600">
         PDF로 저장 (인쇄)
@@ -481,7 +481,7 @@ def get_signed_document(
       <div style="border:1px solid #e2e8f0;border-radius:8px;padding:8px;min-height:80px;display:flex;align-items:center;justify-content:center;background:#f8fafc">{rec_sig_html}</div>
     </div>
   </div>
-  <p style="text-align:center;font-size:11px;color:#94a3b8;margin:16px 0 0">문서 ID: {record.token[:24]}... · ⓒ 2026 CHECKMATE</p>
+  <p style="text-align:center;font-size:11px;color:#94a3b8;margin:16px 0 0">문서 ID: {record.token[:24]}... · ⓒ 2026 RESPECTCHECK</p>
   <div style="text-align:center;margin-top:16px">
     <button onclick="window.print()" style="padding:10px 28px;background:#1e3a8a;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600">PDF로 저장 (인쇄)</button>
   </div>

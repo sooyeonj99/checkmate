@@ -334,4 +334,4 @@ def _require_api_key(x_api_key: str = Header(...), db: Session = Depends(get_db)
 @router.get("/b2b/health")
 def b2b_health(api_key: str = Depends(_require_api_key)):
     """B2B API 키 유효성 확인"""
-    return {"status": "ok", "service": "Checkmate AI", "version": "1.0"}
+    return {"status": "ok", "service": "RespectCheck AI", "version": "1.0"}

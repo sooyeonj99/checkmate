@@ -93,13 +93,13 @@ def invite_member(
     try:
         _send_smtp(
             to_email=str(body.email),
-            subject=f"[CHECKMATE] {current_user.username}님이 팀에 초대했습니다",
+            subject=f"[RESPECTCHECK] {current_user.username}님이 팀에 초대했습니다",
             html_body=f"""안녕하세요!<br><br>
-<b>{current_user.username}</b>님이 CHECKMATE 팀에 초대했습니다.<br><br>
+<b>{current_user.username}</b>님이 RESPECTCHECK 팀에 초대했습니다.<br><br>
 아래 링크를 클릭하여 팀에 합류하세요:<br>
 <a href="{invite_link}">{invite_link}</a><br><br>
 초대 링크는 7일간 유효합니다.<br><br>
-감사합니다, CHECKMATE 팀""",
+감사합니다, RESPECTCHECK 팀""",
         )
     except Exception as e:
         print(f"[WARN] 초대 이메일 발송 실패: {e}")

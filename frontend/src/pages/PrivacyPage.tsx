@@ -122,7 +122,7 @@ export default function PrivacyPage() {
                   <li>처리정지 요구</li>
                 </ul>
               </li>
-              <li>권리 행사는 서비스 내 계정 설정 페이지 또는 이메일(support@checkmate.kr)을 통해 요청할 수 있으며, 회사는 10일 이내에 조치 결과를 알려드립니다.</li>
+              <li>권리 행사는 서비스 내 계정 설정 페이지 또는 이메일(support@respectcheck.kr)을 통해 요청할 수 있으며, 회사는 10일 이내에 조치 결과를 알려드립니다.</li>
               <li>이용자는 개인정보의 정확성 유지를 위해 최신 정보를 입력해야 하며, 부정확한 정보 입력으로 발생하는 손해에 대해 회사는 책임지지 않습니다.</li>
             </ol>
           </Section>
@@ -150,7 +150,7 @@ export default function PrivacyPage() {
             <p>회사는 개인정보 처리에 관한 업무를 총괄해서 책임지고, 정보주체의 개인정보 관련 불만처리 및 피해구제 등을 위하여 아래와 같이 개인정보 보호책임자를 지정하고 있습니다.</p>
             <div className="legal-contact-box">
               <p><strong>개인정보 보호책임자</strong></p>
-              <p>이메일: privacy@checkmate.kr</p>
+              <p>이메일: privacy@respectcheck.kr</p>
               <p>문의 처리 시간: 평일 09:00 ~ 18:00 (공휴일 제외)</p>
             </div>
             <p style={{marginTop: 12}}>이용자는 개인정보 보호에 관한 모든 민원을 위 연락처로 신고할 수 있으며, 회사는 신속하고 성실하게 답변 드리겠습니다.</p>
@@ -171,7 +171,7 @@ export default function PrivacyPage() {
 
           <div className="legal-footer-box">
             <p><strong>리스펙체크 (RespectCheck)</strong></p>
-            <p>개인정보 문의: privacy@checkmate.kr</p>
+            <p>개인정보 문의: privacy@respectcheck.kr</p>
             <p>본 방침은 2026년 06월 23일부터 시행됩니다.</p>
           </div>
         </div>
