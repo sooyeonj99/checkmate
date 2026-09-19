@@ -6,7 +6,7 @@ from app.db.base import Base
 
 
 class PopupSetting(Base):
-    """홈페이지 공지/이벤트 팝업 설정 — 단일 레코드로 관리한다."""
+    """홈페이지 공지/이벤트 팝업 설정 — 여러 개를 등록할 수 있다."""
     __tablename__ = "popup_settings"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
@@ -18,5 +18,5 @@ class PopupSetting(Base):
     button_text: Mapped[str] = mapped_column(String(50), default="자세히 보기")
     width: Mapped[int] = mapped_column(Integer, default=420)
     height: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # null = 내용에 맞춰 자동
-    position: Mapped[str] = mapped_column(String(20), default="center")   # center / top / bottom
+    position: Mapped[str] = mapped_column(String(20), default="center")   # top/center/bottom/top-left/top-right/bottom-left/bottom-right/left/right
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())

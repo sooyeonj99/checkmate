@@ -12,7 +12,7 @@ router = APIRouter(prefix="/popup", tags=["팝업"])
 
 
 class PublicPopupOut(BaseModel):
-    enabled: bool
+    id: int
     title: str = ""
     body: str = ""
     image_url: Optional[str] = None
@@ -24,21 +24,15 @@ class PublicPopupOut(BaseModel):
     updated_at: Optional[str] = None
 
 
-@router.get("", response_model=PublicPopupOut)
-def get_active_popup(db: Session = Depends(get_db)):
-    """활성화된 팝업 설정 반환. 비활성 상태면 enabled=false만 반환."""
-    setting = db.query(PopupSetting).first()
-    if not setting or not setting.enabled:
-        return PublicPopupOut(enabled=False)
-    return PublicPopupOut(
-        enabled=True,
-        title=setting.title,
-        body=setting.body,
-        image_url=setting.image_url,
-        link_url=setting.link_url,
-        button_text=setting.button_text,
-        width=setting.width,
-        height=setting.height,
-        position=setting.position,
-        updated_at=setting.updated_at.isoformat() if setting.updated_at else None,
-    )
+@router.get("", response_model=list[PublicPopupOut])
+def get_active_popups(db: Session = Depends(get_db)):
+    """활성화된 팝업 목록 반환 (없으면 빈 배열)."""
+    rows = db.query(PopupSetting).filter(PopupSetting.enabled == True).order_by(PopupSetting.id).all()  # noqa: E712
+    return [
+        PublicPopupOut(
+            id=r.id, title=r.title, body=r.body, image_url=r.image_url, link_url=r.link_url,
+            button_text=r.button_text, width=r.width, height=r.height, position=r.position,
+            updated_at=r.updated_at.isoformat() if r.updated_at else None,
+        )
+        for r in rows
+    ]

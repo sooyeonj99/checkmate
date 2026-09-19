@@ -242,6 +242,7 @@ def toggle_api_key(
 # ── 홈페이지 공지/이벤트 팝업 관리 ────────────────────────────────────────────
 
 class PopupSettingOut(BaseModel):
+    id: int
     enabled: bool
     title: str
     body: str
@@ -266,33 +267,66 @@ class PopupSettingIn(BaseModel):
     position: str = "center"
 
 
-def _get_or_create_popup(db: Session) -> PopupSetting:
-    setting = db.query(PopupSetting).first()
-    if not setting:
-        setting = PopupSetting()
-        db.add(setting)
-        db.commit()
-        db.refresh(setting)
-    return setting
+_POPUP_POSITIONS = {"top", "center", "bottom", "top-left", "top-right", "bottom-left", "bottom-right", "left", "right"}
 
 
-@router.get("/popup", response_model=PopupSettingOut)
-def get_popup_admin(admin: User = Depends(_require_admin), db: Session = Depends(get_db)):
-    return _get_or_create_popup(db)
+def _validate_popup(body: PopupSettingIn):
+    if body.position not in _POPUP_POSITIONS:
+        raise HTTPException(status_code=400, detail="올바르지 않은 위치 값입니다.")
+    body.width = max(200, min(body.width, 1000))
+    if body.height is not None:
+        body.height = max(100, min(body.height, 1000))
 
 
-@router.put("/popup", response_model=PopupSettingOut)
-def update_popup(
+@router.get("/popups", response_model=list[PopupSettingOut])
+def list_popups(admin: User = Depends(_require_admin), db: Session = Depends(get_db)):
+    return db.query(PopupSetting).order_by(PopupSetting.id).all()
+
+
+@router.post("/popups", response_model=PopupSettingOut)
+def create_popup(
     body: PopupSettingIn,
     admin: User = Depends(_require_admin),
     db: Session = Depends(get_db),
 ):
-    setting = _get_or_create_popup(db)
+    _validate_popup(body)
+    setting = PopupSetting(**body.model_dump())
+    db.add(setting)
+    db.commit()
+    db.refresh(setting)
+    return setting
+
+
+@router.put("/popups/{popup_id}", response_model=PopupSettingOut)
+def update_popup(
+    popup_id: int,
+    body: PopupSettingIn,
+    admin: User = Depends(_require_admin),
+    db: Session = Depends(get_db),
+):
+    setting = db.query(PopupSetting).filter(PopupSetting.id == popup_id).first()
+    if not setting:
+        raise HTTPException(status_code=404, detail="팝업을 찾을 수 없습니다.")
+    _validate_popup(body)
     for field, value in body.model_dump().items():
         setattr(setting, field, value)
     db.commit()
     db.refresh(setting)
     return setting
+
+
+@router.delete("/popups/{popup_id}")
+def delete_popup(
+    popup_id: int,
+    admin: User = Depends(_require_admin),
+    db: Session = Depends(get_db),
+):
+    setting = db.query(PopupSetting).filter(PopupSetting.id == popup_id).first()
+    if not setting:
+        raise HTTPException(status_code=404, detail="팝업을 찾을 수 없습니다.")
+    db.delete(setting)
+    db.commit()
+    return {"deleted": popup_id}
 
 
 _POPUP_IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}

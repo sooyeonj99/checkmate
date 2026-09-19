@@ -1,7 +1,7 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useEffect, useState } from 'react'
 
-interface PopupData {
-  enabled: boolean
+export interface PopupData {
+  id: number
   title: string
   body: string
   image_url?: string | null
@@ -13,87 +13,113 @@ interface PopupData {
   updated_at?: string | null
 }
 
-const DISMISS_KEY = 'cm_popup_dismissed'
+const DISMISS_KEY = 'cm_popup_dismissed_v2'
+const CELLS = [
+  'top-left', 'top', 'top-right',
+  'left', 'center', 'right',
+  'bottom-left', 'bottom', 'bottom-right',
+]
 
-function isDismissedToday(version: string | null | undefined): boolean {
-  try {
-    const raw = localStorage.getItem(DISMISS_KEY)
-    if (!raw) return false
-    const parsed = JSON.parse(raw) as { version: string; until: string }
-    if (parsed.version !== (version ?? '')) return false
-    return new Date(parsed.until) > new Date()
-  } catch {
-    return false
-  }
+type DismissMap = Record<string, { version: string; until: string }>
+
+function readDismissed(): DismissMap {
+  try { return JSON.parse(localStorage.getItem(DISMISS_KEY) || '{}') } catch { return {} }
 }
 
-function dismissForToday(version: string | null | undefined) {
+function isDismissedToday(p: PopupData): boolean {
+  const d = readDismissed()[String(p.id)]
+  return !!d && d.version === (p.updated_at ?? '') && new Date(d.until) > new Date()
+}
+
+function dismissForToday(p: PopupData) {
   try {
     const until = new Date()
     until.setHours(23, 59, 59, 999)
-    localStorage.setItem(DISMISS_KEY, JSON.stringify({ version: version ?? '', until: until.toISOString() }))
+    const d = readDismissed()
+    d[String(p.id)] = { version: p.updated_at ?? '', until: until.toISOString() }
+    localStorage.setItem(DISMISS_KEY, JSON.stringify(d))
   } catch {}
 }
 
+export function PopupCard({ popup, onClose, onHideToday }: {
+  popup: PopupData
+  onClose?: () => void
+  onHideToday?: () => void
+}) {
+  return (
+    <div className="popup-card" style={{ width: popup.width, height: popup.height || 'auto' }}>
+      {popup.image_url && (
+        popup.link_url ? (
+          <a href={popup.link_url} target="_blank" rel="noreferrer">
+            <img src={popup.image_url} alt={popup.title} className="popup-image" />
+          </a>
+        ) : (
+          <img src={popup.image_url} alt={popup.title} className="popup-image" />
+        )
+      )}
+      {(popup.title || popup.body || popup.link_url) && (
+        <div className="popup-content">
+          {popup.title && <h3 className="popup-title">{popup.title}</h3>}
+          {popup.body && <p className="popup-body">{popup.body}</p>}
+          {popup.link_url && (
+            <a href={popup.link_url} target="_blank" rel="noreferrer" className="popup-cta">
+              {popup.button_text}
+            </a>
+          )}
+        </div>
+      )}
+      <div className="popup-footer">
+        <button type="button" onClick={onHideToday} className="popup-footer-btn">오늘 하루 안 보기</button>
+        <span className="popup-footer-divider" />
+        <button type="button" onClick={onClose} className="popup-footer-btn">닫기</button>
+      </div>
+    </div>
+  )
+}
+
+export function PopupLayer({ popups, onClose, onHideToday }: {
+  popups: PopupData[]
+  onClose: (p: PopupData) => void
+  onHideToday: (p: PopupData) => void
+}) {
+  if (popups.length === 0) return null
+  const cellOf = (pos: string) => (CELLS.includes(pos) ? pos : 'center')
+  return (
+    <div className="popup-layer">
+      {CELLS.map((cell) => {
+        const items = popups.filter((p) => cellOf(p.position) === cell)
+        if (items.length === 0) return null
+        return (
+          <div key={cell} className={`popup-cell popup-cell-${cell}`}>
+            {items.map((p) => (
+              <PopupCard key={p.id} popup={p} onClose={() => onClose(p)} onHideToday={() => onHideToday(p)} />
+            ))}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 export default function AnnouncementPopup() {
-  const [popup, setPopup] = useState<PopupData | null>(null)
-  const [visible, setVisible] = useState(false)
+  const [popups, setPopups] = useState<PopupData[]>([])
 
   useEffect(() => {
     fetch('/api/v1/popup')
       .then((res) => res.json())
-      .then((data: PopupData) => {
-        if (!data.enabled) return
-        if (isDismissedToday(data.updated_at)) return
-        setPopup(data)
-        setVisible(true)
+      .then((data: PopupData[]) => {
+        if (Array.isArray(data)) setPopups(data.filter((p) => !isDismissedToday(p)))
       })
       .catch(() => {})
   }, [])
 
-  if (!visible || !popup) return null
-
-  const close = () => setVisible(false)
-  const hideToday = () => { dismissForToday(popup.updated_at); setVisible(false) }
-
-  const overlayStyle: CSSProperties =
-    popup.position === 'top' ? { alignItems: 'flex-start', paddingTop: 60 } :
-    popup.position === 'bottom' ? { alignItems: 'flex-end', paddingBottom: 40 } :
-    { alignItems: 'center' }
+  const remove = (p: PopupData) => setPopups((prev) => prev.filter((x) => x.id !== p.id))
 
   return (
-    <div className="popup-overlay" style={overlayStyle} onClick={close}>
-      <div
-        className="popup-card"
-        style={{ width: popup.width, height: popup.height || 'auto' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {popup.image_url && (
-          popup.link_url ? (
-            <a href={popup.link_url} target="_blank" rel="noreferrer">
-              <img src={popup.image_url} alt={popup.title} className="popup-image" />
-            </a>
-          ) : (
-            <img src={popup.image_url} alt={popup.title} className="popup-image" />
-          )
-        )}
-        {(popup.title || popup.body) && (
-          <div className="popup-content">
-            {popup.title && <h3 className="popup-title">{popup.title}</h3>}
-            {popup.body && <p className="popup-body">{popup.body}</p>}
-            {popup.link_url && (
-              <a href={popup.link_url} target="_blank" rel="noreferrer" className="popup-cta">
-                {popup.button_text}
-              </a>
-            )}
-          </div>
-        )}
-        <div className="popup-footer">
-          <button type="button" onClick={hideToday} className="popup-footer-btn">오늘 하루 안 보기</button>
-          <span className="popup-footer-divider" />
-          <button type="button" onClick={close} className="popup-footer-btn">닫기</button>
-        </div>
-      </div>
-    </div>
+    <PopupLayer
+      popups={popups}
+      onClose={remove}
+      onHideToday={(p) => { dismissForToday(p); remove(p) }}
+    />
   )
 }
