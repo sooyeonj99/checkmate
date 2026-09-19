@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from app.api.v1.endpoints import (
     auth, users, contracts, chat, subscriptions, business,
     signing, templates, team, franchise,
-    search, stats, compare, admin, ws,
+    search, stats, compare, admin, ws, popup,
 )
 import app.models.user_template  # noqa: F401
 import app.models.team  # noqa: F401
@@ -24,4 +24,5 @@ api_router.include_router(franchise.router)
 api_router.include_router(search.router)    # /search/contracts
 api_router.include_router(stats.router)     # /stats/me
 api_router.include_router(admin.router)     # /admin/*
+api_router.include_router(popup.router)     # /popup (공개 조회)
 api_router.include_router(ws.router)        # /ws/{user_id}

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import Navbar from '../components/common/Navbar'
+import AnnouncementPopup from '../components/AnnouncementPopup'
 
 /* ── Hero ─────────────────────────────────────────── */
 function HeroSection() {
@@ -544,6 +545,7 @@ export default function HomePage() {
   return (
     <>
       <Navbar />
+      <AnnouncementPopup />
       <main>
         <HeroSection />
         <PainPointSection />

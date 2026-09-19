@@ -70,6 +70,11 @@ def login(credentials: LoginRequest, db: Session = Depends(get_db)):
             status_code=status.HTTP_403_FORBIDDEN,
             detail="이메일 인증이 필요합니다. 메일함을 확인해 주세요.",
         )
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="비활성화된 계정입니다. 관리자에게 문의해 주세요.",
+        )
     return Token(
         access_token=create_access_token({"sub": str(user.id)}),
         user=user,

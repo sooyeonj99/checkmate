@@ -1,14 +1,17 @@
 """어드민 패널 API — ghdiehddl@gmail.com 전용"""
+import os
 import secrets
 from datetime import date, datetime, timedelta
+from typing import Optional
 
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, File, Header, HTTPException, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.v1.endpoints.users import get_current_user
 from app.db.session import get_db
 from app.models.api_key import ApiKey
+from app.models.popup import PopupSetting
 from app.models.saved_contract import SavedContract
 from app.models.signing import SigningRecord
 from app.models.user import User
@@ -234,6 +237,87 @@ def toggle_api_key(
     api_key.is_active = not api_key.is_active
     db.commit()
     return {"key": key, "is_active": api_key.is_active}
+
+
+# ── 홈페이지 공지/이벤트 팝업 관리 ────────────────────────────────────────────
+
+class PopupSettingOut(BaseModel):
+    enabled: bool
+    title: str
+    body: str
+    image_url: Optional[str] = None
+    link_url: Optional[str] = None
+    button_text: str
+    width: int
+    height: Optional[int] = None
+    position: str
+    model_config = {"from_attributes": True}
+
+
+class PopupSettingIn(BaseModel):
+    enabled: bool = False
+    title: str = ""
+    body: str = ""
+    image_url: Optional[str] = None
+    link_url: Optional[str] = None
+    button_text: str = "자세히 보기"
+    width: int = 420
+    height: Optional[int] = None
+    position: str = "center"
+
+
+def _get_or_create_popup(db: Session) -> PopupSetting:
+    setting = db.query(PopupSetting).first()
+    if not setting:
+        setting = PopupSetting()
+        db.add(setting)
+        db.commit()
+        db.refresh(setting)
+    return setting
+
+
+@router.get("/popup", response_model=PopupSettingOut)
+def get_popup_admin(admin: User = Depends(_require_admin), db: Session = Depends(get_db)):
+    return _get_or_create_popup(db)
+
+
+@router.put("/popup", response_model=PopupSettingOut)
+def update_popup(
+    body: PopupSettingIn,
+    admin: User = Depends(_require_admin),
+    db: Session = Depends(get_db),
+):
+    setting = _get_or_create_popup(db)
+    for field, value in body.model_dump().items():
+        setattr(setting, field, value)
+    db.commit()
+    db.refresh(setting)
+    return setting
+
+
+_POPUP_IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+_POPUP_IMAGE_MAX_SIZE = 5 * 1024 * 1024  # 5MB
+
+
+@router.post("/popup/image")
+async def upload_popup_image(
+    file: UploadFile = File(...),
+    admin: User = Depends(_require_admin),
+):
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if ext not in _POPUP_IMAGE_EXTS:
+        raise HTTPException(status_code=400, detail="이미지 파일만 업로드할 수 있습니다 (jpg, png, webp, gif).")
+    contents = await file.read()
+    if len(contents) > _POPUP_IMAGE_MAX_SIZE:
+        raise HTTPException(status_code=413, detail="이미지 크기는 5MB 이하여야 합니다.")
+
+    static_dir = os.path.join("static", "popup")
+    os.makedirs(static_dir, exist_ok=True)
+    filename = f"{secrets.token_hex(8)}{ext}"
+    with open(os.path.join(static_dir, filename), "wb") as f:
+        f.write(contents)
+
+    return {"url": f"/api/static/popup/{filename}"}
 
 
 # ── B2B 외부 엔드포인트 (X-Api-Key 인증) ────────────────────────────────────

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import PopupAdminTab from '../components/PopupAdminTab'
 
 interface UserItem {
   id: number
@@ -42,7 +43,7 @@ const ADMIN_EMAIL = 'ghdiehddl@gmail.com'
 
 export default function AdminPage() {
   const { user } = useAuth()
-  const [tab, setTab] = useState<'stats' | 'users' | 'keys'>('stats')
+  const [tab, setTab] = useState<'stats' | 'users' | 'keys' | 'popup'>('stats')
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [users, setUsers] = useState<UserItem[]>([])
   const [keys, setKeys] = useState<ApiKeyItem[]>([])
@@ -141,14 +142,14 @@ export default function AdminPage() {
       <div style={{ maxWidth: 960, margin: '0 auto', padding: '32px 24px' }}>
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 28 }}>
-          {(['stats', 'users', 'keys'] as const).map(t => (
+          {(['stats', 'users', 'keys', 'popup'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
               padding: '10px 22px', borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 14,
               background: tab === t ? 'var(--accent)' : 'var(--bg-card)',
               color: tab === t ? '#fff' : 'var(--text-muted)',
               boxShadow: tab === t ? '0 2px 8px rgba(37,99,235,0.2)' : 'none',
             }}>
-              {t === 'stats' ? '전체 통계' : t === 'users' ? `사용자 (${users.length})` : 'B2B API 키'}
+              {t === 'stats' ? '전체 통계' : t === 'users' ? `사용자 (${users.length})` : t === 'keys' ? 'B2B API 키' : '팝업 관리'}
             </button>
           ))}
         </div>
@@ -282,6 +283,8 @@ export default function AdminPage() {
               </div>
             ))}
           </div>
+        ) : tab === 'popup' ? (
+          <PopupAdminTab token={token} showToast={showToast} />
         ) : (
           <>
             {/* API 키 생성 */}

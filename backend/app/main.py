@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.router import api_router
 from app.core.config import settings
@@ -92,6 +93,10 @@ app.add_middleware(
 
 # API v1 라우터 등록
 app.include_router(api_router)
+
+# 공개 정적 파일(팝업 이미지 등) — nginx가 /api/를 그대로 프록시하므로 이 경로 아래에 마운트
+os.makedirs("static/popup", exist_ok=True)
+app.mount("/api/static", StaticFiles(directory="static"), name="static")
 
 
 @app.get("/health", tags=["시스템"])
