@@ -598,6 +598,11 @@ async def delete_saved_contract(
     row = db.query(SavedContract).filter_by(id=saved_id, user_id=current_user.id).first()
     if not row:
         raise HTTPException(status_code=404, detail="저장된 계약서를 찾을 수 없습니다.")
+    from app.models.signing import SigningRecord
+    db.query(SigningRecord).filter(
+        SigningRecord.requester_id == current_user.id,
+        SigningRecord.contract_id == row.contract_id,
+    ).delete(synchronize_session=False)
     db.delete(row)
     db.commit()
 

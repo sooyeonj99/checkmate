@@ -193,6 +193,17 @@ def _build_certificate_html(record: SigningRecord) -> str:
 
 # ── Endpoints ────────────────────────────────────────
 
+def _ensure_not_already_signed(db: Session, user_id: int, contract_id: str):
+    """계약서 1건당 전자서명(본인 서명 또는 진행 중/완료된 요청)은 1회만 허용"""
+    exists = db.query(SigningRecord).filter(
+        SigningRecord.requester_id == user_id,
+        SigningRecord.contract_id == contract_id,
+        SigningRecord.status.in_(["signed", "pending"]),
+    ).first()
+    if exists:
+        raise HTTPException(409, "이미 전자서명이 진행되었거나 완료된 계약서입니다. 계약서 1건당 전자서명은 한 번만 가능합니다.")
+
+
 @router.post("/self-sign", response_model=SigningRecordOut)
 def self_sign(
     body: SelfSignRequest,
@@ -200,6 +211,7 @@ def self_sign(
     current_user: User = Depends(get_current_user),
 ):
     _check_sig_size(body.signature_data)
+    _ensure_not_already_signed(db, current_user.id, body.contract_id)
     record = SigningRecord(
         type="self",
         contract_id=body.contract_id,
@@ -229,6 +241,7 @@ def create_signing_request(
         raise HTTPException(400, "이메일 또는 전화번호 중 하나를 입력해주세요.")
     if body.my_signature:
         _check_sig_size(body.my_signature)
+    _ensure_not_already_signed(db, current_user.id, body.contract_id)
 
     import re as _re
     normalized_phone = _re.sub(r"\D", "", body.requestee_phone) if body.requestee_phone else None

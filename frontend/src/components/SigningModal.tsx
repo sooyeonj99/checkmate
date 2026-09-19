@@ -46,10 +46,13 @@ export default function SigningModal({ contractId, contractName, contractHtml, d
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ contract_id: contractId, contract_name: contractName, signature_data: selfSig }),
       })
-      if (!res.ok) throw new Error()
+      if (!res.ok) {
+        const err = await res.json().catch(() => null)
+        throw new Error(err?.detail || '')
+      }
       onDone('서명이 저장되었습니다.')
-    } catch {
-      alert('서명 저장 중 오류가 발생했습니다.')
+    } catch (e) {
+      alert((e as Error).message || '서명 저장 중 오류가 발생했습니다.')
     } finally {
       setSelfLoading(false)
     }
@@ -76,13 +79,16 @@ export default function SigningModal({ contractId, contractName, contractHtml, d
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(body),
       })
-      if (!res.ok) throw new Error()
+      if (!res.ok) {
+        const err = await res.json().catch(() => null)
+        throw new Error(err?.detail || '')
+      }
       const target = reqContactType === 'email' ? reqEmail : reqPhone
       onDone(reqContactType === 'email'
         ? `${target}으로 서명 요청 메일을 발송했습니다.`
         : `${target}으로 서명 요청 SMS를 발송했습니다.`)
-    } catch {
-      alert('서명 요청 중 오류가 발생했습니다.')
+    } catch (e) {
+      alert((e as Error).message || '서명 요청 중 오류가 발생했습니다.')
     } finally {
       setReqLoading(false)
     }

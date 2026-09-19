@@ -422,7 +422,7 @@ export default function DashboardPage() {
   }, [fetchSaved, fetchSubs, fetchSigningRecords, fetchUserTemplates, fetchExpiring, fetchTeamMembers, fetchB2BStats, user?.user_type])
 
   const handleDeleteSaved = useCallback(async (id: number) => {
-    if (!confirm('이 분석 결과를 삭제할까요?')) return
+    if (!confirm('이 분석 결과를 정말 삭제하시겠습니까?\n\n연결된 전자서명 내역도 함께 삭제되며, 삭제한 뒤에는 복구할 수 없습니다.')) return
     setDeletingId(id)
     const token = sessionStorage.getItem('cm_token')
     try {
@@ -431,10 +431,11 @@ export default function DashboardPage() {
         headers: { Authorization: `Bearer ${token}` },
       })
       setSavedContracts((prev) => prev.filter((c) => c.id !== id))
+      fetchSigningRecords()
     } finally {
       setDeletingId(null)
     }
-  }, [])
+  }, [fetchSigningRecords])
 
   const handleViewSaved = useCallback(async (item: SavedContractItem) => {
     const token = sessionStorage.getItem('cm_token')
